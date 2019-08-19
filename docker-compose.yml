@@ -1,0 +1,57 @@
+version: '3.0'
+
+# Define a network for the application communicate with the database so we don't have to expose the database to the
+# outside world.
+networks:
+  db_net:
+
+services:
+  backend:
+    # Set the hostname explicitly so we can refer to it, otherwise docker-compose will create one prefixed with the
+    # parent directories name (e.g. familyartifacts_backend)
+    hostname: backend
+    image: 'openjdk:8-jdk-slim'
+    # Maven wrapper (mvnw) will install maven as required and the application dependencies
+    command: './mvnw clean spring-boot:run'
+    working_dir: /app
+    ports:
+      # Map port 8080 in the docker container to port 8080 on the localhost. This allows us to access the application
+      # at http://localhost:8080
+      - '8080:8080'
+    networks:
+      # Make the backend service run on the db_net so we can talk to the database
+      - db_net
+    environment:
+      DB_URL: 'jdbc:mysql://db:3306/familyartefacts?useSSL=false'
+      DB_USER: 'root'
+      DB_PASSWORD: 'secret'
+      DB_DRIVER: 'com.mysql.cj.jdbc.Driver'
+      DB_PLATFORM: 'org.hibernate.dialect.MySQLDialect'
+      # Use application-docker.properties rather than the default application.properties
+      SPRING_PROFILES_ACTIVE: 'docker'
+    volumes:
+      # Mount the app so we can build it. Only the required files/directories are loaded and as read only so we don't
+      # change the permissions of file sin the project.
+      - '$PWD/src:/app/src:ro'
+      - '$PWD/mvnw:/app/mvnw:ro'
+      - '$PWD/pom.xml:/app/pom.xml:ro'
+      - '$PWD/.mvn:/app/.mvn:ro'
+      # Use the maven cache so they don't have to be downloaded every time
+      - '~/.m2:/root/.m2'
+    depends_on:
+      # Wait for the db service to start before we start up the backend service
+      - db
+
+  db:
+    # Explicitly set the hostname like with the backend service. This is especially important because we use this
+    # hostname in the MySQL database URL (DB_URL) in the backend service.
+    hostname: db
+    image: 'mysql/mysql-server:5.7'
+    environment:
+      # Name of the database to initialise
+      MYSQL_DATABASE: 'familyartefacts'
+      MYSQL_ROOT_PASSWORD: 'secret'
+      MYSQL_ROOT_HOST: '%'
+    networks:
+      # Make the db service run on the db_net network so the backend can talk to it
+      - db_net
