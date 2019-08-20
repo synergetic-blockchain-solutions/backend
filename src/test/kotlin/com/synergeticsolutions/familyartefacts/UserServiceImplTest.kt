@@ -65,6 +65,6 @@ class UserServiceImplIntegrationTest {
         val createdUser = userService.createUser("name", "example@example.com", "password")
         val foundUser = userRepository.findByIdOrNull(createdUser.id)
         assertNotNull(foundUser)
-        assertEquals(createdUser, foundUser)
+        assertEquals(createdUser.email, foundUser!!.email)
     }
 }

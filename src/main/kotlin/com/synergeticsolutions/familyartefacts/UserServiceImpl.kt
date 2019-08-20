@@ -21,6 +21,6 @@ class UserServiceImpl(
         }
         val encPassword = passwordEncoder.encode(password)
         val user = User(name = name, email = email, password = encPassword)
-        return userRepository.save(user)
+        return userRepository.save(user).copy(password = "")
     }
 }
