@@ -1,11 +1,13 @@
 package com.synergeticsolutions.familyartefacts
 
+import com.fasterxml.jackson.annotation.JsonInclude
 import javax.persistence.Column
 import javax.persistence.Entity
 import javax.persistence.GeneratedValue
 import javax.persistence.GenerationType
 import javax.persistence.Id
 
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
 @Entity
 data class User(
     @Id
