@@ -26,7 +26,7 @@ services:
       DB_USER: 'root'
       DB_PASSWORD: 'secret'
       DB_DRIVER: 'com.mysql.cj.jdbc.Driver'
-      DB_PLATFORM: 'org.hibernate.dialect.MySQLDialect'
+      DB_PLATFORM: 'org.hibernate.dialect.MySQL55Dialect'
       # Use application-docker.properties rather than the default application.properties
       SPRING_PROFILES_ACTIVE: 'docker'
     volumes:
