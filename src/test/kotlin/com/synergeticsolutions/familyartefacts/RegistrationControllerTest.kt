@@ -68,6 +68,7 @@ class RegistrationControllerTest {
                 .contentType(MediaType.APPLICATION_JSON_UTF8)
                 .content(mapper.writeValueAsString(registrationRequest))
         )
+            .andExpect(status().isCreated)
             .andReturn()
 
         val returnedUser = mapper.readValue<Map<String, String>>(resp.response.contentAsString)
