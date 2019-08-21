@@ -9,10 +9,14 @@ import org.springframework.security.crypto.password.PasswordEncoder
 
 @Configuration
 class SecurityConfig : WebSecurityConfigurerAdapter() {
+
     override fun configure(http: HttpSecurity) {
         http.csrf().disable()
     }
 
+    /**
+     * Provide a [PasswordEncoder] to be used by services.
+     */
     @Bean
     fun passwordEncoder(): PasswordEncoder {
         return BCryptPasswordEncoder()

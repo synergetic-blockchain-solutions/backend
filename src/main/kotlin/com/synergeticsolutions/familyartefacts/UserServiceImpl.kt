@@ -7,6 +7,10 @@ import javax.naming.AuthenticationException
 
 class UserAlreadyExistsException(msg: String) : AuthenticationException(msg)
 
+/**
+ * [UserServiceImpl] is an implementation of [UserService] that interacts with the [UserRepository] abstracting many
+ * of the details of this interaction away.
+ */
 @Service
 class UserServiceImpl(
     @Autowired
@@ -15,6 +19,19 @@ class UserServiceImpl(
     val passwordEncoder: PasswordEncoder
 ) : UserService {
 
+    /**
+     * [createUser] creates a user with the provided [name], [email] and [password].
+     *
+     * Before the user is created, it is checked that they do not already exist in the database. If they do then
+     * the [UserAlreadyExistsException] is thrown, resulting in a 5xx error being returned by the calling controller.
+     * Additionally, the [password] is hashed using [passwordEncoder].
+     *
+     * @param [name] Name of the user being created.
+     * @param [email] Email of the user being created.
+     * @param [password] Password of the user being created.
+     * @return [User] created in the [userRepository].
+     * @throws [UserAlreadyExistsException] when trying to create a user with an [email] that already exists in the repository.
+     */
     override fun createUser(name: String, email: String, password: String): User {
         if (userRepository.existsByEmail(email)) {
             throw UserAlreadyExistsException("User already exists with email $email")
