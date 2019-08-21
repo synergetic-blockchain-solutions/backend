@@ -1,13 +1,12 @@
 package com.synergeticsolutions.familyartefacts
 
-import com.fasterxml.jackson.annotation.JsonInclude
+import com.fasterxml.jackson.annotation.JsonIgnore
 import javax.persistence.Column
 import javax.persistence.Entity
 import javax.persistence.GeneratedValue
 import javax.persistence.GenerationType
 import javax.persistence.Id
 
-@JsonInclude(JsonInclude.Include.NON_EMPTY)
 @Entity
 data class User(
     @Id
@@ -16,5 +15,6 @@ data class User(
     val name: String,
     @Column(unique = true)
     val email: String,
+    @field:JsonIgnore
     val password: String
 )

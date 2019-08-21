@@ -1,7 +1,11 @@
 package com.synergeticsolutions.familyartefacts
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
@@ -54,5 +58,23 @@ class RegistrationControllerTest {
             .contentType(MediaType.APPLICATION_JSON_UTF8)
             .content(mapper.writeValueAsString(registrationRequest)))
             .andExpect(status().isBadRequest)
+    }
+
+    @Test
+    fun `it should return the created user without the password`() {
+        val registrationRequest = RegistrationRequest("name", "example@example.com", "secret", "secret")
+        val resp = mockMvc.perform(
+            post("/register")
+                .contentType(MediaType.APPLICATION_JSON_UTF8)
+                .content(mapper.writeValueAsString(registrationRequest))
+        )
+            .andReturn()
+
+        val returnedUser = mapper.readValue<Map<String, String>>(resp.response.contentAsString)
+        assertTrue(returnedUser.containsKey("name"))
+        assertEquals(registrationRequest.name, returnedUser["name"])
+        assertTrue(returnedUser.containsKey("email"))
+        assertEquals(registrationRequest.email, returnedUser["email"])
+        assertFalse(returnedUser.containsKey("password"))
     }
 }

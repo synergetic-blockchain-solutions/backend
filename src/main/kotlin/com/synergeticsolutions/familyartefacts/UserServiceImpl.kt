@@ -1,9 +1,9 @@
 package com.synergeticsolutions.familyartefacts
 
-import javax.naming.AuthenticationException
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
+import javax.naming.AuthenticationException
 
 class UserAlreadyExistsException(msg: String) : AuthenticationException(msg)
 
@@ -21,6 +21,6 @@ class UserServiceImpl(
         }
         val encPassword = passwordEncoder.encode(password)
         val user = User(name = name, email = email, password = encPassword)
-        return userRepository.save(user).copy(password = "")
+        return userRepository.save(user)
     }
 }
