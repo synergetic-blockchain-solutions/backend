@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestMapping
 import javax.validation.Valid
 import javax.validation.constraints.Email
 import javax.validation.constraints.NotBlank
+import javax.naming.AuthenticationException
 
 /**
  * RegistrationRequest represents a request sent to the registration endpoint.
@@ -32,6 +33,8 @@ data class RegistrationRequest(
     val confirmPassword: String
 )
 
+class PasswordNotMatchingException(): AuthenticationException("Password and confirm password are not matching")
+
 @Controller
 @RequestMapping(path = ["/register"])
 class RegistrationController {
@@ -49,7 +52,10 @@ class RegistrationController {
      */
     @PostMapping
     fun registerUser(@Valid @RequestBody registration: RegistrationRequest): ResponseEntity<User> {
-        val user = userService.createUser(registration.name, registration.email, registration.password)
-        return ResponseEntity.status(HttpStatus.CREATED).body(user)
+		if (registration.password == registration.confirmPassword) {
+			val user = userService.createUser(registration.name, registration.email, registration.password)
+			return ResponseEntity.status(HttpStatus.CREATED).body(user)
+		}
+		else throw PasswordNotMatchingException()
     }
 }
