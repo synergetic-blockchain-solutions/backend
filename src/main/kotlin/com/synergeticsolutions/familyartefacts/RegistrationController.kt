@@ -28,13 +28,13 @@ import javax.validation.constraints.NotBlank
     message = "'password' and 'confirmPassword' are not matching"
 )
 data class RegistrationRequest(
-    @field:NotBlank
+    @field:NotBlank(message = "'name' must not be blank")
     val name: String,
-    @field:Email
+    @field:Email(message = "'email' must be a well-formed email address")
     val email: String,
-    @field:Length(min = 6)
+    @field:Length(min = 6, message = "'password' must have at least 6 characters")
     val password: String,
-    @field:Length(min = 6)
+    @field:Length(min = 6, message = "'confirmPassword' must have at least 6 characters")
     val confirmPassword: String
 )
 
