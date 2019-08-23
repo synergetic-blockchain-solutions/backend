@@ -1,13 +1,13 @@
 package com.synergeticsolutions.familyartefacts
 
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.ArgumentMatchers.any
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.ArgumentMatchers.argThat
+import org.mockito.Mock
 import org.mockito.Mockito
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -18,7 +18,8 @@ import org.springframework.test.context.junit.jupiter.SpringExtension
 class UserServiceImplUnitTest {
     private val userRepository: UserRepository = Mockito.mock(UserRepository::class.java)
     private val passwordEncoder: PasswordEncoder = Mockito.mock(PasswordEncoder::class.java)
-    private val userService: UserService = UserServiceImpl(userRepository, passwordEncoder)
+    private val groupRepository: GroupRepository = Mockito.mock(GroupRepository::class.java)
+    private val userService: UserService = UserServiceImpl(userRepository, groupRepository, passwordEncoder)
 
     @Test
     fun `it should encrypt the password before saving it in the user repository`() {
@@ -58,13 +59,25 @@ class UserServiceImplIntegrationTest {
     lateinit var userRepository: UserRepository
 
     @Autowired
+    lateinit var groupRepository: GroupRepository
+
+    @Autowired
     lateinit var userService: UserService
 
     @Test
     fun `it should insert the user in the user repository`() {
         val createdUser = userService.createUser("name", "example@example.com", "password")
-        val foundUser = userRepository.findByIdOrNull(createdUser.id)
-        assertNotNull(foundUser)
-        assertEquals(createdUser, foundUser)
+        val foundUser = userRepository.findByIdOrNull(createdUser.id)!!
+        assertEquals(createdUser.id, foundUser.id)
+    }
+
+    @Test
+    fun `it should create a group where the user is member`() {
+        val createdUser = userService.createUser("name", "example2@example.com", "password")
+        val foundUser = userRepository.findByIdOrNull(createdUser.id)!!
+        assertEquals(1, createdUser.groups.size)
+        val foundGroup = groupRepository.findByIdOrNull(createdUser.groups.first().id)!!
+        assertEquals(1, foundUser.groups.size)
+        assertEquals(createdUser.id, foundGroup.members.first().id)
     }
 }

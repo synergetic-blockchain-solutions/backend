@@ -1,6 +1,9 @@
 package com.synergeticsolutions.familyartefacts
 
 import org.hibernate.validator.constraints.Length
+import org.hibernate.validator.constraints.ScriptAssert
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -11,7 +14,6 @@ import org.springframework.web.bind.annotation.RequestMapping
 import javax.validation.Valid
 import javax.validation.constraints.Email
 import javax.validation.constraints.NotBlank
-import javax.naming.AuthenticationException
 
 /**
  * RegistrationRequest represents a request sent to the registration endpoint.
@@ -22,22 +24,27 @@ import javax.naming.AuthenticationException
  *          minimum length of 6.
  * @param [confirmPassword] Confirmation of [password], they should be the same. Has a minimum length of 6.
  */
+@ScriptAssert(
+    lang = "javascript",
+    script = "_this.confirmPassword.equals(_this.password)",
+    message = "'password' and 'confirmPassword' are not matching"
+)
 data class RegistrationRequest(
-    @field:NotBlank
+    @field:NotBlank(message = "'name' must not be blank")
     val name: String,
-    @field:Email
+    @field:Email(message = "'email' must be a well-formed email address")
     val email: String,
-    @field:Length(min = 6)
+    @field:Length(min = 6, message = "'password' must have at least 6 characters")
     val password: String,
-    @field:Length(min = 6)
+    @field:Length(min = 6, message = "'confirmPassword' must have at least 6 characters")
     val confirmPassword: String
 )
-
-class PasswordNotMatchingException(): AuthenticationException("Password and confirm password are not matching")
 
 @Controller
 @RequestMapping(path = ["/register"])
 class RegistrationController {
+
+    val logger: Logger = LoggerFactory.getLogger(this::class.java)
 
     // userService is a server for performing actions around validating and persisting user accounts.
     @Autowired
@@ -52,10 +59,10 @@ class RegistrationController {
      */
     @PostMapping
     fun registerUser(@Valid @RequestBody registration: RegistrationRequest): ResponseEntity<User> {
-		if (registration.password == registration.confirmPassword) {
-			val user = userService.createUser(registration.name, registration.email, registration.password)
-			return ResponseEntity.status(HttpStatus.CREATED).body(user)
-		}
-		else throw PasswordNotMatchingException()
+        logger.info("Registering new user '${registration.name}' with email '${registration.email}")
+        val user = userService.createUser(registration.name, registration.email, registration.password)
+        logger.info("User '${user.name}' was successfully created")
+        logger.debug("User: id=${user.id} name=${user.name} email=${user.email} groups=${user.groups}")
+        return ResponseEntity.status(HttpStatus.CREATED).body(user)
     }
 }
