@@ -1,7 +1,11 @@
 package com.synergeticsolutions.familyartefacts
 
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
+import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import org.hamcrest.Matchers.`is`
 import org.hamcrest.Matchers.containsInAnyOrder
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -9,9 +13,10 @@ import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWeb
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment
+import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
-import org.springframework.test.web.servlet.MockMvc
+import org.springframework.test.web.reactive.server.returnResult
 
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
@@ -19,16 +24,19 @@ import org.springframework.test.web.servlet.MockMvc
 class RegistrationControllerTest {
 
     @Autowired
-    lateinit var mockMvc: MockMvc
-
-    @Autowired
     lateinit var client: WebTestClient
 
     @Autowired
     lateinit var userRepository: UserRepository
 
+    @Autowired
+    lateinit var groupRepository: GroupRepository
+
     @BeforeEach
     fun clearRepository() {
+        groupRepository.saveAll(groupRepository.findAll().map { it.copy(members = listOf()) })
+        userRepository.saveAll(userRepository.findAll().map { it.copy(groups = listOf()) })
+        groupRepository.deleteAll()
         userRepository.deleteAll()
     }
 
@@ -132,5 +140,28 @@ class RegistrationControllerTest {
             .exchange()
             .expectStatus().is5xxServerError
             .expectBody().jsonPath("$.message").isEqualTo("User already exists with email $email")
+    }
+
+    @Test
+    fun `it should create a private group for the user`() {
+        val registrationRequest = RegistrationRequest("name", "example@example.com", "secret", "secret")
+        val body = String(client.post().uri("/register")
+            .contentType(MediaType.APPLICATION_JSON_UTF8)
+            .syncBody(registrationRequest)
+            .exchange()
+            .expectStatus().isCreated
+            .expectBody().jsonPath("$").exists()
+            .returnResult()
+            .responseBody!!)
+
+        val user = ObjectMapper().registerKotlinModule().readValue<Map<String, Any>>(body)
+
+        val usersGroups = user["groups"] as List<Map<String, Any>>
+        assertEquals(usersGroups.size, 1)
+
+        val groupId = usersGroups.first().getValue("id") as Int
+        val group = groupRepository.findByIdOrNull(groupId.toLong())!!
+        assertEquals(group.members.size, 1)
+        assertEquals(group.members.first().id, (user["id"] as Int).toLong())
     }
 }
