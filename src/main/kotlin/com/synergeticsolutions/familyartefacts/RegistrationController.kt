@@ -2,6 +2,8 @@ package com.synergeticsolutions.familyartefacts
 
 import org.hibernate.validator.constraints.Length
 import org.hibernate.validator.constraints.ScriptAssert
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -42,6 +44,8 @@ data class RegistrationRequest(
 @RequestMapping(path = ["/register"])
 class RegistrationController {
 
+    val logger: Logger = LoggerFactory.getLogger(this::class.java)
+
     // userService is a server for performing actions around validating and persisting user accounts.
     @Autowired
     lateinit var userService: UserService
@@ -55,7 +59,10 @@ class RegistrationController {
      */
     @PostMapping
     fun registerUser(@Valid @RequestBody registration: RegistrationRequest): ResponseEntity<User> {
+        logger.info("Registering new user '${registration.name}' with email '${registration.email}")
         val user = userService.createUser(registration.name, registration.email, registration.password)
+        logger.info("User '${user.name}' was successfully created")
+        logger.debug("User: id=${user.id} name=${user.name} email=${user.email} groups=${user.groups}")
         return ResponseEntity.status(HttpStatus.CREATED).body(user)
     }
 }
