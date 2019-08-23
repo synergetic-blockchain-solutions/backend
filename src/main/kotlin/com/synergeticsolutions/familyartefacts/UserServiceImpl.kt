@@ -3,6 +3,10 @@ package com.synergeticsolutions.familyartefacts
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.context.annotation.Lazy
+import org.springframework.security.core.userdetails.UserDetails
+import org.springframework.security.core.userdetails.UserDetailsService
+import org.springframework.security.core.userdetails.UsernameNotFoundException
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import javax.naming.AuthenticationException
@@ -19,6 +23,7 @@ class UserServiceImpl(
     val userRepository: UserRepository,
     @Autowired
     val groupRepository: GroupRepository,
+    @Lazy
     @Autowired
     val passwordEncoder: PasswordEncoder
 ) : UserService {
