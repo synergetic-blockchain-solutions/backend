@@ -1,5 +1,7 @@
 package com.synergeticsolutions.familyartefacts
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
@@ -16,8 +18,12 @@ class UserServiceImpl(
     @Autowired
     val userRepository: UserRepository,
     @Autowired
+    val groupRepository: GroupRepository,
+    @Autowired
     val passwordEncoder: PasswordEncoder
 ) : UserService {
+
+    val logger: Logger = LoggerFactory.getLogger(this::class.java)
 
     /**
      * [createUser] creates a user with the provided [name], [email] and [password].
@@ -36,8 +42,12 @@ class UserServiceImpl(
         if (userRepository.existsByEmail(email)) {
             throw UserAlreadyExistsException("User already exists with email $email")
         }
+        logger.info("No user with email '$email' was found, creating user")
         val encPassword = passwordEncoder.encode(password)
-        val user = User(name = name, email = email, password = encPassword)
-        return userRepository.save(user)
+        val group = Group(name = "$name's Personal Group", members = listOf())
+        val user = User(name = name, email = email, password = encPassword, groups = listOf(group))
+        group.members = listOf(user)
+        val savedUser = userRepository.save(user)
+        return savedUser
     }
 }
