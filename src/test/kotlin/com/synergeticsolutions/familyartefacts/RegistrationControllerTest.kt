@@ -4,20 +4,18 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import org.hamcrest.Matchers.`is`
+import org.hamcrest.Matchers.contains
 import org.hamcrest.Matchers.containsInAnyOrder
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient
-import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
-import org.springframework.test.web.reactive.server.returnResult
 
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 @AutoConfigureWebTestClient
@@ -42,7 +40,7 @@ class RegistrationControllerTest {
 
     @Test
     fun `it should not allow blank names`() {
-        val registrationRequest = RegistrationRequest("", "example@example.com", "secret", "secret")
+        val registrationRequest = RegistrationRequest("", "example@example.com", "secret")
         client.post().uri("/register")
             .contentType(MediaType.APPLICATION_JSON_UTF8)
             .syncBody(registrationRequest)
@@ -55,7 +53,7 @@ class RegistrationControllerTest {
 
     @Test
     fun `it should not allow invalid emails`() {
-        val registrationRequest = RegistrationRequest("name", "example", "secret", "secret")
+        val registrationRequest = RegistrationRequest("name", "example", "secret")
         client.post().uri("/register")
             .contentType(MediaType.APPLICATION_JSON_UTF8)
             .syncBody(registrationRequest)
@@ -67,8 +65,8 @@ class RegistrationControllerTest {
     }
 
     @Test
-    fun `it should not allow short password or confirm passwords`() {
-        val registrationRequest = RegistrationRequest("name", "example@example.com", "", "")
+    fun `it should not allow short password `() {
+        val registrationRequest = RegistrationRequest("name", "example@example.com", "")
         client.post().uri("/register")
             .contentType(MediaType.APPLICATION_JSON_UTF8)
             .syncBody(registrationRequest)
@@ -77,29 +75,15 @@ class RegistrationControllerTest {
             .expectBody()
             .jsonPath("$.message").value(`is`("Validation failed"))
             .jsonPath("$.errors").value(
-                containsInAnyOrder(
-                    "'password' must have at least 6 characters",
-                    "'confirmPassword' must have at least 6 characters"
+                contains(
+                    "'password' must have at least 6 characters"
                 )
             )
     }
 
     @Test
-    fun `it should not allow different password and confirm passwords`() {
-        val registrationRequest = RegistrationRequest("name", "example@example.com", "secret1", "secret2")
-        client.post().uri("/register")
-            .contentType(MediaType.APPLICATION_JSON_UTF8)
-            .syncBody(registrationRequest)
-            .exchange()
-            .expectStatus().isBadRequest
-            .expectBody()
-            .jsonPath("$.message").value(`is`("Validation failed"))
-            .jsonPath("$.errors").value(containsInAnyOrder("'password' and 'confirmPassword' are not matching"))
-    }
-
-    @Test
     fun `it should return all validation errors`() {
-        val registrationRequest = RegistrationRequest("", "example@example.com", "secret1", "secret2")
+        val registrationRequest = RegistrationRequest("", "example", "short")
         client.post().uri("/register")
             .contentType(MediaType.APPLICATION_JSON_UTF8)
             .syncBody(registrationRequest)
@@ -108,12 +92,18 @@ class RegistrationControllerTest {
             .expectBody()
             .jsonPath("$.message").value(`is`("Validation failed"))
             .jsonPath("$.errors")
-            .value(containsInAnyOrder("'password' and 'confirmPassword' are not matching", "'name' must not be blank"))
+            .value(
+                containsInAnyOrder(
+                    "'name' must not be blank",
+                    "'email' must be a well-formed email address",
+                    "'password' must have at least 6 characters"
+                )
+            )
     }
 
     @Test
     fun `it should return the created user without the password`() {
-        val registrationRequest = RegistrationRequest("name", "example@example.com", "secret", "secret")
+        val registrationRequest = RegistrationRequest("name", "example@example.com", "secret")
         client.post().uri("/register")
             .syncBody(registrationRequest)
             .header("Content-Type", MediaType.APPLICATION_JSON_UTF8_VALUE)
@@ -128,7 +118,7 @@ class RegistrationControllerTest {
     @Test
     fun `it should not allow registering the same email twice`() {
         val email = "example@example.com"
-        val registrationRequest = RegistrationRequest("name", email, "secret", "secret")
+        val registrationRequest = RegistrationRequest("name", email, "secret")
         client.post().uri("/register")
             .contentType(MediaType.APPLICATION_JSON_UTF8)
             .syncBody(registrationRequest)
@@ -144,7 +134,7 @@ class RegistrationControllerTest {
 
     @Test
     fun `it should create a private group for the user`() {
-        val registrationRequest = RegistrationRequest("name", "example@example.com", "secret", "secret")
+        val registrationRequest = RegistrationRequest("name", "example@example.com", "secret")
         val body = String(client.post().uri("/register")
             .contentType(MediaType.APPLICATION_JSON_UTF8)
             .syncBody(registrationRequest)

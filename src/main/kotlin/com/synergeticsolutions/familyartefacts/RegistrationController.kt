@@ -1,7 +1,6 @@
 package com.synergeticsolutions.familyartefacts
 
 import org.hibernate.validator.constraints.Length
-import org.hibernate.validator.constraints.ScriptAssert
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -22,22 +21,14 @@ import javax.validation.constraints.NotBlank
  * @param [email] Email of the user being registered. This will be used to uniquely identify them.
  * @param [password] Password the user will user in combination with their email to authenticate themselves. Has a
  *          minimum length of 6.
- * @param [confirmPassword] Confirmation of [password], they should be the same. Has a minimum length of 6.
  */
-@ScriptAssert(
-    lang = "javascript",
-    script = "_this.confirmPassword.equals(_this.password)",
-    message = "'password' and 'confirmPassword' are not matching"
-)
 data class RegistrationRequest(
     @field:NotBlank(message = "'name' must not be blank")
     val name: String,
     @field:Email(message = "'email' must be a well-formed email address")
     val email: String,
     @field:Length(min = 6, message = "'password' must have at least 6 characters")
-    val password: String,
-    @field:Length(min = 6, message = "'confirmPassword' must have at least 6 characters")
-    val confirmPassword: String
+    val password: String
 )
 
 @Controller
