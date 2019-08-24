@@ -156,6 +156,7 @@ class RegistrationControllerTest {
 
         val user = ObjectMapper().registerKotlinModule().readValue<Map<String, Any>>(body)
 
+        @Suppress("UNCHECKED_CAST")
         val usersGroups = user["groups"] as List<Map<String, Any>>
         assertEquals(usersGroups.size, 1)
 
