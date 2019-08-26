@@ -2,6 +2,7 @@ package com.synergeticsolutions.familyartefacts
 
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertThrows
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.ArgumentMatchers.any
@@ -62,6 +63,14 @@ class UserServiceImplIntegrationTest {
 
     @Autowired
     lateinit var userService: UserService
+
+    @BeforeEach
+    fun clearRepository() {
+        groupRepository.saveAll(groupRepository.findAll().map { it.copy(members = listOf()) })
+        userRepository.saveAll(userRepository.findAll().map { it.copy(groups = listOf()) })
+        groupRepository.deleteAll()
+        userRepository.deleteAll()
+    }
 
     @Test
     fun `it should insert the user in the user repository`() {
