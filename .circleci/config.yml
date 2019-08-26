@@ -10,7 +10,8 @@ jobs:
           name: Lint
           command: |
             docker pull openjdk:8-jdk-slim | grep -e 'Pulling from' -e 'Digest' -e 'Status' -e 'Error'
-            docker run --rm -v $PWD:/opt/maven -w /opt/maven openjdk:8-jdk-slim ./mvnw antrun:run@ktlint
+            docker run --rm -v $PWD:/opt/maven -w /opt/maven openjdk:8-jdk-slim \
+                ./mvnw -B antrun:run@ktlint | grep -E -v "Download(ing|ed)"
       - run:
           name: Test
           command: |
