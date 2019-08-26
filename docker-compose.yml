@@ -12,7 +12,7 @@ services:
     hostname: backend
     image: 'openjdk:8-jdk-slim'
     # Maven wrapper (mvnw) will install maven as required and the application dependencies
-    command: './mvnw -B clean spring-boot:run | grep -E -v "Download(ing|ed)"'
+    command: ./mvnw -B clean spring-boot:run
     working_dir: /app
     ports:
       # Map port 8080 in the docker container to port 8080 on the localhost. This allows us to access the application
