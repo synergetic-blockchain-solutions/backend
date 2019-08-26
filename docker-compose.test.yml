@@ -3,4 +3,4 @@ version: '3.0'
 
 services:
   backend:
-    command: ./mvnw -B clean test
+    command: ./mvnw -B clean test | grep -E -v "Download(ing|ed)"
