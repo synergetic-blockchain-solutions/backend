@@ -9,9 +9,8 @@ import javax.persistence.FetchType
 import javax.persistence.GeneratedValue
 import javax.persistence.GenerationType
 import javax.persistence.Id
-import javax.persistence.JoinColumn
-import javax.persistence.JoinTable
 import javax.persistence.ManyToMany
+import javax.persistence.Table
 
 /**
  * The [User] entity is a representation of registered users.
@@ -24,6 +23,7 @@ import javax.persistence.ManyToMany
  * @param [groups] Collection of userGroups the user is a member of.
  */
 @Entity
+@Table(name = "users")
 data class User(
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
