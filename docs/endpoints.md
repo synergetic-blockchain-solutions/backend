@@ -36,7 +36,7 @@ Exchange user credentials (email and password) for a JWT.
 ### Example request
 
 ```http request
-POST http://locahost:8080/login
+POST http://localhost:8080/login
 Accept: application/json
 Content-Type: application/json
 
