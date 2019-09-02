@@ -1,0 +1,3 @@
+package com.synergeticsolutions.familyartefacts
+
+interface GroupService
