@@ -26,6 +26,7 @@ class UserServiceImplUnitTest {
         val encodedPassword = "encodedSecret"
         val user = User(name = "name", email = "email", password = "secret")
         Mockito.`when`(userRepository.save(any<User>())).thenReturn(user.copy(id = 1))
+        Mockito.`when`(groupRepository.save(any<Group>())).thenReturn(Group(1, "group", mutableListOf()))
         Mockito.`when`(passwordEncoder.encode(anyString())).thenReturn(encodedPassword)
         val inOrder = Mockito.inOrder(passwordEncoder, userRepository)
 
@@ -66,8 +67,8 @@ class UserServiceImplIntegrationTest {
 
     @BeforeEach
     fun clearRepository() {
-        groupRepository.saveAll(groupRepository.findAll().map { it.copy(members = listOf()) })
-        userRepository.saveAll(userRepository.findAll().map { it.copy(groups = listOf()) })
+        groupRepository.saveAll(groupRepository.findAll().map { it.copy(members = mutableListOf()) })
+        userRepository.saveAll(userRepository.findAll().map { it.copy(groups = mutableListOf()) })
         groupRepository.deleteAll()
         userRepository.deleteAll()
     }

@@ -34,13 +34,13 @@ data class User(
     val password: String,
     @JsonManagedReference
     @ManyToMany(fetch = FetchType.EAGER)
-    var groups: List<Group> = listOf(),
+    var groups: MutableList<Group> = mutableListOf(),
     @JsonManagedReference
     @ManyToMany(fetch = FetchType.EAGER)
-    val sharedArtifacts: List<Artifact> = listOf(),
+    val sharedArtifacts: MutableList<Artifact> = mutableListOf(),
     @JsonManagedReference
     @ManyToMany(fetch = FetchType.EAGER)
-    val ownedArtifacts: List<Artifact> = listOf()
+    val ownedArtifacts: MutableList<Artifact> = mutableListOf()
 ) {
     override fun toString(): String {
         return "User(id=$id, name=$name, email=$email, password=$password, groups=${groups.map(Group::id)}, sharedArtifacts=${sharedArtifacts.map(

@@ -51,15 +51,17 @@ class ArtifactServiceImpl(
         val artifact = Artifact(
             name = name,
             description = description,
-            owners = listOf(owner),
+            owners = mutableListOf(owner),
             groups = groups,
             sharedWith = shares
         )
         val savedArtifact = artifactRepository.save(artifact)
         logger.debug("Created artifact $savedArtifact")
-        val updatedOwner = entityManager.merge(owner.copy(ownedArtifacts = owner.ownedArtifacts + savedArtifact))
+        owner.ownedArtifacts.add(savedArtifact)
+        val updatedOwner = userRepository.save(owner)
         logger.debug("Updated artifact owner $updatedOwner")
-        val updatedGroups = groups.map { entityManager.merge(it.copy(artifacts = it.artifacts + savedArtifact)) }
+        groups.forEach { it.artifacts.add(savedArtifact) }
+        val updatedGroups = groupRepository.saveAll(groups)
         logger.debug("Updated artifact's associated groups $updatedGroups")
         return savedArtifact
     }

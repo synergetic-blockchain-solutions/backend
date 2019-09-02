@@ -1,12 +1,12 @@
 package com.synergeticsolutions.familyartefacts
 
-import javax.naming.AuthenticationException
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Lazy
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
+import javax.naming.AuthenticationException
 
 class UserAlreadyExistsException(msg: String) : AuthenticationException(msg)
 
@@ -46,10 +46,13 @@ class UserServiceImpl(
         }
         logger.info("No user with email '$email' was found, creating user")
         val encPassword = passwordEncoder.encode(password)
-        val group = Group(name = "$name's Personal Group", members = listOf())
-        val user = User(name = name, email = email, password = encPassword, groups = listOf(group))
-        group.members = listOf(user)
-        val savedUser = userRepository.save(user)
-        return savedUser
+
+        // First we need to create a user with no groups so they're saved in the database. Then we create their personal
+        // group with the user as a member of it so that group exists. We then update the existing user with the create
+        // we just created.
+        val user = userRepository.save(User(name = name, email = email, password = encPassword))
+        val group = groupRepository.save(Group(name = "$name's Personal Group", members = mutableListOf(user)))
+        user.groups.add(group)
+        return userRepository.save(user)
     }
 }

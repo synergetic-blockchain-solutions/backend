@@ -30,12 +30,12 @@ class RegistrationControllerTest {
     @Autowired
     lateinit var groupRepository: GroupRepository
 
+    @Autowired
+    private lateinit var testUtils: TestUtilsService
+
     @BeforeEach
-    fun clearRepository() {
-        groupRepository.saveAll(groupRepository.findAll().map { it.copy(members = listOf()) })
-        userRepository.saveAll(userRepository.findAll().map { it.copy(groups = listOf()) })
-        groupRepository.deleteAll()
-        userRepository.deleteAll()
+    fun beforeEach() {
+        testUtils.clearDatabase()
     }
 
     @Test

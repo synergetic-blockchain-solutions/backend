@@ -26,10 +26,10 @@ data class Group(
     val name: String,
     @JsonBackReference
     @ManyToMany(fetch = FetchType.EAGER, mappedBy = "groups")
-    var members: List<User>,
+    val members: MutableList<User>,
     @JsonManagedReference
     @ManyToMany(fetch = FetchType.EAGER)
-    val artifacts: List<Artifact> = listOf()
+    val artifacts: MutableList<Artifact> = mutableListOf()
 ) {
     override fun toString(): String {
         return "Group(id=$id, name=$name, members=${members.map(User::id)}, artifacts=${artifacts.map(Artifact::id)}"

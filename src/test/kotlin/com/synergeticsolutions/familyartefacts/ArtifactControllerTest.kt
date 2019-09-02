@@ -35,9 +35,22 @@ class ArtifactControllerTest {
     @Autowired
     lateinit var artifactService: ArtifactService
 
+    @Autowired
+    private lateinit var testUtils: TestUtilsService
+
+    val email: String = "example@example.com"
+    val password: String = "password"
     lateinit var token: String
 
-    fun getToken(email: String, password: String): String {
+    @BeforeEach
+    fun beforeEach() {
+        testUtils.clearDatabase()
+    }
+
+    @BeforeEach
+    fun getToken() {
+        val user = userService.createUser("name", email, password)
+        userRepository.save(user)
         val result = client.post()
             .uri("/login")
             .contentType(MediaType.APPLICATION_JSON_UTF8)
@@ -49,29 +62,14 @@ class ArtifactControllerTest {
             .responseBody!!
         println(String(result))
         val response = ObjectMapper().registerKotlinModule().readValue<LoginResponse>(result)
-        return response.token
-    }
-
-    @BeforeEach
-    fun clearRepository() {
-        groupRepository.saveAll(groupRepository.findAll().map { it.copy(members = listOf()) })
-        userRepository.saveAll(userRepository.findAll().map { it.copy(groups = listOf()) })
-        artifactRepository.saveAll(artifactRepository.findAll().map {
-            it.copy(groups = listOf(), owners = listOf(), sharedWith = listOf())
-        })
-        groupRepository.deleteAll()
-        userRepository.deleteAll()
-        artifactRepository.deleteAll()
+        token = response.token
     }
 
     @Test
     fun `it should get all the artifacts accessible by the user`() {
-        val user = userService.createUser("name", "example@example.com", "password")
-        userRepository.save(user)
-        val token = getToken(user.email, "password")
         val artifacts = listOf("artifact1", "artifact2", "artifact3").map {
             artifactService.createArtifact(
-                email = user.email,
+                email = email,
                 name = it,
                 description = "description",
                 groupIDs = listOf(),
@@ -92,15 +90,13 @@ class ArtifactControllerTest {
 
     @Test
     fun `it should filter the artifacts by the given group ID`() {
-        val user = userService.createUser("name", "example@example.com", "password")
-        val token = getToken(user.email, "password")
         val artifacts = mapOf(
             "artifact1" to 1,
             "artifact2" to 1,
             "artifact3" to 2
         ).map {
             artifactService.createArtifact(
-                email = user.email,
+                email = email,
                 name = it.key,
                 description = "description",
                 groupIDs = listOf(it.value.toLong()),
@@ -121,15 +117,13 @@ class ArtifactControllerTest {
 
     @Test
     fun `it should filter the artifacts by the given owner ID`() {
-        val user = userService.createUser("name", "example@example.com", "password")
-        val token = getToken(user.email, "password")
         val artifacts = mapOf(
             "artifact1" to 1,
             "artifact2" to 1,
             "artifact3" to 2
         ).map {
             artifactService.createArtifact(
-                email = user.email,
+                email = email,
                 name = it.key,
                 description = "description",
                 groupIDs = listOf(),
@@ -150,23 +144,20 @@ class ArtifactControllerTest {
 
     @Test
     fun `it should filter the artifacts by the given group ID and owner ID`() {
-        val user = userService.createUser("name", "example@example.com", "password")
-        userRepository.save(user)
-        val token = getToken(user.email, "password")
         val artifacts = mapOf(
             "artifact1" to mapOf("groupID" to 1, "ownerID" to 1),
             "artifact2" to mapOf("groupID" to 1, "ownerID" to 2),
             "artifact3" to mapOf("groupID" to 1, "ownerID" to 2)
         ).map {
             artifactService.createArtifact(
-                email = user.email,
+                email = email,
                 name = it.key,
                 description = "description",
                 groupIDs = listOf(
                     it.value.getValue("groupID").toLong()
                 ),
                 sharedWith = listOf(
-                    it.value.getValue("userID").toLong()
+                    it.value.getValue("ownerID").toLong()
                 )
             )
         }

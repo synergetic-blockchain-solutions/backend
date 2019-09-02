@@ -19,13 +19,13 @@ data class Artifact(
     val description: String,
     @JsonBackReference
     @ManyToMany(fetch = FetchType.EAGER, mappedBy = "ownedArtifacts")
-    val owners: List<User>,
+    val owners: MutableList<User>,
     @JsonBackReference
     @ManyToMany(fetch = FetchType.EAGER, mappedBy = "artifacts")
-    val groups: List<Group>,
+    val groups: MutableList<Group>,
     @JsonBackReference
     @ManyToMany(fetch = FetchType.EAGER, mappedBy = "sharedArtifacts")
-    val sharedWith: List<User>
+    val sharedWith: MutableList<User> = mutableListOf()
 ) {
     override fun toString(): String {
         return "Artifact(id=$id, name=$name, description=$description, owners=${owners.map(User::id)}, groups=${groups.map(
