@@ -32,6 +32,6 @@ data class Group(
     val artifacts: List<Artifact> = listOf()
 ) {
     override fun toString(): String {
-        return "Group $id"
+        return "Group(id=$id, name=$name, members=${members.map(User::id)}, artifacts=${artifacts.map(Artifact::id)}"
     }
 }

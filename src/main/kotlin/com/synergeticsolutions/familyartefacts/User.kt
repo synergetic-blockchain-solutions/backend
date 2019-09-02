@@ -43,6 +43,8 @@ data class User(
     val ownedArtifacts: List<Artifact> = listOf()
 ) {
     override fun toString(): String {
-        return "User $id"
+        return "User(id=$id, name=$name, email=$email, password=$password, groups=${groups.map(Group::id)}, sharedArtifacts=${sharedArtifacts.map(
+            Artifact::id
+        )}, ownedArtifacts=${ownedArtifacts.map(Artifact::id)}"
     }
 }
