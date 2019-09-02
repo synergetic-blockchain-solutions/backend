@@ -2,7 +2,6 @@ package com.synergeticsolutions.familyartefacts
 
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonManagedReference
-import javax.persistence.CascadeType
 import javax.persistence.Column
 import javax.persistence.Entity
 import javax.persistence.FetchType
@@ -34,8 +33,14 @@ data class User(
     @field:JsonIgnore
     val password: String,
     @JsonManagedReference
-    @ManyToMany(cascade = [CascadeType.ALL], fetch = FetchType.EAGER)
-    var groups: List<Group> = listOf()
+    @ManyToMany(fetch = FetchType.EAGER)
+    var groups: List<Group> = listOf(),
+    @JsonManagedReference
+    @ManyToMany(fetch = FetchType.EAGER)
+    val sharedArtifacts: List<Artifact> = listOf(),
+    @JsonManagedReference
+    @ManyToMany(fetch = FetchType.EAGER)
+    val ownedArtifacts: List<Artifact> = listOf()
 ) {
     override fun toString(): String {
         return "User $id"

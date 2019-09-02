@@ -1,7 +1,7 @@
 package com.synergeticsolutions.familyartefacts
 
 import com.fasterxml.jackson.annotation.JsonBackReference
-import javax.persistence.CascadeType
+import com.fasterxml.jackson.annotation.JsonManagedReference
 import javax.persistence.Entity
 import javax.persistence.FetchType
 import javax.persistence.GeneratedValue
@@ -25,8 +25,11 @@ data class Group(
     val id: Long = 0,
     val name: String,
     @JsonBackReference
-    @ManyToMany(cascade = [CascadeType.ALL], fetch = FetchType.EAGER, mappedBy = "groups")
-    var members: List<User>
+    @ManyToMany(fetch = FetchType.EAGER, mappedBy = "groups")
+    var members: List<User>,
+    @JsonManagedReference
+    @ManyToMany(fetch = FetchType.EAGER)
+    val artifacts: List<Artifact> = listOf()
 ) {
     override fun toString(): String {
         return "Group $id"
