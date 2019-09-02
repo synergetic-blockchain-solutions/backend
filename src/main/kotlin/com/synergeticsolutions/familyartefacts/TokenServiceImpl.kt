@@ -6,6 +6,7 @@ import io.jsonwebtoken.SignatureAlgorithm
 import java.util.Date
 import javax.crypto.spec.SecretKeySpec
 import javax.xml.bind.DatatypeConverter
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
@@ -20,6 +21,9 @@ class TokenServiceImpl : TokenService {
     @Value("\${auth.issuer}")
     lateinit var issuer: String
 
+    @Autowired
+    lateinit var userRepository: UserRepository
+
     override fun createToken(name: String, roles: List<String>): String {
         val signatureAlgorithm = SignatureAlgorithm.HS512
         val apiKeySecretBytes = DatatypeConverter.parseBase64Binary(jwtSecret)
@@ -28,6 +32,7 @@ class TokenServiceImpl : TokenService {
         val now = Date(System.currentTimeMillis())
         val expiration = Date(now.time + jwtLifetime!!)
 
+        val user = userRepository.findByEmail(name)!!
         return Jwts.builder()
                 .setAudience(audience)
                 .setIssuer(issuer)
@@ -35,6 +40,7 @@ class TokenServiceImpl : TokenService {
                 .setIssuedAt(now)
                 .setExpiration(expiration)
                 .claim("rol", roles)
+            .claim("nam", user.name)
                 .signWith(signingKey, signatureAlgorithm)
                 .compact()
     }
