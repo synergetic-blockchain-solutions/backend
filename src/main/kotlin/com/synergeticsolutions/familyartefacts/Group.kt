@@ -24,11 +24,11 @@ data class Group(
     @GeneratedValue(strategy = GenerationType.AUTO)
     val id: Long = 0,
     val name: String,
-    @JsonBackReference
-    @ManyToMany(fetch = FetchType.EAGER, mappedBy = "groups")
+    @JsonBackReference(value = "groups-members")
+    @ManyToMany(mappedBy = "groups", fetch = FetchType.EAGER)
     val members: MutableList<User>,
     @JsonManagedReference
-    @ManyToMany(fetch = FetchType.EAGER)
+    @ManyToMany
     val artifacts: MutableList<Artifact> = mutableListOf()
 ) {
     override fun toString(): String {
