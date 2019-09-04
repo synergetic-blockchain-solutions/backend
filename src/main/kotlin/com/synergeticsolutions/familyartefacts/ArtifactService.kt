@@ -6,6 +6,7 @@ interface ArtifactService {
         email: String,
         name: String,
         description: String,
+        ownerIDs: List<Long>,
         groupIDs: List<Long>,
         sharedWith: List<Long>
     ): Artifact

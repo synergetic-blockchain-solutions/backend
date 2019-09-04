@@ -40,29 +40,44 @@ class ArtifactServiceImpl(
         email: String,
         name: String,
         description: String,
+        ownerIDs: List<Long>,
         groupIDs: List<Long>,
         sharedWith: List<Long>
     ): Artifact {
-        logger.info("Creating artifact '$name' for user with email $email associated with groups $groupIDs and shared with users $sharedWith")
-        val owner =
-            userRepository.findByEmail(email) ?: throw UsernameNotFoundException("No user with email $email was found")
+        val creator =
+            userRepository.findByEmail(email) ?: throw UserNotFoundException("No user with email $email was found")
+        (ownerIDs + sharedWith).forEach {
+            if (!userRepository.existsById(it)) {
+                throw UserNotFoundException("Not user with ID $it was found")
+            }
+        }
+        groupIDs.forEach {
+            if (!groupRepository.existsById(it)) {
+                throw GroupNotFoundException("No group with ID $it was found")
+            }
+        }
+
+        val owners = userRepository.findAllById(ownerIDs).toMutableList()
         val groups = groupRepository.findAllById(groupIDs)
         val shares = userRepository.findAllById(sharedWith)
+
+        owners.add(creator)
         val artifact = Artifact(
             name = name,
             description = description,
-            owners = mutableListOf(owner),
+            owners = owners,
             groups = groups,
             sharedWith = shares
         )
         val savedArtifact = artifactRepository.save(artifact)
-        logger.debug("Created artifact $savedArtifact")
-        owner.ownedArtifacts.add(savedArtifact)
-        val updatedOwner = userRepository.save(owner)
-        logger.debug("Updated artifact owner $updatedOwner")
+
+        creator.ownedArtifacts.add(savedArtifact)
+        userRepository.save(creator)
+
         groups.forEach { it.artifacts.add(savedArtifact) }
-        val updatedGroups = groupRepository.saveAll(groups)
-        logger.debug("Updated artifact's associated groups $updatedGroups")
+        groupRepository.saveAll(groups)
+
+        logger.debug("Created artifact $savedArtifact")
         return savedArtifact
     }
 
