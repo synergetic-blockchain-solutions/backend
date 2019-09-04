@@ -150,8 +150,8 @@ class RegistrationControllerTest {
         val usersGroups = user["groups"] as List<Map<String, Any>>
         assertEquals(usersGroups.size, 1)
 
-        val groupId = usersGroups.first().getValue("id") as Int
-        val group = groupRepository.findByIdOrNull(groupId.toLong())!!
+        val groupId = (usersGroups.first().getValue("id") as Int).toLong()
+        val group = groupRepository.findByIdOrNull(groupId)!!
         assertEquals(group.members.size, 1)
         assertEquals(group.members.first().id, (user["id"] as Int).toLong())
     }
