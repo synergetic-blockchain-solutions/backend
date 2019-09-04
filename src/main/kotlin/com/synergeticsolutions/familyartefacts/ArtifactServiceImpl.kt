@@ -5,7 +5,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.security.core.userdetails.UsernameNotFoundException
 import org.springframework.stereotype.Service
-import javax.persistence.EntityManager
 import javax.transaction.Transactional
 
 /**
@@ -19,9 +18,7 @@ class ArtifactServiceImpl(
     @Autowired
     val userRepository: UserRepository,
     @Autowired
-    val groupRepository: GroupRepository,
-    @Autowired
-    val entityManager: EntityManager
+    val groupRepository: GroupRepository
 ) : ArtifactService {
     val logger: Logger = LoggerFactory.getLogger(this::class.java)
 
