@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import org.hamcrest.Matchers.containsInAnyOrder
+import org.hamcrest.Matchers.hasEntry
 import org.hamcrest.collection.IsCollectionWithSize.hasSize
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -51,7 +52,7 @@ class ArtifactControllerTest {
     fun getToken() {
         val user = userService.createUser("name", email, password)
         userRepository.save(user)
-        val result = client.post()
+        val resp = client.post()
             .uri("/login")
             .contentType(MediaType.APPLICATION_JSON_UTF8)
             .syncBody(LoginRequest(email = email, password = password))
@@ -60,9 +61,7 @@ class ArtifactControllerTest {
             .expectBody()
             .returnResult()
             .responseBody!!
-        println(String(result))
-        val response = ObjectMapper().registerKotlinModule().readValue<LoginResponse>(result)
-        token = response.token
+        token = ObjectMapper().registerKotlinModule().readValue<LoginResponse>(resp).token
     }
 
     @Test
@@ -73,7 +72,8 @@ class ArtifactControllerTest {
                 name = it,
                 description = "description",
                 groupIDs = listOf(),
-                sharedWith = listOf()
+                sharedWith = listOf(),
+                ownerIDs = listOf()
             )
         }
         client.get()
@@ -85,26 +85,31 @@ class ArtifactControllerTest {
             .expectBody()
             .jsonPath("$").isArray
             .jsonPath("$").value(hasSize<Artifact>(3))
-            .jsonPath("$").value(containsInAnyOrder(artifacts))
+            .jsonPath("$").value(containsInAnyOrder(artifacts.map { hasEntry("id", it.id.toInt()) }))
     }
 
     @Test
     fun `it should filter the artifacts by the given group ID`() {
+        val usr = userRepository.findByEmail(email)!!
+        val grp1 =
+            groupRepository.save(Group(name = "group1", members = mutableListOf(usr)))
+        val grp2 = groupRepository.save(Group(name = "group2", members = mutableListOf(usr)))
         val artifacts = mapOf(
-            "artifact1" to 1,
-            "artifact2" to 1,
-            "artifact3" to 2
+            "artifact1" to grp1.id,
+            "artifact2" to grp1.id,
+            "artifact3" to grp2.id
         ).map {
             artifactService.createArtifact(
                 email = email,
                 name = it.key,
                 description = "description",
-                groupIDs = listOf(it.value.toLong()),
-                sharedWith = listOf()
+                groupIDs = listOf(it.value),
+                sharedWith = listOf(),
+                ownerIDs = listOf()
             )
         }
         client.get()
-            .uri("/artifact?groupID=1")
+            .uri("/artifact?group=${grp1.id}")
             .accept(MediaType.APPLICATION_JSON_UTF8)
             .header(HttpHeaders.AUTHORIZATION, "Bearer $token")
             .exchange()
@@ -112,26 +117,41 @@ class ArtifactControllerTest {
             .expectBody()
             .jsonPath("$").isArray
             .jsonPath("$").value(hasSize<Artifact>(2))
-            .jsonPath("$").value(containsInAnyOrder(artifacts.filter { it.groups.first().id == (1).toLong() }))
+            .jsonPath("$").value(containsInAnyOrder(artifacts.filter { it.groups.first().id == grp1.id }.map {
+                hasEntry(
+                    "id",
+                    it.id.toInt()
+                )
+            }))
     }
 
     @Test
     fun `it should filter the artifacts by the given owner ID`() {
-        val artifacts = mapOf(
-            "artifact1" to 1,
-            "artifact2" to 1,
-            "artifact3" to 2
+        val usr = userRepository.findByEmail(email)!!
+        userService.createUser("name2", "example2@example.com", "password")
+        val artifacts = listOf(
+            "artifact1",
+            "artifact2"
         ).map {
             artifactService.createArtifact(
                 email = email,
-                name = it.key,
+                name = it,
                 description = "description",
                 groupIDs = listOf(),
-                sharedWith = listOf(it.value.toLong())
+                sharedWith = listOf(),
+                ownerIDs = listOf()
             )
         }
+        artifactService.createArtifact(
+            email = "example2@example.com",
+            name = "artifact3",
+            description = "desc",
+            groupIDs = listOf(),
+            sharedWith = listOf(),
+            ownerIDs = listOf()
+        )
         client.get()
-            .uri("/artifact?ownerID=1")
+            .uri("/artifact?owner=${usr.id}")
             .accept(MediaType.APPLICATION_JSON_UTF8)
             .header(HttpHeaders.AUTHORIZATION, "Bearer $token")
             .exchange()
@@ -139,30 +159,44 @@ class ArtifactControllerTest {
             .expectBody()
             .jsonPath("$").isArray
             .jsonPath("$").value(hasSize<Artifact>(2))
-            .jsonPath("$").value(containsInAnyOrder(artifacts.filter { it.sharedWith.first().id == (1).toLong() }))
+            .jsonPath("$").value(containsInAnyOrder(artifacts.map { hasEntry("id", it.id.toInt()) }))
     }
 
     @Test
     fun `it should filter the artifacts by the given group ID and owner ID`() {
-        val artifacts = mapOf(
-            "artifact1" to mapOf("groupID" to 1, "ownerID" to 1),
-            "artifact2" to mapOf("groupID" to 1, "ownerID" to 2),
-            "artifact3" to mapOf("groupID" to 1, "ownerID" to 2)
-        ).map {
+        val usr1 = userRepository.findByEmail(email)!!
+        val usr2 = userService.createUser("user2", "exampl2@example.com", "password")
+        val grp1 =
+            groupRepository.save(Group(name = "group1", members = mutableListOf(usr1)))
+        val grp2 = groupRepository.save(Group(name = "group2", members = mutableListOf(usr1)))
+        val artifacts = listOf(
             artifactService.createArtifact(
-                email = email,
-                name = it.key,
-                description = "description",
-                groupIDs = listOf(
-                    it.value.getValue("groupID").toLong()
-                ),
-                sharedWith = listOf(
-                    it.value.getValue("ownerID").toLong()
-                )
+                email,
+                "artifact1",
+                "",
+                groupIDs = listOf(grp1.id),
+                sharedWith = listOf(),
+                ownerIDs = listOf()
+            ),
+            artifactService.createArtifact(
+                usr2.email,
+                "artifact2",
+                "",
+                groupIDs = listOf(grp1.id),
+                sharedWith = listOf(),
+                ownerIDs = listOf()
+            ),
+            artifactService.createArtifact(
+                email,
+                "artifact3",
+                "",
+                groupIDs = listOf(grp2.id),
+                sharedWith = listOf(),
+                ownerIDs = listOf()
             )
-        }
+        )
         client.get()
-            .uri("/artifact?ownerID=1&groupID=1")
+            .uri("/artifact?owner=${usr1.id}&group=${grp1.id}")
             .accept(MediaType.APPLICATION_JSON_UTF8)
             .header(HttpHeaders.AUTHORIZATION, "Bearer $token")
             .exchange()
@@ -170,8 +204,12 @@ class ArtifactControllerTest {
             .expectBody()
             .jsonPath("$").isArray
             .jsonPath("$").value(hasSize<Artifact>(1))
-            .jsonPath("$").value(containsInAnyOrder(artifacts.filter {
-                it.sharedWith.first().id == (1).toLong() && it.groups.first().id == (1).toLong()
+            .jsonPath("$")
+            .value(containsInAnyOrder(artifacts.filter { it.groups.first().id == grp1.id && it.owners.first().id == usr1.id }.map {
+                hasEntry(
+                    "id",
+                    it.id.toInt()
+                )
             }))
     }
 }
