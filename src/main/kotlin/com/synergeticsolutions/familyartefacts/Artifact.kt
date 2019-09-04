@@ -2,7 +2,6 @@ package com.synergeticsolutions.familyartefacts
 
 import com.fasterxml.jackson.annotation.JsonBackReference
 import javax.persistence.Entity
-import javax.persistence.FetchType
 import javax.persistence.GeneratedValue
 import javax.persistence.GenerationType
 import javax.persistence.Id
@@ -17,14 +16,14 @@ data class Artifact(
     val id: Long = 0,
     val name: String,
     val description: String,
-    @JsonBackReference
-    @ManyToMany(fetch = FetchType.EAGER, mappedBy = "ownedArtifacts")
+    @JsonBackReference(value = "ownedArtifacts-owners")
+    @ManyToMany(mappedBy = "ownedArtifacts")
     val owners: MutableList<User>,
-    @JsonBackReference
-    @ManyToMany(fetch = FetchType.EAGER, mappedBy = "artifacts")
+    @JsonBackReference(value = "artifacts-groups")
+    @ManyToMany(mappedBy = "artifacts")
     val groups: MutableList<Group>,
-    @JsonBackReference
-    @ManyToMany(fetch = FetchType.EAGER, mappedBy = "sharedArtifacts")
+    @JsonBackReference(value = "sharedArtifacts-sharedWith")
+    @ManyToMany(mappedBy = "sharedArtifacts")
     val sharedWith: MutableList<User> = mutableListOf()
 ) {
     override fun toString(): String {
