@@ -36,10 +36,10 @@ data class User(
     @ManyToMany(fetch = FetchType.EAGER)
     var groups: MutableList<Group> = mutableListOf(),
     @JsonManagedReference
-    @ManyToMany(fetch = FetchType.EAGER)
+    @ManyToMany
     val sharedArtifacts: MutableList<Artifact> = mutableListOf(),
     @JsonManagedReference
-    @ManyToMany(fetch = FetchType.EAGER)
+    @ManyToMany
     val ownedArtifacts: MutableList<Artifact> = mutableListOf()
 ) {
     override fun toString(): String {
