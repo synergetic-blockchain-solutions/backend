@@ -1,8 +1,5 @@
 package com.synergeticsolutions.familyartefacts
 
-import javax.validation.Valid
-import javax.validation.constraints.Email
-import javax.validation.constraints.NotBlank
 import org.hibernate.validator.constraints.Length
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -13,6 +10,9 @@ import org.springframework.stereotype.Controller
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
+import javax.validation.Valid
+import javax.validation.constraints.Email
+import javax.validation.constraints.NotBlank
 
 /**
  * RegistrationRequest represents a request sent to the registration endpoint.
@@ -53,7 +53,7 @@ class RegistrationController {
         logger.info("Registering new user '${registration.name}' with email '${registration.email}")
         val user = userService.createUser(registration.name, registration.email, registration.password)
         logger.info("User '${user.name}' was successfully created")
-        logger.debug("User: id=${user.id} name=${user.name} email=${user.email} groups=${user.groups}")
+        logger.debug("$user")
         return ResponseEntity.status(HttpStatus.CREATED).body(user)
     }
 }
