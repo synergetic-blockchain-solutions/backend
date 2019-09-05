@@ -23,20 +23,23 @@ class ArtifactController(
      *
      * @param groupID ID of the group to restrict artifacts to
      * @param ownerID ID of the owner to restrict artifacts to
+     * @param sharedID ID of the user the returned artifacts must be shared to
      * @return Collection of artifacts the user has access to and fit the criteria given by the parameters
      */
     @GetMapping
     fun getArtifacts(
         @RequestParam(name = "group", required = false) groupID: Long?,
-        @RequestParam(name = "owner", required = false) ownerID: Long?
+        @RequestParam(name = "owner", required = false) ownerID: Long?,
+        @RequestParam(name = "shared", required = false) sharedID: Long?
     ): ResponseEntity<List<Artifact>> {
         val currentUser = SecurityContextHolder.getContext().authentication
-        logger.debug("Filtering artifacts for ${currentUser.principal} by group = $groupID and owner = $ownerID")
+        logger.debug("Filtering artifacts for ${currentUser.principal} by group=$groupID, owner=$ownerID, shared=$sharedID")
         val artifacts =
             artifactService.findArtifactsByOwner(
                 email = currentUser.principal as String,
                 groupID = groupID,
-                ownerID = ownerID
+                ownerID = ownerID,
+                sharedID = sharedID
             )
         logger.debug("Found ${artifacts.size} artifacts fitting the criteria")
 

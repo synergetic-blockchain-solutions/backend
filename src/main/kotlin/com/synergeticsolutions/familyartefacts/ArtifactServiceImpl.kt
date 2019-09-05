@@ -1,11 +1,11 @@
 package com.synergeticsolutions.familyartefacts
 
-import javax.transaction.Transactional
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.security.core.userdetails.UsernameNotFoundException
 import org.springframework.stereotype.Service
+import javax.transaction.Transactional
 
 /**
  * Service for performing actions with artifacts.
@@ -88,7 +88,7 @@ class ArtifactServiceImpl(
      * @param ownerID ID of the owning user to filter the artifacts to
      * @return Collection of artifacts the user has access to filtered by the given parameters
      */
-    override fun findArtifactsByOwner(email: String, groupID: Long?, ownerID: Long?): List<Artifact> {
+    override fun findArtifactsByOwner(email: String, groupID: Long?, ownerID: Long?, sharedID: Long?): List<Artifact> {
         val user =
             userRepository.findByEmail(email) ?: throw UsernameNotFoundException("No user with email $email was found")
 
@@ -104,6 +104,10 @@ class ArtifactServiceImpl(
 
         if (ownerID != null) {
             artifacts = artifacts.filter { it.owners.map(User::id).contains(ownerID) }
+        }
+
+        if (sharedID != null) {
+            artifacts = artifacts.filter { it.sharedWith.map(User::id).contains(sharedID) }
         }
 
         return artifacts
