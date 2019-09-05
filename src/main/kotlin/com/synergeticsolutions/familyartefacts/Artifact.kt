@@ -2,6 +2,7 @@ package com.synergeticsolutions.familyartefacts
 
 import com.fasterxml.jackson.annotation.JsonBackReference
 import javax.persistence.Entity
+import javax.persistence.FetchType
 import javax.persistence.GeneratedValue
 import javax.persistence.GenerationType
 import javax.persistence.Id
@@ -17,7 +18,7 @@ data class Artifact(
     val name: String,
     val description: String,
     @JsonBackReference(value = "ownedArtifacts-owners")
-    @ManyToMany(mappedBy = "ownedArtifacts")
+    @ManyToMany(mappedBy = "ownedArtifacts", fetch = FetchType.EAGER)
     val owners: MutableList<User>,
     @JsonBackReference(value = "artifacts-groups")
     @ManyToMany(mappedBy = "artifacts")
