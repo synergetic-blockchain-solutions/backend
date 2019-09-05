@@ -6,18 +6,22 @@ import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import org.hamcrest.Matchers.containsInAnyOrder
 import org.hamcrest.Matchers.hasEntry
 import org.hamcrest.collection.IsCollectionWithSize.hasSize
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@AutoConfigureWebTestClient
+@AutoConfigureWebTestClient(timeout = "36000")
 class ArtifactControllerTest {
     @Autowired
     lateinit var client: WebTestClient
@@ -221,7 +225,33 @@ class ArtifactControllerTest {
     @Nested
     inner class Post {
         @Test
-        fun `it should create the specified artifact`() {
+        fun `it should create the artifact`() {
+            val artifactRequest = ArtifactRequest(
+                name = "Artifact 1",
+                description = "Description",
+                owners = listOf(),
+                groups = listOf(),
+                sharedWith = listOf()
+            )
+            val response = client.post()
+                .uri("/artifact")
+                .accept(MediaType.APPLICATION_JSON_UTF8)
+                .contentType(MediaType.APPLICATION_JSON_UTF8)
+                .header(HttpHeaders.AUTHORIZATION, "Bearer $token")
+                .syncBody(artifactRequest)
+                .exchange()
+                .expectStatus().isCreated
+                .expectBody()
+                .returnResult()
+                .responseBody!!
+            val returnedArtifact = ObjectMapper().registerKotlinModule().readValue<Map<String, Any>>(String(response))
+            assertTrue((returnedArtifact["id"] as Int) > 0)
+            assertEquals(returnedArtifact["name"] as String, artifactRequest.name)
+            assertEquals(returnedArtifact["description"] as String, artifactRequest.description)
+
+            val createdArtifact = artifactRepository.findByIdOrNull((returnedArtifact["id"] as Int).toLong())
+            assertNotNull(createdArtifact)
+            assertEquals(mutableListOf(userRepository.findByEmail(email)!!.id), createdArtifact!!.owners.map(User::id))
         }
     }
 }
