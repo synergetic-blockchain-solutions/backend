@@ -2,9 +2,10 @@ package com.synergeticsolutions.familyartefacts
 
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonManagedReference
+import org.hibernate.annotations.LazyCollection
+import org.hibernate.annotations.LazyCollectionOption
 import javax.persistence.Column
 import javax.persistence.Entity
-import javax.persistence.FetchType
 import javax.persistence.GeneratedValue
 import javax.persistence.GenerationType
 import javax.persistence.Id
@@ -33,12 +34,14 @@ data class User(
     @field:JsonIgnore
     val password: String,
     @JsonManagedReference
-    @ManyToMany(fetch = FetchType.EAGER)
+    @ManyToMany
+    @LazyCollection(value = LazyCollectionOption.FALSE)
     var groups: MutableList<Group> = mutableListOf(),
     @JsonManagedReference
     @ManyToMany
     val sharedArtifacts: MutableList<Artifact> = mutableListOf(),
     @JsonManagedReference
+    @LazyCollection(value = LazyCollectionOption.FALSE)
     @ManyToMany
     val ownedArtifacts: MutableList<Artifact> = mutableListOf()
 ) {

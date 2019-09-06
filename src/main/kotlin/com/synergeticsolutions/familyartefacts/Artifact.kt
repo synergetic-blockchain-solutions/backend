@@ -1,8 +1,9 @@
 package com.synergeticsolutions.familyartefacts
 
 import com.fasterxml.jackson.annotation.JsonBackReference
+import org.hibernate.annotations.LazyCollection
+import org.hibernate.annotations.LazyCollectionOption
 import javax.persistence.Entity
-import javax.persistence.FetchType
 import javax.persistence.GeneratedValue
 import javax.persistence.GenerationType
 import javax.persistence.Id
@@ -18,12 +19,15 @@ data class Artifact(
     val name: String,
     val description: String,
     @JsonBackReference(value = "ownedArtifacts-owners")
-    @ManyToMany(mappedBy = "ownedArtifacts", fetch = FetchType.EAGER)
+    @LazyCollection(value = LazyCollectionOption.FALSE)
+    @ManyToMany(mappedBy = "ownedArtifacts")
     val owners: MutableList<User>,
     @JsonBackReference(value = "artifacts-groups")
+    @LazyCollection(value = LazyCollectionOption.FALSE)
     @ManyToMany(mappedBy = "artifacts")
     val groups: MutableList<Group>,
     @JsonBackReference(value = "sharedArtifacts-sharedWith")
+    @LazyCollection(value = LazyCollectionOption.FALSE)
     @ManyToMany(mappedBy = "sharedArtifacts")
     val sharedWith: MutableList<User> = mutableListOf()
 ) {

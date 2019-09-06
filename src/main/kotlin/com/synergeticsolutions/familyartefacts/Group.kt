@@ -2,8 +2,9 @@ package com.synergeticsolutions.familyartefacts
 
 import com.fasterxml.jackson.annotation.JsonBackReference
 import com.fasterxml.jackson.annotation.JsonManagedReference
+import org.hibernate.annotations.LazyCollection
+import org.hibernate.annotations.LazyCollectionOption
 import javax.persistence.Entity
-import javax.persistence.FetchType
 import javax.persistence.GeneratedValue
 import javax.persistence.GenerationType
 import javax.persistence.Id
@@ -25,9 +26,11 @@ data class Group(
     val id: Long = 0,
     val name: String,
     @JsonBackReference(value = "groups-members")
-    @ManyToMany(mappedBy = "groups", fetch = FetchType.EAGER)
+    @LazyCollection(value = LazyCollectionOption.FALSE)
+    @ManyToMany(mappedBy = "groups")
     val members: MutableList<User>,
     @JsonManagedReference
+    @LazyCollection(value = LazyCollectionOption.FALSE)
     @ManyToMany
     val artifacts: MutableList<Artifact> = mutableListOf()
 ) {
