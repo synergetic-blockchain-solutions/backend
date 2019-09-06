@@ -161,10 +161,10 @@ class ArtifactServiceImplTest {
                 "Artifact 1",
                 description = "Artifact description"
             )
-            val argCapturer = ArgumentCaptor.forClass(Artifact::class.java)
-            Mockito.verify(artifactRepository).save(argCapturer.capture())
+            val argumentCaptor = ArgumentCaptor.forClass(Artifact::class.java)
+            Mockito.verify(artifactRepository).save(argumentCaptor.capture())
             val matcher = hasProperty<Artifact>("groups", contains(hasProperty("id", equalTo(2L))))
-            assertThat(argCapturer.value, matcher)
+            assertThat(argumentCaptor.value, matcher)
         }
 
         @Test
