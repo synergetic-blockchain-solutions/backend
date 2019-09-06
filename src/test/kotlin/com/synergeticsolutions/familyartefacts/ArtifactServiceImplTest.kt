@@ -1,8 +1,19 @@
 package com.synergeticsolutions.familyartefacts
 
+import org.hamcrest.MatcherAssert.assertThat
+import org.hamcrest.Matchers.contains
+import org.hamcrest.Matchers.equalTo
+import org.hamcrest.beans.HasPropertyWithValue.hasProperty
+import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.Mockito
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.data.repository.findByIdOrNull
+import org.springframework.test.context.junit.jupiter.SpringExtension
 
 class ArtifactServiceImplTest {
     private val userRepository: UserRepository = Mockito.mock(UserRepository::class.java)
@@ -68,24 +79,133 @@ class ArtifactServiceImplTest {
     }
 }
 
+@SpringBootTest
+@ExtendWith(SpringExtension::class)
 class ArtifactServiceImplIntegrationTest {
+    @Autowired
+    private lateinit var artifactService: ArtifactService
+
+    @Autowired
+    private lateinit var userService: UserService
+
+    @Autowired
+    private lateinit var artifactRepository: ArtifactRepository
+
+    @Autowired
+    private lateinit var userRepository: UserRepository
+
+    @Autowired
+    private lateinit var groupRepository: GroupRepository
+
+    @Autowired
+    private lateinit var testUtils: TestUtilsService
+
+    val email = "example@example.com"
+
+    @BeforeEach
+    fun beforeEach() {
+        testUtils.clearDatabase()
+    }
 
     @Nested
     inner class CreateArtifact {
+
         @Test
         fun `it should insert the artifact in the database`() {
+            val user = userService.createUser("User1", email, "password")
+            val createdArtifact = artifactService.createArtifact(
+                user.email,
+                "Artifact 1",
+                "Description of artifact",
+                groupIDs = listOf(),
+                ownerIDs = listOf(),
+                sharedWith = listOf()
+            )
+            assertTrue(artifactRepository.existsById(createdArtifact.id))
         }
 
         @Test
         fun `it should update the creating user's relationship with the artifact`() {
+            val user = userService.createUser("User1", email, "password")
+            val createdArtifact = artifactService.createArtifact(
+                user.email,
+                "Artifact 1",
+                "Description of artifact",
+                groupIDs = listOf(),
+                ownerIDs = listOf(),
+                sharedWith = listOf()
+            )
+
+            val updatedUser = userRepository.findByIdOrNull(user.id)!!
+            assertThat(
+                updatedUser,
+                hasProperty("ownedArtifacts", contains(hasProperty("id", equalTo(createdArtifact.id))))
+            )
         }
 
         @Test
         fun `it should update the owning user's relationship with the artifact`() {
+            val user = userService.createUser("User1", email, "password")
+            val owningUsers = listOf(
+                userService.createUser("User2", "example2@example.com", "password"),
+                userService.createUser("User3", "example3@example.com", "password"),
+                userService.createUser("User4", "example4@example.com", "password")
+            )
+            val createdArtifact = artifactService.createArtifact(
+                user.email,
+                "Artifact 1",
+                "Description of artifact",
+                groupIDs = listOf(),
+                ownerIDs = owningUsers.map(User::id),
+                sharedWith = listOf()
+            )
+
+            val updatedOwningUsers = userRepository.findAllById(owningUsers.map(User::id))
+            updatedOwningUsers.forEach {
+                println("ownedArtifacts = ${it.ownedArtifacts}")
+            }
+            updatedOwningUsers.forEach {
+                assertThat(
+                    it.ownedArtifacts,
+                    contains(hasProperty("id", equalTo(createdArtifact.id)))
+                )
+            }
         }
 
         @Test
         fun `it should update the groups's relationship with the artifact`() {
+            val user = userService.createUser("User1", email, "password")
+            val groups = listOf(
+                groupRepository.save(
+                    Group(
+                        name = "Group1",
+                        members = mutableListOf(user),
+                        artifacts = mutableListOf()
+                    )
+                ),
+                groupRepository.save(
+                    Group(
+                        name = "Group2",
+                        members = mutableListOf(user),
+                        artifacts = mutableListOf()
+                    )
+                ),
+                groupRepository.save(Group(name = "Group3", members = mutableListOf(user), artifacts = mutableListOf()))
+            )
+            val createdArtifact = artifactService.createArtifact(
+                user.email,
+                "Artifact 1",
+                "Description of artifact",
+                groupIDs = groups.map(Group::id),
+                ownerIDs = listOf(),
+                sharedWith = listOf()
+            )
+            groupRepository.findAllById(groups.map(Group::id)).forEach {
+                assertThat(
+                    it,
+                    hasProperty("artifacts", contains(hasProperty("id", equalTo(createdArtifact.id))))
+                )
+            }
         }
     }
 }
