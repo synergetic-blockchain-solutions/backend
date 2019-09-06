@@ -59,6 +59,7 @@ class ArtifactServiceImpl(
         val shares = userRepository.findAllById(sharedWith)
 
         owners.add(creator)
+        groups.add(creator.privateGroup)
         val artifact = Artifact(
             name = name,
             description = description,
