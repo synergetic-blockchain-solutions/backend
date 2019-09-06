@@ -5,6 +5,7 @@ import org.hamcrest.Matchers.contains
 import org.hamcrest.Matchers.containsInAnyOrder
 import org.hamcrest.Matchers.equalTo
 import org.hamcrest.beans.HasPropertyWithValue.hasProperty
+import org.hamcrest.core.IsCollectionContaining.hasItems
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
@@ -143,18 +144,188 @@ class ArtifactServiceImplTest {
 
         @Test
         fun `it should include the user's personal group as one of the artifact's associated groups`() {
+            Mockito.`when`(artifactRepository.save(any<Artifact>())).then { it.arguments[0] as Artifact }
+            Mockito.`when`(userRepository.findByEmail(anyString()))
+                .thenReturn(
+                    User(
+                        1,
+                        "User1",
+                        "example@example.com",
+                        "password",
+                        privateGroup = Group(2, "Group 1", members = mutableListOf())
+                    )
+                )
+            Mockito.`when`(userRepository.findByIdOrNull(anyLong())).thenReturn(null)
+            artifactService.createArtifact(
+                "example@example.com",
+                "Artifact 1",
+                description = "Artifact description"
+            )
+            val argCapturer = ArgumentCaptor.forClass(Artifact::class.java)
+            Mockito.verify(artifactRepository).save(argCapturer.capture())
+            val matcher = hasProperty<Artifact>("groups", contains(hasProperty("id", equalTo(2L))))
+            assertThat(argCapturer.value, matcher)
         }
 
         @Test
         fun `it should make the specified owner IDs the owners of the artifact`() {
+            Mockito.`when`(artifactRepository.save(any<Artifact>())).then { it.arguments[0] as Artifact }
+            Mockito.`when`(userRepository.existsById(anyLong())).thenReturn(true)
+            Mockito.`when`(userRepository.findByEmail(anyString()))
+                .thenReturn(
+                    User(
+                        1,
+                        "User1",
+                        "example@example.com",
+                        "password",
+                        privateGroup = Group(2, "Group 1", members = mutableListOf())
+                    )
+                )
+            Mockito.`when`(userRepository.findByIdOrNull(anyLong())).then {
+                User(
+                    it.arguments[0] as Long,
+                    "User ${it.arguments[0]}",
+                    "example${it.arguments[0]}@email.com",
+                    "password",
+                    privateGroup = Group(2, "Group 1", members = mutableListOf())
+                )
+            }
+            Mockito.`when`(userRepository.findAllById(any<Iterable<Long>>())).then {
+                (it.arguments[0] as Iterable<Long>).map { id ->
+                    User(
+                        id = id,
+                        name = "Artifact $id",
+                        email = "example$id@example.com",
+                        password = "password",
+                        privateGroup = Group(
+                            1, "Group1", members = mutableListOf()
+                        )
+                    )
+                }
+            }
+            artifactService.createArtifact(
+                "example@example.com",
+                "Artifact 1",
+                description = "Artifact description",
+                ownerIDs = listOf(2, 3)
+            )
+            val argCapturer = ArgumentCaptor.forClass(Artifact::class.java)
+            Mockito.verify(artifactRepository).save(argCapturer.capture())
+            val matcher =
+                hasProperty<Artifact>(
+                    "owners",
+                    hasItems<User>(
+                        hasProperty("id", equalTo(2L)),
+                        hasProperty("id", equalTo(3L))
+                    )
+                )
+            assertThat(argCapturer.value, matcher)
         }
 
         @Test
         fun `it should make the specified group IDs associated with the artifact`() {
+            Mockito.`when`(artifactRepository.save(any<Artifact>())).then { it.arguments[0] as Artifact }
+            Mockito.`when`(groupRepository.existsById(anyLong())).thenReturn(true)
+            Mockito.`when`(userRepository.findByEmail(anyString()))
+                .thenReturn(
+                    User(
+                        1,
+                        "User1",
+                        "example@example.com",
+                        "password",
+                        privateGroup = Group(2, "Group 1", members = mutableListOf())
+                    )
+                )
+            Mockito.`when`(userRepository.findByIdOrNull(anyLong())).then {
+                User(
+                    it.arguments[0] as Long,
+                    "User ${it.arguments[0]}",
+                    "example${it.arguments[0]}@email.com",
+                    "password",
+                    privateGroup = Group(2, "Group 1", members = mutableListOf())
+                )
+            }
+            Mockito.`when`(groupRepository.findAllById(any<Iterable<Long>>())).then {
+                (it.arguments[0] as Iterable<Long>).map { id ->
+                    Group(
+                        id = id,
+                        name = "Artifact $id",
+                        members = mutableListOf()
+                    )
+                }
+            }
+            artifactService.createArtifact(
+                "example@example.com",
+                "Artifact 1",
+                description = "Artifact description",
+                groupIDs = listOf(2, 3)
+            )
+            val argCapturer = ArgumentCaptor.forClass(Artifact::class.java)
+            Mockito.verify(artifactRepository).save(argCapturer.capture())
+            val matcher =
+                hasProperty<Artifact>(
+                    "groups",
+                    hasItems<Group>(
+                        hasProperty("id", equalTo(2L)),
+                        hasProperty("id", equalTo(3L))
+                    )
+                )
+            assertThat(argCapturer.value, matcher)
         }
 
         @Test
         fun `it should share the artifact with the specified user IDs`() {
+            Mockito.`when`(artifactRepository.save(any<Artifact>())).then { it.arguments[0] as Artifact }
+            Mockito.`when`(userRepository.existsById(anyLong())).thenReturn(true)
+            Mockito.`when`(userRepository.findByEmail(anyString()))
+                .thenReturn(
+                    User(
+                        1,
+                        "User1",
+                        "example@example.com",
+                        "password",
+                        privateGroup = Group(2, "Group 1", members = mutableListOf())
+                    )
+                )
+            Mockito.`when`(userRepository.findByIdOrNull(anyLong())).then {
+                User(
+                    it.arguments[0] as Long,
+                    "User ${it.arguments[0]}",
+                    "example${it.arguments[0]}@email.com",
+                    "password",
+                    privateGroup = Group(2, "Group 1", members = mutableListOf())
+                )
+            }
+            Mockito.`when`(userRepository.findAllById(any<Iterable<Long>>())).then {
+                (it.arguments[0] as Iterable<Long>).map { id ->
+                    User(
+                        id = id,
+                        name = "Artifact $id",
+                        email = "example$id@example.com",
+                        password = "password",
+                        privateGroup = Group(
+                            1, "Group1", members = mutableListOf()
+                        )
+                    )
+                }
+            }
+            artifactService.createArtifact(
+                "example@example.com",
+                "Artifact 1",
+                description = "Artifact description",
+                sharedWith = listOf(2, 3)
+            )
+            val argCapturer = ArgumentCaptor.forClass(Artifact::class.java)
+            Mockito.verify(artifactRepository).save(argCapturer.capture())
+            val matcher =
+                hasProperty<Artifact>(
+                    "sharedWith",
+                    hasItems<User>(
+                        hasProperty("id", equalTo(2L)),
+                        hasProperty("id", equalTo(3L))
+                    )
+                )
+            assertThat(argCapturer.value, matcher)
         }
 
         @Test
