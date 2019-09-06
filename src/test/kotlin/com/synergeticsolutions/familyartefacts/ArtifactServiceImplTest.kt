@@ -172,19 +172,19 @@ class ArtifactServiceImplTest {
         @Test
         fun `it should find all the artifacts accessible by the user`() {
             val email = "example@example.com"
-            val groupArtifacts = listOf<Artifact>(
+            val groupArtifacts = listOf(
                 Artifact(1, "Artifact 1", "Description", owners = mutableListOf(), groups = mutableListOf()),
                 Artifact(2, "Artifact 2", "Description", owners = mutableListOf(), groups = mutableListOf()),
                 Artifact(3, "Artifact 3", "Description", owners = mutableListOf(), groups = mutableListOf()),
                 Artifact(4, "Artifact 4", "Description", owners = mutableListOf(), groups = mutableListOf())
             )
-            val ownerArtifacts = listOf<Artifact>(
+            val ownerArtifacts = listOf(
                 Artifact(5, "Artifact 7", "Description", owners = mutableListOf(), groups = mutableListOf()),
                 Artifact(6, "Artifact 8", "Description", owners = mutableListOf(), groups = mutableListOf()),
                 Artifact(7, "Artifact 9", "Description", owners = mutableListOf(), groups = mutableListOf()),
                 Artifact(8, "Artifact 10", "Description", owners = mutableListOf(), groups = mutableListOf())
             )
-            val sharedArtifacts = listOf<Artifact>(
+            val sharedArtifacts = listOf(
                 Artifact(11, "Artifact 11", "Description", owners = mutableListOf(), groups = mutableListOf()),
                 Artifact(12, "Artifact 12", "Description", owners = mutableListOf(), groups = mutableListOf()),
                 Artifact(13, "Artifact 13", "Description", owners = mutableListOf(), groups = mutableListOf()),
@@ -211,7 +211,7 @@ class ArtifactServiceImplTest {
         @Test
         fun `it should filter the accessible artifacts by the group ID if specified`() {
             val email = "example@example.com"
-            val groupArtifacts = listOf<Artifact>(
+            val groupArtifacts = listOf(
                 Artifact(
                     1,
                     "Artifact 1",
@@ -241,7 +241,7 @@ class ArtifactServiceImplTest {
                     groups = mutableListOf(Group(id = 1, name = "Group 1", members = mutableListOf()))
                 )
             )
-            val ownerArtifacts = listOf<Artifact>(
+            val ownerArtifacts = listOf(
                 Artifact(
                     5,
                     "Artifact 7",
@@ -271,7 +271,7 @@ class ArtifactServiceImplTest {
                     groups = mutableListOf(Group(id = 2, name = "Group 2", members = mutableListOf()))
                 )
             )
-            val sharedArtifacts = listOf<Artifact>(
+            val sharedArtifacts = listOf(
                 Artifact(
                     11,
                     "Artifact 11",
@@ -328,7 +328,7 @@ class ArtifactServiceImplTest {
                     Group(id = 1, name = "Group 1", members = mutableListOf())
                 ), privateGroup = Group(2, "Group 2", members = mutableListOf())
             )
-            val groupArtifacts = listOf<Artifact>(
+            val groupArtifacts = listOf(
                 Artifact(
                     1,
                     "Artifact 1",
@@ -358,7 +358,7 @@ class ArtifactServiceImplTest {
                     groups = mutableListOf(Group(id = 1, name = "Group 1", members = mutableListOf()))
                 )
             )
-            val ownerArtifacts = listOf<Artifact>(
+            val ownerArtifacts = listOf(
                 Artifact(
                     5,
                     "Artifact 7",
@@ -388,7 +388,7 @@ class ArtifactServiceImplTest {
                     groups = mutableListOf(Group(id = 2, name = "Group 2", members = mutableListOf()))
                 )
             )
-            val sharedArtifacts = listOf<Artifact>(
+            val sharedArtifacts = listOf(
                 Artifact(
                     11,
                     "Artifact 11",
@@ -438,7 +438,7 @@ class ArtifactServiceImplTest {
                     Group(id = 1, name = "Group 1", members = mutableListOf())
                 )
             )
-            val groupArtifacts = listOf<Artifact>(
+            val groupArtifacts = listOf(
                 Artifact(
                     1,
                     "Artifact 1",
@@ -468,7 +468,7 @@ class ArtifactServiceImplTest {
                     groups = mutableListOf(Group(id = 1, name = "Group 1", members = mutableListOf()))
                 )
             )
-            val ownerArtifacts = listOf<Artifact>(
+            val ownerArtifacts = listOf(
                 Artifact(
                     5,
                     "Artifact 7",
@@ -498,7 +498,7 @@ class ArtifactServiceImplTest {
                     groups = mutableListOf(Group(id = 2, name = "Group 2", members = mutableListOf()))
                 )
             )
-            val sharedArtifacts = listOf<Artifact>(
+            val sharedArtifacts = listOf(
                 Artifact(
                     11,
                     "Artifact 11",
