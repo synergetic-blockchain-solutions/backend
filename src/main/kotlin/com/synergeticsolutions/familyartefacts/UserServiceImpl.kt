@@ -47,12 +47,21 @@ class UserServiceImpl(
         logger.info("No user with email '$email' was found, creating user")
         val encPassword = passwordEncoder.encode(password)
 
-        // First we need to create a user with no groups so they're saved in the database. Then we create their personal
-        // group with the user as a member of it so that group exists. We then update the existing user with the create
-        // we just created.
-        val user = userRepository.save(User(name = name, email = email, password = encPassword))
-        val group = groupRepository.save(Group(name = "$name's Personal Group", members = mutableListOf(user)))
-        user.groups.add(group)
-        return userRepository.save(user)
+        val group = groupRepository.save(Group(name = "$name's Personal Group", members = mutableListOf()))
+        val user = userRepository.save(
+            User(
+                name = name,
+                email = email,
+                password = encPassword,
+                privateGroup = group,
+                groups = mutableListOf(group)
+            )
+        )
+        group.members.add(user)
+        val updatedGroup = groupRepository.save(group)
+        val updatedUser = userRepository.findByEmail(user.email)!!
+        logger.debug("Created user: $updatedUser")
+        logger.debug("Personal group: $updatedGroup")
+        return updatedUser
     }
 }
