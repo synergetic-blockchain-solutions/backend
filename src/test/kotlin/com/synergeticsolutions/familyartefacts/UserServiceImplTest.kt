@@ -77,12 +77,12 @@ class UserServiceImplIntegrationTest {
     @Autowired
     lateinit var userService: UserService
 
+    @Autowired
+    lateinit var testUtilsService: TestUtilsService
+
     @BeforeEach
     fun clearRepository() {
-        groupRepository.saveAll(groupRepository.findAll().map { it.copy(members = mutableListOf()) })
-        userRepository.saveAll(userRepository.findAll().map { it.copy(groups = mutableListOf()) })
-        groupRepository.deleteAll()
-        userRepository.deleteAll()
+        testUtilsService.clearDatabase()
     }
 
     @Test
