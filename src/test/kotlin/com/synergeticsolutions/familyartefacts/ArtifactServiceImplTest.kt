@@ -330,10 +330,110 @@ class ArtifactServiceImplTest {
 
         @Test
         fun `it should not double up if the creator's ID is specified in the owners`() {
+            Mockito.`when`(artifactRepository.save(any<Artifact>())).then { it.arguments[0] as Artifact }
+            Mockito.`when`(userRepository.existsById(anyLong())).thenReturn(true)
+            Mockito.`when`(userRepository.findByEmail(anyString()))
+                .thenReturn(
+                    User(
+                        1,
+                        "User 1",
+                        "example1@example.com",
+                        "password",
+                        privateGroup = Group(2, "Group 1", members = mutableListOf())
+                    )
+                )
+            Mockito.`when`(userRepository.findByIdOrNull(anyLong())).then {
+                User(
+                    it.arguments[0] as Long,
+                    "User ${it.arguments[0]}",
+                    "example${it.arguments[0]}@email.com",
+                    "password",
+                    privateGroup = Group(2, "Group 1", members = mutableListOf())
+                )
+            }
+            Mockito.`when`(userRepository.findAllById(any<Iterable<Long>>())).then {
+                (it.arguments[0] as Iterable<Long>).map { id ->
+                    User(
+                        id = id,
+                        name = "User $id",
+                        email = "example$id@example.com",
+                        password = "password",
+                        privateGroup = Group(
+                            2, "Group 1", members = mutableListOf()
+                        )
+                    )
+                }
+            }
+            artifactService.createArtifact(
+                "example@example.com",
+                "Artifact 1",
+                description = "Artifact description",
+                ownerIDs = listOf(1, 2, 3)
+            )
+            val argCapturer = ArgumentCaptor.forClass(Artifact::class.java)
+            Mockito.verify(artifactRepository).save(argCapturer.capture())
+            val matcher =
+                hasProperty<Artifact>(
+                    "owners",
+                    containsInAnyOrder<User>(
+                        hasProperty("id", equalTo(1L)),
+                        hasProperty("id", equalTo(2L)),
+                        hasProperty("id", equalTo(3L))
+                    )
+                )
+            assertThat(argCapturer.value, matcher)
         }
 
         @Test
         fun `it should not double up if the creator's personal group is specified in the associated groups`() {
+            Mockito.`when`(artifactRepository.save(any<Artifact>())).then { it.arguments[0] as Artifact }
+            Mockito.`when`(groupRepository.existsById(anyLong())).thenReturn(true)
+            Mockito.`when`(userRepository.findByEmail(anyString()))
+                .thenReturn(
+                    User(
+                        1,
+                        "User1",
+                        "example@example.com",
+                        "password",
+                        privateGroup = Group(2, "Group 2", members = mutableListOf())
+                    )
+                )
+            Mockito.`when`(userRepository.findByIdOrNull(anyLong())).then {
+                User(
+                    it.arguments[0] as Long,
+                    "User ${it.arguments[0]}",
+                    "example${it.arguments[0]}@email.com",
+                    "password",
+                    privateGroup = Group(2, "Group 1", members = mutableListOf())
+                )
+            }
+            Mockito.`when`(groupRepository.findAllById(any<Iterable<Long>>())).then {
+                (it.arguments[0] as Iterable<Long>).map { id ->
+                    Group(
+                        id = id,
+                        name = "Group $id",
+                        members = mutableListOf()
+                    )
+                }
+            }
+            artifactService.createArtifact(
+                "example@example.com",
+                "Artifact 1",
+                description = "Artifact description",
+                groupIDs = listOf(1, 2, 3)
+            )
+            val argCapturer = ArgumentCaptor.forClass(Artifact::class.java)
+            Mockito.verify(artifactRepository).save(argCapturer.capture())
+            val matcher =
+                hasProperty<Artifact>(
+                    "groups",
+                    containsInAnyOrder<Group>(
+                        hasProperty("id", equalTo(1L)),
+                        hasProperty("id", equalTo(2L)),
+                        hasProperty("id", equalTo(3L))
+                    )
+                )
+            assertThat(argCapturer.value, matcher)
         }
     }
 
@@ -711,6 +811,118 @@ class ArtifactServiceImplTest {
             val foundArtifacts = artifactService.findArtifactsByOwner(email, sharedID = user.id)
             val expectedArtifacts =
                 (groupArtifacts + ownerArtifacts + sharedArtifacts).filter { it.sharedWith.firstOrNull()?.id == user.id }
+            assertEquals(expectedArtifacts.size, foundArtifacts.size)
+            assertThat(foundArtifacts, containsInAnyOrder(*expectedArtifacts.toTypedArray()))
+        }
+
+        @Test
+        fun `it should not return duplicate artifacts`() {
+            val email = "example@example.com"
+            val user = User(
+                id = 1, name = "User 1", email = email, password = "password", groups = mutableListOf(
+                    Group(id = 1, name = "Group 1", members = mutableListOf())
+                ), privateGroup = Group(2, "Group 2", members = mutableListOf())
+            )
+            val groupArtifacts = listOf(
+                Artifact(
+                    1,
+                    "Artifact 1",
+                    "Description",
+                    owners = mutableListOf(),
+                    groups = mutableListOf(Group(id = 1, name = "Group 1", members = mutableListOf()))
+                ),
+                Artifact(
+                    2,
+                    "Artifact 2",
+                    "Description",
+                    owners = mutableListOf(),
+                    groups = mutableListOf(Group(id = 1, name = "Group 1", members = mutableListOf()))
+                ),
+                Artifact(
+                    3,
+                    "Artifact 3",
+                    "Description",
+                    owners = mutableListOf(),
+                    groups = mutableListOf(Group(id = 1, name = "Group 1", members = mutableListOf()))
+                ),
+                Artifact(
+                    4,
+                    "Artifact 4",
+                    "Description",
+                    owners = mutableListOf(),
+                    groups = mutableListOf(Group(id = 1, name = "Group 1", members = mutableListOf()))
+                )
+            )
+            val ownerArtifacts = listOf(
+                Artifact(
+                    1,
+                    "Artifact 1",
+                    "Description",
+                    owners = mutableListOf(),
+                    groups = mutableListOf(Group(id = 1, name = "Group 1", members = mutableListOf()))
+                ),
+                Artifact(
+                    6,
+                    "Artifact 8",
+                    "Description",
+                    owners = mutableListOf(user),
+                    groups = mutableListOf(Group(id = 2, name = "Group 2", members = mutableListOf()))
+                ),
+                Artifact(
+                    7,
+                    "Artifact 9",
+                    "Description",
+                    owners = mutableListOf(user),
+                    groups = mutableListOf(Group(id = 2, name = "Group 2", members = mutableListOf()))
+                ),
+                Artifact(
+                    8,
+                    "Artifact 10",
+                    "Description",
+                    owners = mutableListOf(user),
+                    groups = mutableListOf(Group(id = 2, name = "Group 2", members = mutableListOf()))
+                )
+            )
+            val sharedArtifacts = listOf(
+                Artifact(
+                    1,
+                    "Artifact 1",
+                    "Description",
+                    owners = mutableListOf(),
+                    groups = mutableListOf(Group(id = 1, name = "Group 1", members = mutableListOf()))
+                ),
+                Artifact(
+                    12,
+                    "Artifact 12",
+                    "Description",
+                    owners = mutableListOf(),
+                    groups = mutableListOf(Group(id = 2, name = "Group 2", members = mutableListOf())),
+                    sharedWith = mutableListOf(user)
+                ),
+                Artifact(
+                    13,
+                    "Artifact 13",
+                    "Description",
+                    owners = mutableListOf(),
+                    groups = mutableListOf(Group(id = 2, name = "Group 2", members = mutableListOf())),
+                    sharedWith = mutableListOf(user)
+                ),
+                Artifact(
+                    14,
+                    "Artifact 14",
+                    "Description",
+                    owners = mutableListOf(),
+                    groups = mutableListOf(Group(id = 2, name = "Group 2", members = mutableListOf())),
+                    sharedWith = mutableListOf(user)
+                )
+            )
+            Mockito.`when`(userRepository.findByEmail(email)).thenReturn(user)
+            Mockito.`when`(artifactRepository.findByGroups_Id(anyLong())).thenReturn(groupArtifacts)
+            Mockito.`when`(artifactRepository.findByOwners_Email(anyString())).thenReturn(ownerArtifacts)
+            Mockito.`when`(artifactRepository.findBySharedWith_Email(anyString())).thenReturn(sharedArtifacts)
+
+            val foundArtifacts = artifactService.findArtifactsByOwner(email)
+            val expectedArtifacts = (groupArtifacts + ownerArtifacts + sharedArtifacts).toSet().toList()
             assertEquals(expectedArtifacts.size, foundArtifacts.size)
             assertThat(foundArtifacts, containsInAnyOrder(*expectedArtifacts.toTypedArray()))
         }
