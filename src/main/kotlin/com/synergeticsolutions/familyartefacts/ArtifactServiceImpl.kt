@@ -68,8 +68,8 @@ class ArtifactServiceImpl(
         )
         val savedArtifact = artifactRepository.save(artifact)
 
-        creator.ownedArtifacts.add(savedArtifact)
-        userRepository.save(creator)
+        owners.forEach { it.ownedArtifacts.add(savedArtifact) }
+        userRepository.saveAll(owners)
 
         groups.forEach { it.artifacts.add(savedArtifact) }
         groupRepository.saveAll(groups)
