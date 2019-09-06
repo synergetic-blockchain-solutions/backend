@@ -8,9 +8,12 @@ import javax.persistence.GeneratedValue
 import javax.persistence.GenerationType
 import javax.persistence.Id
 import javax.persistence.ManyToMany
+import javax.persistence.OneToOne
 import javax.persistence.Table
 import org.hibernate.annotations.LazyCollection
 import org.hibernate.annotations.LazyCollectionOption
+import org.hibernate.annotations.LazyToOne
+import org.hibernate.annotations.LazyToOneOption
 
 /**
  * The [User] entity is a representation of registered users.
@@ -38,16 +41,20 @@ data class User(
     @LazyCollection(value = LazyCollectionOption.FALSE)
     var groups: MutableList<Group> = mutableListOf(),
     @JsonManagedReference
+    @LazyCollection(value = LazyCollectionOption.FALSE)
     @ManyToMany
     val sharedArtifacts: MutableList<Artifact> = mutableListOf(),
     @JsonManagedReference
     @LazyCollection(value = LazyCollectionOption.FALSE)
     @ManyToMany
-    val ownedArtifacts: MutableList<Artifact> = mutableListOf()
+    val ownedArtifacts: MutableList<Artifact> = mutableListOf(),
+    @OneToOne
+    @LazyToOne(value = LazyToOneOption.FALSE)
+    val privateGroup: Group
 ) {
     override fun toString(): String {
         return "User(id=$id, name=$name, email=$email, password=$password, groups=${groups.map(Group::id)}, sharedArtifacts=${sharedArtifacts.map(
             Artifact::id
-        )}, ownedArtifacts=${ownedArtifacts.map(Artifact::id)}"
+        )}, ownedArtifacts=${ownedArtifacts.map(Artifact::id)}, privateGroup=${privateGroup.id})                                                                "
     }
 }

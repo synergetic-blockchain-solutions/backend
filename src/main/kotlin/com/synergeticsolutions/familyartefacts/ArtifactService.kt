@@ -11,8 +11,8 @@ interface ArtifactService {
         email: String,
         name: String,
         description: String,
-        ownerIDs: List<Long>,
-        groupIDs: List<Long>,
-        sharedWith: List<Long>
+        ownerIDs: List<Long> = listOf(),
+        groupIDs: List<Long> = listOf(),
+        sharedWith: List<Long> = listOf()
     ): Artifact
 }
