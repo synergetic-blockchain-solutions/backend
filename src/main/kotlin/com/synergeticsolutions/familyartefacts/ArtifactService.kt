@@ -1,7 +1,12 @@
 package com.synergeticsolutions.familyartefacts
 
 interface ArtifactService {
-    fun findArtifactsByOwner(email: String, groupID: Long?, ownerID: Long?, sharedID: Long?): List<Artifact>
+    fun findArtifactsByOwner(
+        email: String,
+        groupID: Long? = null,
+        ownerID: Long? = null,
+        sharedID: Long? = null
+    ): List<Artifact>
     fun createArtifact(
         email: String,
         name: String,
