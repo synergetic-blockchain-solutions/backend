@@ -7,7 +7,6 @@ import org.hamcrest.Matchers.containsInAnyOrder
 import org.hamcrest.Matchers.hasEntry
 import org.hamcrest.collection.IsCollectionWithSize.hasSize
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
@@ -245,9 +244,8 @@ class ArtifactControllerTest {
             assertEquals(returnedArtifact["name"] as String, artifactRequest.name)
             assertEquals(returnedArtifact["description"] as String, artifactRequest.description)
 
-            val createdArtifact = artifactRepository.findByIdOrNull((returnedArtifact["id"] as Int).toLong())
-            assertNotNull(createdArtifact)
-            assertEquals(mutableListOf(userRepository.findByEmail(email)!!.id), createdArtifact!!.owners.map(User::id))
+            val createdArtifact = artifactRepository.findByIdOrNull((returnedArtifact["id"] as Int).toLong())!!
+            assertEquals(mutableListOf(userRepository.findByEmail(email)!!.id), createdArtifact.owners.map(User::id))
         }
     }
 }
