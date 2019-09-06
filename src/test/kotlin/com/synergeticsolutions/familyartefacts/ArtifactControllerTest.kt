@@ -21,7 +21,7 @@ import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@AutoConfigureWebTestClient(timeout = "36000")
+@AutoConfigureWebTestClient
 class ArtifactControllerTest {
     @Autowired
     lateinit var client: WebTestClient
