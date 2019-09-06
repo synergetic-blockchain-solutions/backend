@@ -436,7 +436,7 @@ class ArtifactServiceImplTest {
             val user = User(
                 id = 1, name = "User 1", email = email, password = "password", groups = mutableListOf(
                     Group(id = 1, name = "Group 1", members = mutableListOf())
-                )
+                ), privateGroup = Group(2, "Group 2", members = mutableListOf())
             )
             val groupArtifacts = listOf(
                 Artifact(
