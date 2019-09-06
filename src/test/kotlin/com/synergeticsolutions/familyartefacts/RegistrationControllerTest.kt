@@ -147,12 +147,11 @@ class RegistrationControllerTest {
         val user = ObjectMapper().registerKotlinModule().readValue<Map<String, Any>>(body)
 
         @Suppress("UNCHECKED_CAST")
-        val usersGroups = user["groups"] as List<Map<String, Any>>
-        assertEquals(usersGroups.size, 1)
+        val privateGroup = user["privateGroup"] as Map<String, Any>
 
-        val groupId = (usersGroups.first().getValue("id") as Int).toLong()
+        val groupId = (privateGroup.getValue("id") as Int).toLong()
         val group = groupRepository.findByIdOrNull(groupId)!!
-        assertEquals(group.members.size, 1)
+        assertEquals(1, group.members.size)
         assertEquals(group.members.first().id, (user["id"] as Int).toLong())
     }
 }

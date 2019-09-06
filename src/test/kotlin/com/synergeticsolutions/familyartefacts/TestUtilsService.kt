@@ -34,8 +34,8 @@ class TestUtilsService(
                 owners = mutableListOf()
             )
         })
-        groupRepository.deleteAll()
         userRepository.deleteAll()
+        groupRepository.deleteAll()
         artifactRepository.deleteAll()
     }
 }

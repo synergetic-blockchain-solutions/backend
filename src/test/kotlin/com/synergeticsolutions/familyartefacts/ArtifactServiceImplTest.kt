@@ -10,7 +10,10 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
+import org.mockito.ArgumentCaptor
+import org.mockito.ArgumentMatchers.any
 import org.mockito.ArgumentMatchers.anyLong
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mockito
@@ -32,22 +35,110 @@ class ArtifactServiceImplTest {
 
         @Test
         fun `it should not create the artifact if the creating user's email are not actual users`() {
+            Mockito.`when`(userRepository.findByEmail(anyString())).thenReturn(null)
+            assertThrows<UserNotFoundException> {
+                artifactService.createArtifact(
+                    "example@example.com",
+                    "Artifact 1",
+                    description = "Artifact description"
+                )
+            }
         }
 
         @Test
         fun `it should not create the artifact if one of the owning users' IDs are not in the database`() {
+            Mockito.`when`(userRepository.findByEmail(anyString()))
+                .thenReturn(
+                    User(
+                        1,
+                        "User1",
+                        "example@example.com",
+                        "password",
+                        privateGroup = Group(1, "Group1", members = mutableListOf())
+                    )
+                )
+            Mockito.`when`(userRepository.findByIdOrNull(anyLong())).thenReturn(null)
+            assertThrows<UserNotFoundException> {
+                artifactService.createArtifact(
+                    "example@example.com",
+                    "Artifact 1",
+                    description = "Artifact description",
+                    ownerIDs = listOf(2)
+                )
+            }
         }
 
         @Test
         fun `it should not create the artifact if one of the associated group IDs do not exist`() {
+            Mockito.`when`(userRepository.findByEmail(anyString()))
+                .thenReturn(
+                    User(
+                        1,
+                        "User1",
+                        "example@example.com",
+                        "password",
+                        privateGroup = Group(1, "Group1", members = mutableListOf())
+                    )
+                )
+            Mockito.`when`(groupRepository.findByIdOrNull(anyLong())).thenReturn(null)
+            assertThrows<GroupNotFoundException> {
+                artifactService.createArtifact(
+                    "example@example.com",
+                    "Artifact 1",
+                    description = "Artifact description",
+                    groupIDs = listOf(2)
+                )
+            }
         }
 
         @Test
         fun `it should not create the artifact if one of the shared user's IDs do not exist`() {
+            Mockito.`when`(userRepository.findByEmail(anyString()))
+                .thenReturn(
+                    User(
+                        1,
+                        "User1",
+                        "example@example.com",
+                        "password",
+                        privateGroup = Group(
+                            1, "Group 1", members = mutableListOf()
+                        )
+                    )
+                )
+            Mockito.`when`(userRepository.findByIdOrNull(anyLong())).thenReturn(null)
+            assertThrows<UserNotFoundException> {
+                artifactService.createArtifact(
+                    "example@example.com",
+                    "Artifact 1",
+                    description = "Artifact description",
+                    sharedWith = listOf(2)
+                )
+            }
         }
 
         @Test
         fun `it should include the creator as one of the artifact owners`() {
+            Mockito.`when`(artifactRepository.save(any<Artifact>())).then { it.arguments[0] as Artifact }
+            Mockito.`when`(userRepository.findByEmail(anyString()))
+                .thenReturn(
+                    User(
+                        1,
+                        "User1",
+                        "example@example.com",
+                        "password",
+                        privateGroup = Group(1, "Group 1", members = mutableListOf())
+                    )
+                )
+            Mockito.`when`(userRepository.findByIdOrNull(anyLong())).thenReturn(null)
+            artifactService.createArtifact(
+                "example@example.com",
+                "Artifact 1",
+                description = "Artifact description"
+            )
+            val argCapturer = ArgumentCaptor.forClass(Artifact::class.java)
+            Mockito.verify(artifactRepository).save(argCapturer.capture())
+            val matcher = hasProperty<Artifact>("owners", contains(hasProperty("id", equalTo(1L))))
+            assertThat(argCapturer.value, matcher)
         }
 
         @Test
@@ -64,6 +155,14 @@ class ArtifactServiceImplTest {
 
         @Test
         fun `it should share the artifact with the specified user IDs`() {
+        }
+
+        @Test
+        fun `it should not double up if the creator's ID is specified in the owners`() {
+        }
+
+        @Test
+        fun `it should not double up if the creator's personal group is specified in the associated groups`() {
         }
     }
 
@@ -96,7 +195,7 @@ class ArtifactServiceImplTest {
                     User(
                         id = 1, name = "User 1", email = email, password = "password", groups = mutableListOf(
                             Group(id = 1, name = "Group 1", members = mutableListOf())
-                        )
+                        ), privateGroup = Group(2, "Group 2", members = mutableListOf())
                     )
                 )
             Mockito.`when`(artifactRepository.findByGroups_Id(anyLong())).thenReturn(groupArtifacts)
@@ -207,7 +306,7 @@ class ArtifactServiceImplTest {
                     User(
                         id = 1, name = "User 1", email = email, password = "password", groups = mutableListOf(
                             Group(id = 1, name = "Group 1", members = mutableListOf())
-                        )
+                        ), privateGroup = Group(2, "Group 2", members = mutableListOf())
                     )
                 )
             Mockito.`when`(artifactRepository.findByGroups_Id(anyLong())).thenReturn(groupArtifacts)
@@ -227,7 +326,7 @@ class ArtifactServiceImplTest {
             val user = User(
                 id = 1, name = "User 1", email = email, password = "password", groups = mutableListOf(
                     Group(id = 1, name = "Group 1", members = mutableListOf())
-                )
+                ), privateGroup = Group(2, "Group 2", members = mutableListOf())
             )
             val groupArtifacts = listOf<Artifact>(
                 Artifact(
