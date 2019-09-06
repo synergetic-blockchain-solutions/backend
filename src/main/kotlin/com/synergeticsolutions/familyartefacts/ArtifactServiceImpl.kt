@@ -55,11 +55,16 @@ class ArtifactServiceImpl(
         }
 
         val owners = userRepository.findAllById(ownerIDs).toMutableList()
-        val groups = groupRepository.findAllById(groupIDs)
+        val groups = groupRepository.findAllById(groupIDs).toMutableList()
         val shares = userRepository.findAllById(sharedWith)
 
-        owners.add(creator)
-        groups.add(creator.privateGroup)
+        if (!owners.contains(creator)) {
+            owners.add(creator)
+        }
+
+        if (!groups.contains(creator.privateGroup)) {
+            groups.add(creator.privateGroup)
+        }
         val artifact = Artifact(
             name = name,
             description = description,
@@ -97,7 +102,7 @@ class ArtifactServiceImpl(
         val groupsArtifacts = user.groups.map(Group::id).flatMap(artifactRepository::findByGroups_Id)
         val sharedArtifacts = artifactRepository.findBySharedWith_Email(email)
 
-        var artifacts = ownedArtifacts + groupsArtifacts + sharedArtifacts
+        var artifacts = ownedArtifacts.union(groupsArtifacts).union(sharedArtifacts).toList()
 
         if (groupID != null) {
             artifacts = artifacts.filter { it.groups.map(Group::id).contains(groupID) }
