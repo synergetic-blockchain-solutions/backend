@@ -45,7 +45,7 @@ class ArtifactServiceImpl(
             userRepository.findByEmail(email) ?: throw UserNotFoundException("No user with email $email was found")
         (ownerIDs + sharedWith).forEach {
             if (!userRepository.existsById(it)) {
-                throw UserNotFoundException("Not user with ID $it was found")
+                throw UserNotFoundException("No user with ID $it was found")
             }
         }
         groupIDs.forEach {
