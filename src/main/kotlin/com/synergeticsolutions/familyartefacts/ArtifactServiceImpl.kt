@@ -1,9 +1,9 @@
 package com.synergeticsolutions.familyartefacts
 
-import javax.transaction.Transactional
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.data.repository.findByIdOrNull
 import org.springframework.security.core.userdetails.UsernameNotFoundException
 import org.springframework.stereotype.Service
 
@@ -11,7 +11,6 @@ import org.springframework.stereotype.Service
  * Service for performing actions with artifacts.
  */
 @Service
-@Transactional
 class ArtifactServiceImpl(
     @Autowired
     val artifactRepository: ArtifactRepository,
@@ -74,9 +73,11 @@ class ArtifactServiceImpl(
         )
         val savedArtifact = artifactRepository.save(artifact)
 
+        logger.debug("Making $owners the owners of $savedArtifact")
         owners.forEach { it.ownedArtifacts.add(savedArtifact) }
         userRepository.saveAll(owners)
 
+        logger.debug("Adding $savedArtifact to $groups")
         groups.forEach { it.artifacts.add(savedArtifact) }
         groupRepository.saveAll(groups)
 
@@ -117,5 +118,60 @@ class ArtifactServiceImpl(
         }
 
         return artifacts
+    }
+
+    /**
+     * [updateArtifact] updates the artifact with [id] using [update]. To update an artifact, the user (determined
+     * by [email]) must be an owner of the artifact. Except in the case where the user is the owner of a group and
+     * removing the artifact from a group, in this case updating the artifact is allowed.
+     *
+     * @param email Email of the user doing the update
+     * @param id ID of the artifact being updated
+     * @param update Update of the artifact
+     * @return Updated artifact
+     */
+    override fun updateArtifact(email: String, id: Long, update: ArtifactRequest): Artifact {
+        val artifact =
+            artifactRepository.findByIdOrNull(id)
+                ?: throw ArtifactNotFoundException("Could not find artifact with ID $id")
+        val user =
+            userRepository.findByEmail(email) ?: throw UserNotFoundException("User with email $email does not exist")
+        if (!artifact.owners.contains(user)) {
+            throw ActionNotAllowedException("User ${user.id} is not an owner of artifact $id")
+        }
+        val owners = userRepository.findAllById(update.owners ?: listOf()).toMutableList()
+        val groups = groupRepository.findAllById(update.groups ?: listOf()).toMutableList()
+        val shares = userRepository.findAllById(update.sharedWith ?: listOf())
+        return artifact.copy(
+            name = update.name,
+            description = update.description,
+            owners = owners,
+            groups = groups,
+            sharedWith = shares
+        )
+    }
+
+    /**
+     * [deleteArtifact] deletes artifact with [id]. This action is only allowable by users who are owners of the
+     * artifact.
+     *
+     * @param email Email of the user doing the deleting
+     * @param id ID of the artifact to delete
+     * @return delete [Artifact]
+     */
+    override fun deleteArtifact(email: String, id: Long): Artifact {
+        val user =
+            userRepository.findByEmail(email) ?: throw UserNotFoundException("User with email $email does not exist")
+        val artifact =
+            artifactRepository.findByIdOrNull(id)
+                ?: throw ArtifactNotFoundException("Could not find artifact with ID $id")
+        if (!artifact.owners.contains(user)) {
+            throw ActionNotAllowedException("User ${user.id} is not an owner of artifact $id")
+        }
+        artifact.owners.forEach { it.ownedArtifacts.remove(artifact) }
+        artifact.groups.forEach { it.artifacts.remove(artifact) }
+        artifact.sharedWith.forEach { it.sharedArtifacts.remove(artifact) }
+        artifactRepository.delete(artifact)
+        return artifact
     }
 }

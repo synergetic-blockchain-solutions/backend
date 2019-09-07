@@ -7,6 +7,7 @@ interface ArtifactService {
         ownerID: Long? = null,
         sharedID: Long? = null
     ): List<Artifact>
+
     fun createArtifact(
         email: String,
         name: String,
@@ -15,4 +16,8 @@ interface ArtifactService {
         groupIDs: List<Long> = listOf(),
         sharedWith: List<Long> = listOf()
     ): Artifact
+
+    fun updateArtifact(email: String, id: Long, update: ArtifactRequest): Artifact
+
+    fun deleteArtifact(email: String, id: Long): Artifact
 }

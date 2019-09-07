@@ -6,8 +6,11 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.context.SecurityContextHolder
+import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
@@ -71,6 +74,38 @@ class ArtifactController(
         )
         logger.info("Created artifact $createdArtifact")
         return ResponseEntity.status(HttpStatus.CREATED).body(createdArtifact)
+    }
+
+    /**
+     * PUT /artifact/{id}
+     *
+     * Update the artifact with [id]. Generally modification of artifacts is only available to users who are owners of
+     * the artifact. However, if the user is the owner a group the artifact is associated with, they can remove that
+     * group from the collection of associated groups.
+     *
+     * @return [Artifact] representing the updated artifact
+     */
+    @PutMapping(path = ["/{id}"])
+    fun updateArtifact(@PathVariable id: Long, @RequestBody artifact: ArtifactRequest): ResponseEntity<Artifact> {
+        val currentUser = SecurityContextHolder.getContext().authentication ?: throw NoAuthenticationException()
+        val updatedArtifact = artifactService.updateArtifact(currentUser.principal as String, id, artifact)
+        logger.info("Updated artifact $updatedArtifact")
+        return ResponseEntity.ok(updatedArtifact)
+    }
+
+    /**
+     * Delete /artifact/{id}
+     *
+     * Delete the artifact with [id]. This endpoint is only usable by users who are owners of the artifact.
+     *
+     * @return [Artifact] representing the deleted artifact
+     */
+    @DeleteMapping(path = ["/{id}"])
+    fun deleteArtifact(@PathVariable id: Long): ResponseEntity<Artifact> {
+        val currentUser = SecurityContextHolder.getContext().authentication ?: throw NoAuthenticationException()
+        val deletedArtifact = artifactService.deleteArtifact(currentUser.principal as String, id)
+        logger.info("Deleted artifact $deletedArtifact")
+        return ResponseEntity.ok(deletedArtifact)
     }
 }
 
