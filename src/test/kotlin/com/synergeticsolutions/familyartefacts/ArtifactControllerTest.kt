@@ -218,7 +218,7 @@ class ArtifactControllerTest {
     }
 
     @Nested
-    inner class Post {
+    inner class CreateArtifact {
         @Test
         fun `it should create the artifact`() {
             val artifactRequest = ArtifactRequest(
@@ -246,6 +246,40 @@ class ArtifactControllerTest {
 
             val createdArtifact = artifactRepository.findByIdOrNull((returnedArtifact["id"] as Int).toLong())!!
             assertEquals(mutableListOf(userRepository.findByEmail(email)!!.id), createdArtifact.owners.map(User::id))
+        }
+
+        @Nested
+        inner class UpdateArtifact {
+            @Test
+            fun `it should allow owners to update the artifact`() {
+            }
+
+            @Test
+            fun `it should allow group owners to remove the artifact from the group`() {
+            }
+
+            @Test
+            fun `it should not allow normal users to update the artifact`() {
+            }
+
+            @Test
+            fun `it should return the updated version of the artifact`() {
+            }
+        }
+
+        @Nested
+        inner class DeleteArtifact {
+            @Test
+            fun `it should allow owners to delete the artifact`() {
+            }
+
+            @Test
+            fun `it should not allow normal users to delete the artifact`() {
+            }
+
+            @Test
+            fun `it should return the delete artifact`() {
+            }
         }
     }
 }
