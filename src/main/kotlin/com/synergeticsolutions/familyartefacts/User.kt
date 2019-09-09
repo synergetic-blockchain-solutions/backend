@@ -34,8 +34,11 @@ data class User(
     @field:JsonIgnore
     val password: String,
     @JsonManagedReference
-    @ManyToMany(cascade = [CascadeType.ALL], fetch = FetchType.EAGER)
-    var groups: List<Group> = listOf()
+    @ManyToMany
+    var groups: MutableList<Group> = mutableListOf(),
+    @JsonManagedReference
+    @ManyToMany
+    val ownedGroups: MutableList<Group> = mutableListOf()
 ) {
     override fun toString(): String {
         return "User $id"

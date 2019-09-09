@@ -22,8 +22,8 @@ class LoginTest() {
 
     @BeforeEach
     fun clearRepository() {
-        groupRepository.saveAll(groupRepository.findAll().map { it.copy(members = listOf()) })
-        userRepository.saveAll(userRepository.findAll().map { it.copy(groups = listOf()) })
+        groupRepository.saveAll(groupRepository.findAll().map { it.copy(members = mutableListOf()) })
+        userRepository.saveAll(userRepository.findAll().map { it.copy(groups = mutableListOf()) })
         groupRepository.deleteAll()
         userRepository.deleteAll()
     }
