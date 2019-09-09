@@ -114,31 +114,43 @@ class GroupServiceImpl(
         userRepository.saveAll(newAdmins)
     }
 
-    override fun removeMembers(membersToRemove: List<User>, groupID: Long) {
+    override fun removeMembers(memberIDs: List<Long>, groupID: Long) {
         val group = groupRepository.findByIdOrNull(groupID) ?: throw GroupNotFoundException("No group with id $groupID was found")
+        memberIDs.forEach{
+            if (!userRepository.existsById(it)) {
+                throw UserNotFoundException("No user with ID $it was found")
+            }
+        }
+        val membersToRemove = userRepository.findAllById(memberIDs).toMutableList()
         membersToRemove.forEach {
             if (group.members.contains(it)) {
                 group.members.remove(it)
                 it.groups.remove(group)
-                userRepository.save(it)
             } else {
                 throw MemberNotInGroupException("Member ${it.name} not in group")
             }
         }
+        userRepository.saveAll(membersToRemove)
         groupRepository.save(group)
     }
 
-    override fun removeAdmins(adminsToRemove: List<User>, groupID: Long) {
+    override fun removeAdmins(adminIDs: List<Long>, groupID: Long) {
         val group = groupRepository.findByIdOrNull(groupID) ?: throw GroupNotFoundException("No group with id $groupID was found")
+        adminIDs.forEach{
+            if (!userRepository.existsById(it)) {
+                throw UserNotFoundException("No user with ID $it was found")
+            }
+        }
+        val adminsToRemove = userRepository.findAllById(adminIDs).toMutableList()
         adminsToRemove.forEach {
             if (group.admins.contains(it)) {
                 group.admins.remove(it)
                 it.ownedGroups.remove(group)
-                userRepository.save(it)
             } else {
                 throw MemberNotInGroupException("Member ${it.name} not in group")
             }
         }
+        userRepository.saveAll(adminsToRemove)
         groupRepository.save(group)
     }
 
