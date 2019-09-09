@@ -9,7 +9,7 @@ interface GroupService {
     ): Group
     fun addMembers(newMemberIDs: List<Long>, groupID: Long)
     fun addAdmins(newAdminIDs: List<Long>, groupID: Long)
-    fun removeMembers(membersToRemove: List<User>, groupID: Long)
-    fun removeAdmins(adminsToRemove: List<User>, groupID: Long)
+    fun removeMembers(membersToRemove: List<Long>, groupID: Long)
+    fun removeAdmins(adminsToRemove: List<Long>, groupID: Long)
     fun findGroups(email: String, ownerID: Long?, memberID: Long?): List<Group>
 }
