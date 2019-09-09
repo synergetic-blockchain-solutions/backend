@@ -7,6 +7,9 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.web.bind.annotation.*
+import javax.naming.AuthenticationException
+
+class NoAuthenticationException() : AuthenticationException()
 
 @RestController
 @RequestMapping(path = ["/group"])
@@ -34,7 +37,7 @@ class GroupController(
     fun createGroup(
             @RequestBody groupRequest: GroupRequest
     ): ResponseEntity<Group> {
-        val currentUser = SecurityContextHolder.getContext().authentication
+        val currentUser = SecurityContextHolder.getContext().authentication ?: throw NoAuthenticationException()
         val newGroup =
                 groupService.createGroup(
                         email = currentUser.principal as String,
@@ -45,8 +48,12 @@ class GroupController(
         return ResponseEntity.status(HttpStatus.CREATED).body(newGroup)
     }
 
+
 }
-    data class GroupRequest(
+
+
+
+data class GroupRequest(
             val name: String,
             val description: String,
             val members: List<Long>?
