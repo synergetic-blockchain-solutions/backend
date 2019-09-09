@@ -7,7 +7,7 @@ import org.springframework.data.repository.findByIdOrNull
 import org.springframework.security.core.userdetails.UsernameNotFoundException
 import org.springframework.stereotype.Service
 
-class MemberNotInGroupException(msg: String) : RuntimeException(msg)
+class UserNotMemberOrAdminException(msg: String) : RuntimeException(msg)
 class GroupNotFoundException(msg: String) : RuntimeException(msg)
 class UserNotFoundException(msg: String) : RuntimeException(msg)
 class MemberAlreadyInGroupException(msg: String) : RuntimeException(msg)
@@ -76,7 +76,7 @@ class GroupServiceImpl(
         newMembers.forEach {
             if (!group.members.contains(it)) {
                 group.members.add(it)
-            } else throw MemberAlreadyInGroupException("Member with ID ${it.id} is already in the group")
+            } else throw MemberAlreadyInGroupException("Member with name ${it.name} is already in the group")
         }
         groupRepository.save(group)
         newMembers.forEach {
@@ -95,7 +95,7 @@ class GroupServiceImpl(
         val newAdmins = userRepository.findAllById(newAdminIDs).toMutableList()
         newAdmins.forEach {
             if (!group.members.contains(it)) {
-                throw MemberNotInGroupException("User with ID ${it.id} is not a member")
+                throw UserNotMemberOrAdminException("User with ID ${it.id} is not a member")
             } else {
                 if (group.admins.contains(it)) {
                     throw MemberIsAlreadyAdminException("User with ID ${it.id} is already an admin")
@@ -124,7 +124,7 @@ class GroupServiceImpl(
                 group.members.remove(it)
                 it.groups.remove(group)
             } else {
-                throw MemberNotInGroupException("Member ${it.name} not in group")
+                throw UserNotMemberOrAdminException("Member ${it.name} not in group")
             }
         }
         userRepository.saveAll(membersToRemove)
@@ -144,7 +144,7 @@ class GroupServiceImpl(
                 group.admins.remove(it)
                 it.ownedGroups.remove(group)
             } else {
-                throw MemberNotInGroupException("Member ${it.name} not in group")
+                throw UserNotMemberOrAdminException("Member ${it.name} is not an admin")
             }
         }
         userRepository.saveAll(adminsToRemove)
