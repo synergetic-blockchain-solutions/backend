@@ -278,7 +278,7 @@ class ArtifactControllerTest {
             }
 
             @Test
-            fun `it should return the delete artifact`() {
+            fun `it should return the deleted artifact`() {
             }
         }
     }
