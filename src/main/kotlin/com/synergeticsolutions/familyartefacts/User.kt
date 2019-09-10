@@ -1,7 +1,9 @@
 package com.synergeticsolutions.familyartefacts
 
+import com.fasterxml.jackson.annotation.JsonIdentityInfo
+import com.fasterxml.jackson.annotation.JsonIdentityReference
 import com.fasterxml.jackson.annotation.JsonIgnore
-import com.fasterxml.jackson.annotation.JsonManagedReference
+import com.fasterxml.jackson.annotation.ObjectIdGenerators
 import javax.persistence.Column
 import javax.persistence.Entity
 import javax.persistence.GeneratedValue
@@ -36,17 +38,20 @@ data class User(
     val email: String,
     @field:JsonIgnore
     val password: String,
-    @JsonManagedReference
     @ManyToMany
     @LazyCollection(value = LazyCollectionOption.FALSE)
+    @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator::class, property = "id")
+    @JsonIdentityReference(alwaysAsId = true)
     var groups: MutableList<Group> = mutableListOf(),
-    @JsonManagedReference
     @LazyCollection(value = LazyCollectionOption.FALSE)
     @ManyToMany
+    @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator::class, property = "id")
+    @JsonIdentityReference(alwaysAsId = true)
     val sharedArtifacts: MutableList<Artifact> = mutableListOf(),
-    @JsonManagedReference
     @LazyCollection(value = LazyCollectionOption.FALSE)
     @ManyToMany
+    @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator::class, property = "id")
+    @JsonIdentityReference(alwaysAsId = true)
     val ownedArtifacts: MutableList<Artifact> = mutableListOf(),
     @OneToOne
     @LazyToOne(value = LazyToOneOption.FALSE)

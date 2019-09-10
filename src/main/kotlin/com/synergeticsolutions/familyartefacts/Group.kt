@@ -1,7 +1,8 @@
 package com.synergeticsolutions.familyartefacts
 
-import com.fasterxml.jackson.annotation.JsonBackReference
-import com.fasterxml.jackson.annotation.JsonManagedReference
+import com.fasterxml.jackson.annotation.JsonIdentityInfo
+import com.fasterxml.jackson.annotation.JsonIdentityReference
+import com.fasterxml.jackson.annotation.ObjectIdGenerators
 import javax.persistence.Entity
 import javax.persistence.GeneratedValue
 import javax.persistence.GenerationType
@@ -25,13 +26,15 @@ data class Group(
     @GeneratedValue(strategy = GenerationType.AUTO)
     val id: Long = 0,
     val name: String,
-    @JsonBackReference(value = "groups-members")
     @LazyCollection(value = LazyCollectionOption.FALSE)
     @ManyToMany(mappedBy = "groups")
+    @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator::class, property = "id")
+    @JsonIdentityReference(alwaysAsId = true)
     val members: MutableList<User>,
-    @JsonManagedReference
     @LazyCollection(value = LazyCollectionOption.FALSE)
     @ManyToMany
+    @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator::class, property = "id")
+    @JsonIdentityReference(alwaysAsId = true)
     val artifacts: MutableList<Artifact> = mutableListOf()
 ) {
     override fun toString(): String {

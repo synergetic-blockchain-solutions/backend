@@ -1,6 +1,8 @@
 package com.synergeticsolutions.familyartefacts
 
-import com.fasterxml.jackson.annotation.JsonBackReference
+import com.fasterxml.jackson.annotation.JsonIdentityInfo
+import com.fasterxml.jackson.annotation.JsonIdentityReference
+import com.fasterxml.jackson.annotation.ObjectIdGenerators
 import javax.persistence.Entity
 import javax.persistence.GeneratedValue
 import javax.persistence.GenerationType
@@ -18,17 +20,20 @@ data class Artifact(
     val id: Long = 0,
     val name: String,
     val description: String,
-    @JsonBackReference(value = "ownedArtifacts-owners")
     @LazyCollection(value = LazyCollectionOption.FALSE)
     @ManyToMany(mappedBy = "ownedArtifacts")
+    @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator::class, property = "id")
+    @JsonIdentityReference(alwaysAsId = true)
     val owners: MutableList<User>,
-    @JsonBackReference(value = "artifacts-groups")
     @LazyCollection(value = LazyCollectionOption.FALSE)
     @ManyToMany(mappedBy = "artifacts")
+    @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator::class, property = "id")
+    @JsonIdentityReference(alwaysAsId = true)
     val groups: MutableList<Group>,
-    @JsonBackReference(value = "sharedArtifacts-sharedWith")
     @LazyCollection(value = LazyCollectionOption.FALSE)
     @ManyToMany(mappedBy = "sharedArtifacts")
+    @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator::class, property = "id")
+    @JsonIdentityReference(alwaysAsId = true)
     val sharedWith: MutableList<User> = mutableListOf()
 ) {
     override fun toString(): String {
