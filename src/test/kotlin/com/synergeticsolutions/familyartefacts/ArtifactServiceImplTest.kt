@@ -927,6 +927,36 @@ class ArtifactServiceImplTest {
             assertThat(foundArtifacts, containsInAnyOrder(*expectedArtifacts.toTypedArray()))
         }
     }
+
+    @Nested
+    inner class UpdateArtifact {
+        @Test
+        fun `it should not allow users without permission to modify the artifact`() {
+        }
+
+        @Test
+        fun `it should allow group owners to remove their group from the artifact`() {
+        }
+
+        @Test
+        fun `it should not allow group owners to make changes except for their group`() {
+        }
+
+        @Test
+        fun `it should allow artifact owners to make changes to the artifact`() {
+        }
+    }
+
+    @Nested
+    inner class DeleteArtifact {
+        @Test
+        fun `it should not allow user's who are not the artifact's owners to delete it`() {
+        }
+
+        @Test
+        fun `it should allow the artifact's owners to delete it`() {
+        }
+    }
 }
 
 @SpringBootTest
