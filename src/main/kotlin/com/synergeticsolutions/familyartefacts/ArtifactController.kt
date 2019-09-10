@@ -94,7 +94,7 @@ class ArtifactController(
     }
 
     /**
-     * Delete /artifact/{id}
+     * DELETE /artifact/{id}
      *
      * Delete the artifact with [id]. This endpoint is only usable by users who are owners of the artifact.
      *
