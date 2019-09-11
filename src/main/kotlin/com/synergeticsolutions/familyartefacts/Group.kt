@@ -1,6 +1,11 @@
 package com.synergeticsolutions.familyartefacts
 
 import com.fasterxml.jackson.annotation.JsonBackReference
+import com.fasterxml.jackson.annotation.JsonIdentityInfo
+import com.fasterxml.jackson.annotation.JsonIdentityReference
+import com.fasterxml.jackson.annotation.ObjectIdGenerators
+import org.hibernate.annotations.LazyCollection
+import org.hibernate.annotations.LazyCollectionOption
 import javax.persistence.CascadeType
 import javax.persistence.Entity
 import javax.persistence.FetchType
@@ -25,11 +30,15 @@ data class Group(
     val id: Long = 0,
     val name: String,
     val description: String,
-    @JsonBackReference
-    @ManyToMany
+    @LazyCollection(value = LazyCollectionOption.FALSE)
+    @ManyToMany(mappedBy = "groups")
+    @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator::class, property = "id")
+    @JsonIdentityReference(alwaysAsId = true)
     var members: MutableList<User> = mutableListOf(),
-    @JsonBackReference
-    @ManyToMany
+    @LazyCollection(value = LazyCollectionOption.FALSE)
+    @ManyToMany(mappedBy = "ownedGroups")
+    @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator::class, property = "id")
+    @JsonIdentityReference(alwaysAsId = true)
     var admins: MutableList<User> = mutableListOf()
 ) {
     override fun toString(): String {

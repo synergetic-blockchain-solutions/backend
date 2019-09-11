@@ -1,16 +1,12 @@
 package com.synergeticsolutions.familyartefacts
 
-import com.fasterxml.jackson.annotation.JsonIgnore
-import com.fasterxml.jackson.annotation.JsonManagedReference
-import javax.persistence.CascadeType
-import javax.persistence.Column
-import javax.persistence.Entity
-import javax.persistence.FetchType
-import javax.persistence.GeneratedValue
-import javax.persistence.GenerationType
-import javax.persistence.Id
-import javax.persistence.ManyToMany
-import javax.persistence.Table
+import com.fasterxml.jackson.annotation.*
+import org.hibernate.annotations.LazyCollection
+import org.hibernate.annotations.LazyCollectionOption
+import org.hibernate.annotations.LazyToOne
+import org.hibernate.annotations.LazyToOneOption
+import org.springframework.data.jpa.domain.AbstractPersistable_.id
+import javax.persistence.*
 
 /**
  * The [User] entity is a representation of registered users.
@@ -33,12 +29,19 @@ data class User(
     val email: String,
     @field:JsonIgnore
     val password: String,
-    @JsonManagedReference
     @ManyToMany
+    @LazyCollection(value = LazyCollectionOption.FALSE)
+    @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator::class, property = "id")
+    @JsonIdentityReference(alwaysAsId = true)
     var groups: MutableList<Group> = mutableListOf(),
-    @JsonManagedReference
     @ManyToMany
-    val ownedGroups: MutableList<Group> = mutableListOf()
+    @LazyCollection(value = LazyCollectionOption.FALSE)
+    @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator::class, property = "id")
+    @JsonIdentityReference(alwaysAsId = true)
+    var ownedGroups: MutableList<Group> = mutableListOf(),
+    @OneToOne
+    @LazyToOne(value = LazyToOneOption.FALSE)
+    val privateGroup: Group
 ) {
     override fun toString(): String {
         return "User $id"

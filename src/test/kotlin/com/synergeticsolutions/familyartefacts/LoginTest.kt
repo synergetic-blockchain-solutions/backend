@@ -20,12 +20,12 @@ class LoginTest() {
     @Autowired
     private lateinit var userRepository: UserRepository
 
+    @Autowired
+    private lateinit var testUtils: TestUtilsService
+
     @BeforeEach
-    fun clearRepository() {
-        groupRepository.saveAll(groupRepository.findAll().map { it.copy(members = mutableListOf()) })
-        userRepository.saveAll(userRepository.findAll().map { it.copy(groups = mutableListOf()) })
-        groupRepository.deleteAll()
-        userRepository.deleteAll()
+    fun beforeEach() {
+        testUtils.clearDatabase()
     }
 
     @Test
