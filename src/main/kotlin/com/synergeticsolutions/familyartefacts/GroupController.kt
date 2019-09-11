@@ -45,11 +45,7 @@ class GroupController(
                 )
         return ResponseEntity.status(HttpStatus.CREATED).body(newGroup)
     }
-
-
 }
-
-
 
 data class GroupRequest(
             val name: String,

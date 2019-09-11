@@ -48,21 +48,19 @@ class UserServiceImpl(
         val encPassword = passwordEncoder.encode(password)
 
         val group = groupRepository.save(
-            Group(
-                name = "$name's Personal Group",
-                description = "$name's Personal Group",
-                members = mutableListOf(),
-                admins = mutableListOf()
-            )
-        )
+                Group(
+                        name = "$name's Personal Group",
+                        description = "$name's Personal Group",
+                        members = mutableListOf(),
+                        admins = mutableListOf()))
         val user = userRepository.save(
-            User(
-                name = name,
-                email = email,
-                password = encPassword,
-                privateGroup = group,
-                groups = mutableListOf(group)
-            )
+                User(
+                        name = name,
+                        email = email,
+                        password = encPassword,
+                        privateGroup = group,
+                        groups = mutableListOf(group)
+                )
         )
         group.members.add(user)
         val updatedGroup = groupRepository.save(group)

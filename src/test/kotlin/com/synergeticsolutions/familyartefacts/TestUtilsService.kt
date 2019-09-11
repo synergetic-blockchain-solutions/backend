@@ -18,13 +18,16 @@ class TestUtilsService(
             it.copy(
                 members = mutableListOf(),
                 artifacts = mutableListOf()
+                    members = mutableListOf(),
+                    admins = mutableListOf()
             )
         })
         userRepository.saveAll(userRepository.findAll().map {
             it.copy(
                 groups = mutableListOf(),
                 ownedArtifacts = mutableListOf(),
-                sharedArtifacts = mutableListOf()
+                sharedArtifacts = mutableListOf(),
+                ownedGroups = mutableListOf()
             )
         })
         artifactRepository.saveAll(artifactRepository.findAll().map {
