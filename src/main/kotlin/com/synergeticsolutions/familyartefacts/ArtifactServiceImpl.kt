@@ -136,20 +136,36 @@ class ArtifactServiceImpl(
         val artifact =
             artifactRepository.findByIdOrNull(id)
                 ?: throw ArtifactNotFoundException("Could not find artifact with ID $id")
-        val user =
-            userRepository.findByEmail(email) ?: throw UserNotFoundException("User with email $email does not exist")
         if (!artifact.owners.contains(user)) {
             throw ActionNotAllowedException("User ${user.id} is not an owner of artifact $id")
         }
-        val owners = userRepository.findAllById(update.owners ?: listOf()).toMutableList()
-        val groups = groupRepository.findAllById(update.groups ?: listOf()).toMutableList()
-        val shares = userRepository.findAllById(update.sharedWith ?: listOf())
-        return artifact.copy(
+        val updatedOwners = userRepository.findAllById(update.owners ?: listOf())
+        val updatedGroups = groupRepository.findAllById(update.groups ?: listOf())
+        val updatedShares = userRepository.findAllById(update.sharedWith ?: listOf())
+
+        val removedOwners = artifact.owners.intersect(updatedOwners)
+        logger.debug("Removed artifact from owners ${removedOwners.map(User::id)}")
+        removedOwners.forEach { it.ownedArtifacts.remove(artifact) }
+        userRepository.saveAll(removedOwners)
+
+        val removedGroups = artifact.groups.intersect(updatedGroups)
+        logger.debug("Removing artifact from groups ${removedGroups.map(Group::id)}")
+        removedGroups.forEach { it.artifacts.remove(artifact) }
+        groupRepository.saveAll(removedGroups)
+
+        val removedShares = artifact.sharedWith.intersect(updatedShares)
+        logger.debug("Removed artifact from groups ${removedShares.map(User::id)}")
+        removedShares.forEach { it.sharedArtifacts.remove(artifact) }
+        userRepository.saveAll(removedShares)
+
+        return artifactRepository.save(
+            artifact.copy(
             name = update.name,
             description = update.description,
-            owners = owners,
-            groups = groups,
-            sharedWith = shares
+                owners = updatedOwners,
+                groups = updatedGroups,
+                sharedWith = updatedShares
+            )
         )
     }
 
@@ -171,8 +187,11 @@ class ArtifactServiceImpl(
             throw ActionNotAllowedException("User ${user.id} is not an owner of artifact $id")
         }
         artifact.owners.forEach { it.ownedArtifacts.remove(artifact) }
+        userRepository.saveAll(artifact.owners)
         artifact.groups.forEach { it.artifacts.remove(artifact) }
+        groupRepository.saveAll(artifact.groups)
         artifact.sharedWith.forEach { it.sharedArtifacts.remove(artifact) }
+        userRepository.saveAll(artifact.sharedWith)
         artifactRepository.delete(artifact)
         return artifact
     }
