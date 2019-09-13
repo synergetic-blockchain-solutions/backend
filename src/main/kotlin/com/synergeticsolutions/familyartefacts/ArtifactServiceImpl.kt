@@ -139,34 +139,35 @@ class ArtifactServiceImpl(
         if (!artifact.owners.contains(user)) {
             throw ActionNotAllowedException("User ${user.id} is not an owner of artifact $id")
         }
+        // Fix up new users and owners who are being removed
         val updatedOwners = userRepository.findAllById(update.owners ?: listOf())
+        artifact.owners.difference(updatedOwners).forEach { it.ownedArtifacts.remove(artifact) }
+        updatedOwners.difference(artifact.owners).forEach { it.ownedArtifacts.add(artifact) }
+        userRepository.saveAll(artifact.owners)
+        userRepository.saveAll(updatedOwners)
+
+        // Fix up new groups and groups that are being removed
         val updatedGroups = groupRepository.findAllById(update.groups ?: listOf())
+        artifact.groups.difference(updatedGroups).forEach { it.artifacts.remove(artifact) }
+        updatedGroups.difference(artifact.groups).forEach { it.artifacts.add(artifact) }
+        groupRepository.saveAll(artifact.groups)
+        groupRepository.saveAll(updatedGroups)
+
+        // Fix up new sharees and sharees who are being removed
         val updatedShares = userRepository.findAllById(update.sharedWith ?: listOf())
+        artifact.sharedWith.difference(updatedShares).forEach { it.sharedArtifacts.remove(artifact) }
+        updatedShares.difference(artifact.sharedWith).forEach { it.sharedArtifacts.add(artifact) }
+        userRepository.saveAll(artifact.sharedWith)
+        userRepository.saveAll(updatedShares)
 
-        val removedOwners = artifact.owners.intersect(updatedOwners)
-        logger.debug("Removed artifact from owners ${removedOwners.map(User::id)}")
-        removedOwners.forEach { it.ownedArtifacts.remove(artifact) }
-        userRepository.saveAll(removedOwners)
-
-        val removedGroups = artifact.groups.intersect(updatedGroups)
-        logger.debug("Removing artifact from groups ${removedGroups.map(Group::id)}")
-        removedGroups.forEach { it.artifacts.remove(artifact) }
-        groupRepository.saveAll(removedGroups)
-
-        val removedShares = artifact.sharedWith.intersect(updatedShares)
-        logger.debug("Removed artifact from groups ${removedShares.map(User::id)}")
-        removedShares.forEach { it.sharedArtifacts.remove(artifact) }
-        userRepository.saveAll(removedShares)
-
-        return artifactRepository.save(
-            artifact.copy(
+        val updatedArtifact = artifact.copy(
             name = update.name,
             description = update.description,
-                owners = updatedOwners,
-                groups = updatedGroups,
-                sharedWith = updatedShares
-            )
+            owners = updatedOwners,
+            groups = updatedGroups,
+            sharedWith = updatedShares
         )
+        return artifactRepository.save(updatedArtifact)
     }
 
     /**
@@ -195,4 +196,9 @@ class ArtifactServiceImpl(
         artifactRepository.delete(artifact)
         return artifact
     }
+}
+
+private fun <T> Iterable<T>.difference(other: Iterable<T>): Iterable<T> {
+    val set = this.toMutableSet()
+    return set.filter { !other.contains(it) }
 }
