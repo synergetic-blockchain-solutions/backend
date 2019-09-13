@@ -252,18 +252,22 @@ class ArtifactControllerTest {
         inner class UpdateArtifact {
             @Test
             fun `it should allow owners to update the artifact`() {
+                TODO()
             }
 
             @Test
             fun `it should allow group owners to remove the artifact from the group`() {
+                TODO()
             }
 
             @Test
             fun `it should not allow normal users to update the artifact`() {
+                TODO()
             }
 
             @Test
             fun `it should return the updated version of the artifact`() {
+                TODO()
             }
         }
 
@@ -271,14 +275,17 @@ class ArtifactControllerTest {
         inner class DeleteArtifact {
             @Test
             fun `it should allow owners to delete the artifact`() {
+                TODO()
             }
 
             @Test
             fun `it should not allow normal users to delete the artifact`() {
+                TODO()
             }
 
             @Test
             fun `it should return the deleted artifact`() {
+                TODO()
             }
         }
     }

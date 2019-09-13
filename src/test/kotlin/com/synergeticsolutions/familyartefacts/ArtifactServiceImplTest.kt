@@ -932,18 +932,22 @@ class ArtifactServiceImplTest {
     inner class UpdateArtifact {
         @Test
         fun `it should not allow users without permission to modify the artifact`() {
+            TODO()
         }
 
         @Test
         fun `it should allow group owners to remove their group from the artifact`() {
+            TODO()
         }
 
         @Test
         fun `it should not allow group owners to make changes except for their group`() {
+            TODO()
         }
 
         @Test
         fun `it should allow artifact owners to make changes to the artifact`() {
+            TODO()
         }
     }
 
@@ -951,10 +955,12 @@ class ArtifactServiceImplTest {
     inner class DeleteArtifact {
         @Test
         fun `it should not allow user's who are not the artifact's owners to delete it`() {
+            TODO()
         }
 
         @Test
         fun `it should allow the artifact's owners to delete it`() {
+            TODO()
         }
     }
 }
