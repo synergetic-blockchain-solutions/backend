@@ -131,6 +131,8 @@ class ArtifactServiceImpl(
      * @return Updated artifact
      */
     override fun updateArtifact(email: String, id: Long, update: ArtifactRequest): Artifact {
+        val user =
+            userRepository.findByEmail(email) ?: throw UserNotFoundException("User with email $email does not exist")
         val artifact =
             artifactRepository.findByIdOrNull(id)
                 ?: throw ArtifactNotFoundException("Could not find artifact with ID $id")
