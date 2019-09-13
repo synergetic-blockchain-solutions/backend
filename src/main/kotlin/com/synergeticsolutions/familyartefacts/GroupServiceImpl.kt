@@ -70,9 +70,9 @@ class GroupServiceImpl(
     }
 
 
-    override fun addMembers(email: String, newMemberIDs: List<Long>, groupID: Long) {
-        val group = groupRepository.findByIdOrNull(groupID) ?: throw GroupNotFoundException("No group with id $groupID was found")
+    override fun addMembers(email: String, newMemberIDs: List<Long>, groupID: Long): Group {
         val owner = userRepository.findByEmail(email) ?: throw UsernameNotFoundException("No user with email $email was found")
+        val group = groupRepository.findByIdOrNull(groupID) ?: throw GroupNotFoundException("No group with id $groupID was found")
         if (!group.admins.contains(owner)) {
             throw ActionNotAllowedException()
         }
@@ -87,11 +87,12 @@ class GroupServiceImpl(
                 group.members.add(it)
             } else throw MemberAlreadyInGroupException("Member with email ${it.email} is already in the group")
         }
-        groupRepository.save(group)
+        val updatedGroup = groupRepository.save(group)
         newMembers.forEach {
             it.groups.add(group)
         }
         userRepository.saveAll(newMembers)
+        return updatedGroup
     }
 
     override fun addAdmins(email: String, newAdminIDs: List<Long>, groupID: Long) {
@@ -176,4 +177,29 @@ class GroupServiceImpl(
         userRepository.saveAll(adminsToRemove)
         groupRepository.save(group)
     }
+
+    //Not finished
+    override fun updateGroup(email: String, groupID: Long, groupRequest: GroupRequest) : Group {
+        return Group(id = 2,
+                name = "Group Name",
+                description = "Group description",
+                members = mutableListOf(),
+                admins = mutableListOf())
+    }
+
+    override fun deleteGroup(email: String, groupID: Long): Group {
+        val group = groupRepository.findByIdOrNull(groupID) ?: throw GroupNotFoundException("No group with id $groupID was found")
+        val owner = userRepository.findByEmail(email) ?: throw UsernameNotFoundException("No user with email $email was found")
+        if (!group.admins.contains(owner)) {
+            throw ActionNotAllowedException()
+        }
+        group.members.forEach { it.groups.remove(group) }
+        group.admins.forEach { it.ownedGroups.remove(group) }
+        groupRepository.delete(group)
+        return group
+    }
+
+
+
+
 }
