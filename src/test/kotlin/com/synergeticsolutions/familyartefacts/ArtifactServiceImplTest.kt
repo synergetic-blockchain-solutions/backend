@@ -1,5 +1,6 @@
 package com.synergeticsolutions.familyartefacts
 
+import java.util.Optional
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.contains
 import org.hamcrest.Matchers.containsInAnyOrder
@@ -169,6 +170,7 @@ class ArtifactServiceImplTest {
 
         @Test
         fun `it should make the specified owner IDs the owners of the artifact`() {
+            Mockito.`when`(groupRepository.save(any<Group>())).then { it.arguments[0] as Group }
             Mockito.`when`(artifactRepository.save(any<Artifact>())).then { it.arguments[0] as Artifact }
             Mockito.`when`(userRepository.existsById(anyLong())).thenReturn(true)
             Mockito.`when`(userRepository.findByEmail(anyString()))
@@ -932,7 +934,50 @@ class ArtifactServiceImplTest {
     inner class UpdateArtifact {
         @Test
         fun `it should not allow users without permission to modify the artifact`() {
-            TODO()
+            val email = "example@example.com"
+            var owningUser = User(
+                id = 2, name = "User 2", email = "example@example2.com", password = "password", groups = mutableListOf(
+                    Group(id = 1, name = "Group 1", members = mutableListOf())
+                ), privateGroup = Group(2, "Group 2", members = mutableListOf())
+            )
+            val artifact = Artifact(
+                1,
+                "Artifact 1",
+                "Description",
+                mutableListOf(owningUser),
+                mutableListOf()
+            )
+            owningUser = owningUser.copy(ownedArtifacts = mutableListOf(artifact))
+            val user = User(
+                id = 1, name = "User 1", email = email, password = "password", groups = mutableListOf(
+                    Group(id = 1, name = "Group 1", members = mutableListOf())
+                ), privateGroup = Group(2, "Group 2", members = mutableListOf())
+            )
+            Mockito.`when`(artifactRepository.findByIdOrNull(anyLong())).then {
+                if (it.arguments[0] == artifact.id) {
+                    Optional.of(artifact)
+                } else {
+                    Optional.empty()
+                }
+            }
+            Mockito.`when`(userRepository.findByEmail(anyString())).then {
+                when (it.arguments[0]) {
+                    user.email -> user
+                    owningUser.email -> owningUser
+                    else -> throw RuntimeException("${it.arguments[0]} not handled")
+                }
+            }
+            assertThrows<ActionNotAllowedException> {
+                artifactService.updateArtifact(
+                    user.email, artifact.id, ArtifactRequest(
+                        artifact.name,
+                        "updated description",
+                        artifact.owners.map(User::id),
+                        artifact.groups.map(Group::id),
+                        artifact.sharedWith.map(User::id)
+                    )
+                )
+            }
         }
 
         @Test
@@ -947,7 +992,56 @@ class ArtifactServiceImplTest {
 
         @Test
         fun `it should allow artifact owners to make changes to the artifact`() {
-            TODO()
+            val email = "example@example.com"
+            var owningUser = User(
+                id = 2, name = "User 2", email = "example@example2.com", password = "password", groups = mutableListOf(
+                    Group(id = 1, name = "Group 1", members = mutableListOf())
+                ), privateGroup = Group(2, "Group 2", members = mutableListOf())
+            )
+            var artifact = Artifact(
+                1,
+                "Artifact 1",
+                "Description",
+                mutableListOf(owningUser),
+                mutableListOf()
+            )
+            owningUser = owningUser.copy(ownedArtifacts = mutableListOf(artifact))
+            artifact = artifact.copy(owners = mutableListOf(owningUser))
+            Mockito.`when`(artifactRepository.findByIdOrNull(anyLong())).then {
+                if (it.arguments[0] == artifact.id) {
+                    Optional.of(artifact)
+                } else {
+                    Optional.empty()
+                }
+            }
+            Mockito.`when`(userRepository.findByEmail(anyString())).then {
+                when (it.arguments[0]) {
+                    owningUser.email -> owningUser
+                    else -> throw RuntimeException("${it.arguments[0]} not handled")
+                }
+            }
+            Mockito.`when`(artifactRepository.save(any<Artifact>())).then { it.arguments[0] as Artifact }
+            Mockito.`when`(userRepository.findAllById(any<Iterable<Long>>())).then {
+                val args = it.arguments[0] as Iterable<Long>
+                if (args.toList() == artifact.owners.map(User::id)) {
+                    artifact.owners
+                } else {
+                    listOf<User>()
+                }
+            }
+            val updatedArtifact = artifactService.updateArtifact(
+                owningUser.email, artifact.id, ArtifactRequest(
+                    artifact.name,
+                    "updated description",
+                    artifact.owners.map(User::id),
+                    artifact.groups.map(Group::id),
+                    artifact.sharedWith.map(User::id)
+                )
+            )
+            assertThat(
+                updatedArtifact, equalTo(artifact.copy(description = "updated description"))
+            )
+            Mockito.verify(artifactRepository).save(artifact.copy(description = "updated description"))
         }
     }
 
@@ -955,12 +1049,84 @@ class ArtifactServiceImplTest {
     inner class DeleteArtifact {
         @Test
         fun `it should not allow user's who are not the artifact's owners to delete it`() {
-            TODO()
+            val email = "example@example.com"
+            var owningUser = User(
+                id = 2, name = "User 2", email = "example@example2.com", password = "password", groups = mutableListOf(
+                    Group(id = 1, name = "Group 1", members = mutableListOf())
+                ), privateGroup = Group(2, "Group 2", members = mutableListOf())
+            )
+            val artifact = Artifact(
+                1,
+                "Artifact 1",
+                "Description",
+                mutableListOf(owningUser),
+                mutableListOf()
+            )
+            owningUser = owningUser.copy(ownedArtifacts = mutableListOf(artifact))
+            val user = User(
+                id = 1, name = "User 1", email = email, password = "password", groups = mutableListOf(
+                    Group(id = 1, name = "Group 1", members = mutableListOf())
+                ), privateGroup = Group(2, "Group 2", members = mutableListOf())
+            )
+            Mockito.`when`(artifactRepository.findByIdOrNull(anyLong())).then {
+                if (it.arguments[0] == artifact.id) {
+                    Optional.of(artifact)
+                } else {
+                    Optional.empty()
+                }
+            }
+            Mockito.`when`(userRepository.findByEmail(anyString())).then {
+                when (it.arguments[0]) {
+                    user.email -> user
+                    owningUser.email -> owningUser
+                    else -> throw RuntimeException("${it.arguments[0]} not handled")
+                }
+            }
+            assertThrows<ActionNotAllowedException> { artifactService.deleteArtifact(user.email, artifact.id) }
         }
 
         @Test
         fun `it should allow the artifact's owners to delete it`() {
-            TODO()
+            val email = "example@example.com"
+            var owningUser = User(
+                id = 2, name = "User 2", email = "example@example2.com", password = "password", groups = mutableListOf(
+                    Group(id = 1, name = "Group 1", members = mutableListOf())
+                ), privateGroup = Group(2, "Group 2", members = mutableListOf())
+            )
+            var artifact = Artifact(
+                1,
+                "Artifact 1",
+                "Description",
+                mutableListOf(owningUser),
+                mutableListOf()
+            )
+            owningUser = owningUser.copy(ownedArtifacts = mutableListOf(artifact))
+            artifact = artifact.copy(owners = mutableListOf(owningUser))
+            Mockito.`when`(artifactRepository.findByIdOrNull(anyLong())).then {
+                if (it.arguments[0] == artifact.id) {
+                    Optional.of(artifact)
+                } else {
+                    Optional.empty()
+                }
+            }
+            Mockito.`when`(userRepository.findByEmail(anyString())).then {
+                when (it.arguments[0]) {
+                    owningUser.email -> owningUser
+                    else -> throw RuntimeException("${it.arguments[0]} not handled")
+                }
+            }
+            Mockito.`when`(artifactRepository.save(any<Artifact>())).then { it.arguments[0] as Artifact }
+            Mockito.`when`(userRepository.findAllById(any<Iterable<Long>>())).then {
+                val args = it.arguments[0] as Iterable<Long>
+                if (args.toList() == artifact.owners.map(User::id)) {
+                    artifact.owners
+                } else {
+                    listOf<User>()
+                }
+            }
+            val deletedArtifact = artifactService.deleteArtifact(owningUser.email, artifact.id)
+            assertThat(deletedArtifact, equalTo(artifact))
+            Mockito.verify(artifactRepository).delete(artifact)
         }
     }
 }

@@ -3,10 +3,16 @@ package com.synergeticsolutions.familyartefacts
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
+import org.hamcrest.MatcherAssert.assertThat
+import org.hamcrest.Matchers.`is`
 import org.hamcrest.Matchers.containsInAnyOrder
 import org.hamcrest.Matchers.hasEntry
+import org.hamcrest.Matchers.hasItems
+import org.hamcrest.Matchers.hasProperty
+import org.hamcrest.Matchers.not
 import org.hamcrest.collection.IsCollectionWithSize.hasSize
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
@@ -47,21 +53,25 @@ class ArtifactControllerTest {
     val password: String = "password"
     lateinit var token: String
 
-    @BeforeEach
-    fun beforeEach() {
-        testUtils.clearDatabase()
-        val user = userService.createUser("name", email, password)
-        userRepository.save(user)
+    fun getToken(userEmail: String, userPassword: String): String {
         val resp = client.post()
             .uri("/login")
             .contentType(MediaType.APPLICATION_JSON_UTF8)
-            .syncBody(LoginRequest(email = email, password = password))
+            .syncBody(LoginRequest(email = userEmail, password = userPassword))
             .exchange()
             .expectStatus().isOk
             .expectBody()
             .returnResult()
             .responseBody!!
-        token = ObjectMapper().registerKotlinModule().readValue<LoginResponse>(resp).token
+        return ObjectMapper().registerKotlinModule().readValue<LoginResponse>(resp).token
+    }
+
+    @BeforeEach
+    fun beforeEach() {
+        testUtils.clearDatabase()
+        val user = userService.createUser("name", email, password)
+        userRepository.save(user)
+        token = getToken(email, password)
     }
 
     @Nested
@@ -247,12 +257,67 @@ class ArtifactControllerTest {
             val createdArtifact = artifactRepository.findByIdOrNull((returnedArtifact["id"] as Int).toLong())!!
             assertEquals(mutableListOf(userRepository.findByEmail(email)!!.id), createdArtifact.owners.map(User::id))
         }
+    }
 
         @Nested
         inner class UpdateArtifact {
             @Test
             fun `it should allow owners to update the artifact`() {
-                TODO()
+                val artifactRequest = ArtifactRequest(
+                    name = "Artifact 1",
+                    description = "Description",
+                    owners = listOf(),
+                    groups = listOf(),
+                    sharedWith = listOf()
+                )
+                val createArtifactResponse = client.post()
+                    .uri("/artifact")
+                    .accept(MediaType.APPLICATION_JSON_UTF8)
+                    .contentType(MediaType.APPLICATION_JSON_UTF8)
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer $token")
+                    .syncBody(artifactRequest)
+                    .exchange()
+                    .expectStatus().isCreated
+                    .expectBody()
+                    .returnResult()
+                    .responseBody!!
+                val returnedArtifact =
+                    ObjectMapper().registerKotlinModule().readValue<Map<String, Any>>(String(createArtifactResponse))
+                val updateArtifactRequest =
+                    ArtifactRequest(
+                        name = returnedArtifact["name"] as String,
+                        description = returnedArtifact["description"] as String,
+                        owners = (returnedArtifact["owners"] as List<Int>).map(Int::toLong),
+                        groups = (returnedArtifact["groups"] as List<Int>).map(Int::toLong),
+                        sharedWith = (returnedArtifact["owners"] as List<Int>).map(Int::toLong)
+                    )
+                val updateArtifactResponse = client.put()
+                    .uri("/artifact/${returnedArtifact["id"]}")
+                    .accept(MediaType.APPLICATION_JSON_UTF8)
+                    .contentType(MediaType.APPLICATION_JSON_UTF8)
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer $token")
+                    .syncBody(updateArtifactRequest)
+                    .exchange()
+                    .expectStatus().isOk
+                    .expectBody()
+                    .returnResult()
+                    .responseBody!!
+                val updatedArtifactResponse =
+                    ObjectMapper().registerKotlinModule().readValue<Map<String, Any>>(updateArtifactResponse)
+                assertEquals((updatedArtifactResponse["id"] as Int).toLong(), (returnedArtifact["id"] as Int).toLong())
+                assertEquals(updatedArtifactResponse["name"] as String, artifactRequest.name)
+                assertEquals(updatedArtifactResponse["description"] as String, artifactRequest.description)
+
+                val updatedArtifact =
+                    artifactRepository.findByIdOrNull((updatedArtifactResponse["id"] as Int).toLong())!!
+                assertEquals(
+                    mutableListOf(userRepository.findByEmail(email)!!.id),
+                    updatedArtifact.owners.map(User::id)
+                )
+                assertEquals(
+                    mutableListOf(userRepository.findByEmail(email)!!.id),
+                    updatedArtifact.sharedWith.map(User::id)
+                )
             }
 
             @Test
@@ -262,12 +327,45 @@ class ArtifactControllerTest {
 
             @Test
             fun `it should not allow normal users to update the artifact`() {
-                TODO()
-            }
+                val artifactRequest = ArtifactRequest(
+                    name = "Artifact 1",
+                    description = "Description",
+                    owners = listOf(),
+                    groups = listOf(),
+                    sharedWith = listOf()
+                )
 
-            @Test
-            fun `it should return the updated version of the artifact`() {
-                TODO()
+                val createArtifactResponse = client.post()
+                    .uri("/artifact")
+                    .accept(MediaType.APPLICATION_JSON_UTF8)
+                    .contentType(MediaType.APPLICATION_JSON_UTF8)
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer $token")
+                    .syncBody(artifactRequest)
+                    .exchange()
+                    .expectStatus().isCreated
+                    .expectBody()
+                    .returnResult()
+                    .responseBody!!
+                val returnedArtifact =
+                    ObjectMapper().registerKotlinModule().readValue<Map<String, Any>>(String(createArtifactResponse))
+
+                val updateArtifactRequest =
+                    ArtifactRequest(
+                        name = returnedArtifact["name"] as String,
+                        description = returnedArtifact["description"] as String,
+                        owners = (returnedArtifact["owners"] as List<Int>).map(Int::toLong),
+                        groups = (returnedArtifact["groups"] as List<Int>).map(Int::toLong),
+                        sharedWith = (returnedArtifact["owners"] as List<Int>).map(Int::toLong)
+                    )
+                val altUser = userService.createUser("user 2", "exampl2@example.com", "password")
+                val altToken = getToken(altUser.email, "password")
+                client.put()
+                    .uri("/artifact/${returnedArtifact["id"]}")
+                    .accept(MediaType.APPLICATION_JSON_UTF8)
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer $altToken")
+                    .syncBody(updateArtifactRequest)
+                    .exchange()
+                    .expectStatus().isForbidden
             }
         }
 
@@ -275,18 +373,73 @@ class ArtifactControllerTest {
         inner class DeleteArtifact {
             @Test
             fun `it should allow owners to delete the artifact`() {
-                TODO()
+                val artifactRequest = ArtifactRequest(
+                    name = "Artifact 1",
+                    description = "Description",
+                    owners = listOf(),
+                    groups = listOf(),
+                    sharedWith = listOf()
+                )
+                val createArtifactResponse = client.post()
+                    .uri("/artifact")
+                    .accept(MediaType.APPLICATION_JSON_UTF8)
+                    .contentType(MediaType.APPLICATION_JSON_UTF8)
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer $token")
+                    .syncBody(artifactRequest)
+                    .exchange()
+                    .expectStatus().isCreated
+                    .expectBody()
+                    .returnResult()
+                    .responseBody!!
+                val returnedArtifact =
+                    ObjectMapper().registerKotlinModule().readValue<Map<String, Any>>(String(createArtifactResponse))
+                client.delete()
+                    .uri("/artifact/${returnedArtifact["id"]}")
+                    .accept(MediaType.APPLICATION_JSON_UTF8)
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer $token")
+                    .exchange()
+                    .expectStatus().isOk
+                    .expectBody()
+                    .returnResult()
+                    .responseBody!!
+                assertFalse(artifactRepository.existsById((returnedArtifact["id"] as Int).toLong()))
+                val user = userRepository.findByEmail(email)!!
+                val artifactId = (returnedArtifact["id"] as Int).toLong()
+                assertThat(user.ownedArtifacts, not(hasItems(hasProperty("id", `is`(artifactId)))))
             }
 
             @Test
             fun `it should not allow normal users to delete the artifact`() {
-                TODO()
-            }
+                val artifactRequest = ArtifactRequest(
+                    name = "Artifact 1",
+                    description = "Description",
+                    owners = listOf(),
+                    groups = listOf(),
+                    sharedWith = listOf()
+                )
 
-            @Test
-            fun `it should return the deleted artifact`() {
-                TODO()
+                val createArtifactResponse = client.post()
+                    .uri("/artifact")
+                    .accept(MediaType.APPLICATION_JSON_UTF8)
+                    .contentType(MediaType.APPLICATION_JSON_UTF8)
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer $token")
+                    .syncBody(artifactRequest)
+                    .exchange()
+                    .expectStatus().isCreated
+                    .expectBody()
+                    .returnResult()
+                    .responseBody!!
+                val returnedArtifact =
+                    ObjectMapper().registerKotlinModule().readValue<Map<String, Any>>(String(createArtifactResponse))
+
+                userService.createUser("user 2", "exampl2@example.com", "password")
+                val altToken = getToken("exampl2@example.com", "password")
+                client.delete()
+                    .uri("/artifact/${returnedArtifact["id"]}")
+                    .accept(MediaType.APPLICATION_JSON_UTF8)
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer $altToken")
+                    .exchange()
+                    .expectStatus().isForbidden
             }
         }
     }
-}
