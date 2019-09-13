@@ -128,7 +128,7 @@ class RegistrationControllerTest {
             .contentType(MediaType.APPLICATION_JSON_UTF8)
             .syncBody(registrationRequest)
             .exchange()
-            .expectStatus().is5xxServerError
+            .expectStatus().isBadRequest
             .expectBody().jsonPath("$.message").isEqualTo("User already exists with email $email")
     }
 
