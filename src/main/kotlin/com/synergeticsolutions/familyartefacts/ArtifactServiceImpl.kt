@@ -121,6 +121,36 @@ class ArtifactServiceImpl(
     }
 
     /**
+     * findArtifactById finds artifact [id] in the context of user with [email]. If the user has access to the artifact
+     * then it is returned. If they do not have access [ActionNotAllowedException] is thrown.
+     *
+     * @param email Email of the user to get the artifact for
+     * @param id ID of the artifact to get
+     * @return [ArtifactRepository] with ID [id]
+     * @throws UserNotFoundException when there is no user with [email]
+     * @throws ActionNotAllowedException when the user does not have access to artifact with [id].
+     * @throws ArtifactNotFoundException when the artifact does not exist
+     */
+    override fun findArtifactById(email: String, id: Long): Artifact {
+        val user =
+            userRepository.findByEmail(email) ?: throw UserNotFoundException("No user with email $email was found")
+        // A user can access an artifact if they're an owner, it has been shared with them or they're part of a group
+        // that has access to the artifact.
+        val accessibleArtifacts =
+            user.ownedArtifacts.map(Artifact::id) + user.sharedArtifacts.map(Artifact::id) + user.groups.flatMap {
+                it.artifacts.map(Artifact::id)
+            }
+        if (!accessibleArtifacts.contains(id)) {
+            if (!artifactRepository.existsById(id)) {
+                logger.info("Artifact $id does not exist")
+            }
+            throw ActionNotAllowedException("User ${user.id} does not have access to artifact $id")
+        }
+        return artifactRepository.findByIdOrNull(id)
+            ?: throw ArtifactNotFoundException("No artifact with ID $id was found")
+    }
+
+    /**
      * [updateArtifact] updates the artifact with [id] using [update]. To update an artifact, the user (determined
      * by [email]) must be an owner of the artifact. Except in the case where the user is the owner of a group and
      * removing the artifact from a group, in this case updating the artifact is allowed.

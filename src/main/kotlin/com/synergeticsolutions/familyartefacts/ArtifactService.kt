@@ -8,6 +8,8 @@ interface ArtifactService {
         sharedID: Long? = null
     ): List<Artifact>
 
+    fun findArtifactById(email: String, id: Long): Artifact
+
     fun createArtifact(
         email: String,
         name: String,

@@ -52,6 +52,15 @@ class ArtifactController(
         return ResponseEntity.ok(artifacts)
     }
 
+    @GetMapping(path = ["/{id}"])
+    fun getArtifactByI(@PathVariable id: Long) {
+        val currentUser = SecurityContextHolder.getContext().authentication
+        logger.debug("Getting artifact $id for user ${currentUser.principal}")
+        val artifact = artifactService.findArtifactById(currentUser.principal as String, id)
+        logger.debug("Found $artifact")
+        return ResponseEntity.ok(artifact)
+    }
+
     /**
      * POST /artifact
      *
