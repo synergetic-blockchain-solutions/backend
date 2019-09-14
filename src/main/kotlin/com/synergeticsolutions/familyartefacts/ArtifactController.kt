@@ -53,7 +53,7 @@ class ArtifactController(
     }
 
     @GetMapping(path = ["/{id}"])
-    fun getArtifactByI(@PathVariable id: Long) {
+    fun getArtifactById(@PathVariable id: Long): ResponseEntity<Artifact> {
         val currentUser = SecurityContextHolder.getContext().authentication
         logger.debug("Getting artifact $id for user ${currentUser.principal}")
         val artifact = artifactService.findArtifactById(currentUser.principal as String, id)
