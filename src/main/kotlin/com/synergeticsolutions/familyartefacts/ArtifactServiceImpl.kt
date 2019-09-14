@@ -31,6 +31,8 @@ class ArtifactServiceImpl(
      * @param groupIDs IDs of the groups the artifact is to be shared with
      * @param sharedWith IDs of the users the artifact is to be shared with
      * @return Created artifact
+     * @throws UserNotFoundException when no user with [email] or one of the IDs in [ownerIDs] or [sharedWith] does not correspond to a [User.id]
+     * @throws GroupNotFoundException when one of the IDs in [groupIDs] does not correspond to a [Group.id]()
      */
     override fun createArtifact(
         email: String,
@@ -94,10 +96,11 @@ class ArtifactServiceImpl(
      * @param groupID ID of the group to filter the artifacts to
      * @param ownerID ID of the owning user to filter the artifacts to
      * @return Collection of artifacts the user has access to filtered by the given parameters
+     * @throws UserNotFoundException when a user with [email] does not exist
      */
     override fun findArtifactsByOwner(email: String, groupID: Long?, ownerID: Long?, sharedID: Long?): List<Artifact> {
         val user =
-            userRepository.findByEmail(email) ?: throw UsernameNotFoundException("No user with email $email was found")
+            userRepository.findByEmail(email) ?: throw UserNotFoundException("No user with email $email was found")
 
         val ownedArtifacts = artifactRepository.findByOwners_Email(email)
         val groupsArtifacts = user.groups.map(Group::id).flatMap(artifactRepository::findByGroups_Id)
@@ -158,7 +161,10 @@ class ArtifactServiceImpl(
      * @param email Email of the user doing the update
      * @param id ID of the artifact being updated
      * @param update Update of the artifact
-     * @return Updated artifact
+     * @return Updated [Artifact]
+     * @throws UserNotFoundException when there exists no user with [email]
+     * @throws ArtifactNotFoundException when the artifact does not exist
+     * @throws ActionNotAllowedException when the user is not authorised to perform the action they're attempting
      */
     override fun updateArtifact(email: String, id: Long, update: ArtifactRequest): Artifact {
         val user =
@@ -207,6 +213,9 @@ class ArtifactServiceImpl(
      * @param email Email of the user doing the deleting
      * @param id ID of the artifact to delete
      * @return delete [Artifact]
+     * @throws UserNotFoundException when there exists no user with [email]
+     * @throws ArtifactNotFoundException when no artifact with [id] exists
+     * @throws ActionNotAllowedException when the user is not authorised to delete the artifact
      */
     override fun deleteArtifact(email: String, id: Long): Artifact {
         val user =
@@ -228,6 +237,14 @@ class ArtifactServiceImpl(
     }
 }
 
+/**
+ * Find the different of two [Iterable]s, that is all the elements in [this] that are not in [other]. In set notation
+ * this would be `[this] - [other]` or `[this] / [other]`.
+ *
+ * @receiver [Iterable] to take [other] away from
+ * @param other to take away from [this]
+ * @return [Set] of the difference between [this] and [other]
+ */
 private fun <T> Iterable<T>.difference(other: Iterable<T>): Iterable<T> {
     val set = this.toMutableSet()
     return set.filter { !other.contains(it) }
