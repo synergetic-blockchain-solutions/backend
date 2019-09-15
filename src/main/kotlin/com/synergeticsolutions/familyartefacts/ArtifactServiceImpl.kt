@@ -172,27 +172,28 @@ class ArtifactServiceImpl(
         val artifact =
             artifactRepository.findByIdOrNull(id)
                 ?: throw ArtifactNotFoundException("Could not find artifact with ID $id")
-        if (!artifact.owners.contains(user)) {
-            throw ActionNotAllowedException("User ${user.id} is not an owner of artifact $id")
-        }
+
+        assertCanUpdate(user, artifact, update)
+        // Past this point we can perform any actions and be comfortable the user is authorised to perform them
+
         // Fix up new users and owners who are being removed
         val updatedOwners = userRepository.findAllById(update.owners ?: listOf())
-        artifact.owners.difference(updatedOwners).forEach { it.ownedArtifacts.remove(artifact) }
-        updatedOwners.difference(artifact.owners).forEach { it.ownedArtifacts.add(artifact) }
+        artifact.owners.subtract(updatedOwners).forEach { it.ownedArtifacts.remove(artifact) }
+        updatedOwners.subtract(artifact.owners).forEach { it.ownedArtifacts.add(artifact) }
         userRepository.saveAll(artifact.owners)
         userRepository.saveAll(updatedOwners)
 
         // Fix up new groups and groups that are being removed
         val updatedGroups = groupRepository.findAllById(update.groups ?: listOf())
-        artifact.groups.difference(updatedGroups).forEach { it.artifacts.remove(artifact) }
-        updatedGroups.difference(artifact.groups).forEach { it.artifacts.add(artifact) }
+        artifact.groups.subtract(updatedGroups).forEach { it.artifacts.remove(artifact) }
+        updatedGroups.subtract(artifact.groups).forEach { it.artifacts.add(artifact) }
         groupRepository.saveAll(artifact.groups)
         groupRepository.saveAll(updatedGroups)
 
         // Fix up new sharees and sharees who are being removed
         val updatedShares = userRepository.findAllById(update.sharedWith ?: listOf())
-        artifact.sharedWith.difference(updatedShares).forEach { it.sharedArtifacts.remove(artifact) }
-        updatedShares.difference(artifact.sharedWith).forEach { it.sharedArtifacts.add(artifact) }
+        artifact.sharedWith.subtract(updatedShares).forEach { it.sharedArtifacts.remove(artifact) }
+        updatedShares.subtract(artifact.sharedWith).forEach { it.sharedArtifacts.add(artifact) }
         userRepository.saveAll(artifact.sharedWith)
         userRepository.saveAll(updatedShares)
 
@@ -204,6 +205,31 @@ class ArtifactServiceImpl(
             sharedWith = updatedShares
         )
         return artifactRepository.save(updatedArtifact)
+    }
+
+    private fun assertCanUpdate(user: User, artifact: Artifact, update: ArtifactRequest) {
+        // Owners of an artifact can make any changes they want
+        if (artifact.owners.contains(user)) {
+            return
+        }
+
+        // Other than owners, the only users that can make any sort of modifications are group owners of groups the
+        // artifact is in. In this case, they're limited to being able to remove an artifact from a group they're an
+        // owner of.
+        when {
+            update.name != artifact.name -> throw ActionNotAllowedException("User ${user.id} is not an owner of artifact ${artifact.id}")
+            update.description != artifact.description -> throw ActionNotAllowedException("User ${user.id} is not an owner of artifact ${artifact.id}")
+            update.owners != artifact.owners.map(User::id) -> throw ActionNotAllowedException("User ${user.id} is not an owner of artifact ${artifact.id}")
+            update.sharedWith != artifact.sharedWith.map(User::id) -> throw ActionNotAllowedException("User ${user.id} is not an owner of artifact ${artifact.id}")
+            update.groups != artifact.groups.map(Group::id) -> {
+                // The set of groups a user removes must be a subset of the set groups in which they are an owner
+                val removedGroups = artifact.groups.map(Group::id).subtract(update.groups!!)
+                if (!user.ownedGroups.map(Group::id).containsAll(removedGroups.toList())) {
+                    throw ActionNotAllowedException("User ${user.id} is not an admin of all the groups they attempted to remove")
+                }
+            }
+            else -> throw ActionNotAllowedException("User ${user.id} is not an owner of artifact ${artifact.id}")
+        }
     }
 
     /**
@@ -235,17 +261,4 @@ class ArtifactServiceImpl(
         artifactRepository.delete(artifact)
         return artifact
     }
-}
-
-/**
- * Find the different of two [Iterable]s, that is all the elements in [this] that are not in [other]. In set notation
- * this would be `[this] - [other]` or `[this] / [other]`.
- *
- * @receiver [Iterable] to take [other] away from
- * @param other to take away from [this]
- * @return [Set] of the difference between [this] and [other]
- */
-private fun <T> Iterable<T>.difference(other: Iterable<T>): Iterable<T> {
-    val set = this.toMutableSet()
-    return set.filter { !other.contains(it) }
 }
