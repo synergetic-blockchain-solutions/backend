@@ -1033,12 +1033,180 @@ class ArtifactServiceImplTest {
 
         @Test
         fun `it should allow group owners to remove their group from the artifact`() {
-            TODO()
+            val email = "example@example.com"
+            var group = Group(id = 1, name = "Group 1", members = mutableListOf(), description = "")
+            val groupOwner = User(
+                id = 2,
+                name = "User 2",
+                email = "example@example2.com",
+                password = "password",
+                groups = mutableListOf(
+                    group
+                ),
+                privateGroup = Group(2, "Group 2", members = mutableListOf(), description = ""),
+                ownedGroups = mutableListOf(group)
+            )
+            val artifact = Artifact(
+                1,
+                "Artifact 1",
+                "Description",
+                owners = mutableListOf(),
+                groups = mutableListOf(group)
+            )
+            group = group.copy(artifacts = mutableListOf(artifact))
+            val user = User(
+                id = 1, name = "User 1", email = email, password = "password", groups = mutableListOf(
+                    Group(id = 1, name = "Group 1", members = mutableListOf(), description = "")
+                ), privateGroup = Group(2, "Group 2", members = mutableListOf(), description = "")
+            )
+            Mockito.`when`(artifactRepository.findByIdOrNull(anyLong())).then {
+                if (it.arguments[0] == artifact.id) {
+                    Optional.of(artifact)
+                } else {
+                    Optional.empty()
+                }
+            }
+            Mockito.`when`(userRepository.findByEmail(anyString())).then {
+                when (it.arguments[0]) {
+                    user.email -> user
+                    groupOwner.email -> groupOwner
+                    else -> throw RuntimeException("${it.arguments[0]} not handled")
+                }
+            }
+            Mockito.`when`(groupRepository.findByIdOrNull(anyLong())).then { Optional.of(group) }
+            Mockito.`when`(artifactRepository.save(any<Artifact>())).then { it.arguments[0] as Artifact }
+
+            val updatedArtifact =
+                artifactService.updateArtifact(
+                    groupOwner.email, artifact.id, ArtifactRequest(
+                        artifact.name,
+                        artifact.description,
+                        artifact.owners.map(User::id),
+                        emptyList(),
+                        artifact.sharedWith.map(User::id)
+                    )
+                )
+            assertThat(
+                updatedArtifact, equalTo(artifact.copy(groups = mutableListOf()))
+            )
+            Mockito.verify(artifactRepository).save(artifact.copy(groups = mutableListOf()))
         }
 
         @Test
         fun `it should not allow group owners to make changes except for their group`() {
-            TODO()
+            val email = "example@example.com"
+            var group = Group(id = 1, name = "Group 1", members = mutableListOf(), description = "")
+            val groupOwner = User(
+                id = 2,
+                name = "User 2",
+                email = "example@example2.com",
+                password = "password",
+                groups = mutableListOf(
+                    group
+                ),
+                privateGroup = Group(2, "Group 2", members = mutableListOf(), description = ""),
+                ownedGroups = mutableListOf(group)
+            )
+            val artifact = Artifact(
+                1,
+                "Artifact 1",
+                "Description",
+                owners = mutableListOf(),
+                groups = mutableListOf(group)
+            )
+            group = group.copy(artifacts = mutableListOf(artifact))
+            val user = User(
+                id = 1, name = "User 1", email = email, password = "password", groups = mutableListOf(
+                    Group(id = 1, name = "Group 1", members = mutableListOf(), description = "")
+                ), privateGroup = Group(2, "Group 2", members = mutableListOf(), description = "")
+            )
+            Mockito.`when`(artifactRepository.findByIdOrNull(anyLong())).then {
+                if (it.arguments[0] == artifact.id) {
+                    Optional.of(artifact)
+                } else {
+                    Optional.empty()
+                }
+            }
+            Mockito.`when`(userRepository.findByEmail(anyString())).then {
+                when (it.arguments[0]) {
+                    user.email -> user
+                    groupOwner.email -> groupOwner
+                    else -> throw RuntimeException("${it.arguments[0]} not handled")
+                }
+            }
+            Mockito.`when`(groupRepository.findByIdOrNull(anyLong())).then { Optional.of(group) }
+            assertThrows<ActionNotAllowedException> {
+                artifactService.updateArtifact(
+                    user.email, artifact.id, ArtifactRequest(
+                        artifact.name,
+                        "updated description",
+                        artifact.owners.map(User::id),
+                        artifact.groups.map(Group::id),
+                        artifact.sharedWith.map(User::id)
+                    )
+                )
+            }
+        }
+
+        @Test
+        fun `it should not allow group owners to remove the artifact from other groups`() {
+            val email = "example@example.com"
+            var group = Group(id = 1, name = "Group 1", members = mutableListOf(), description = "")
+            val otherGroup = Group(id = 2, name = "Group 2", members = mutableListOf(), description = "")
+            val groupOwner = User(
+                id = 2,
+                name = "User 2",
+                email = "example@example2.com",
+                password = "password",
+                groups = mutableListOf(
+                    group
+                ),
+                privateGroup = Group(2, "Group 2", members = mutableListOf(), description = ""),
+                ownedGroups = mutableListOf(group)
+            )
+            val artifact = Artifact(
+                1,
+                "Artifact 1",
+                "Description",
+                owners = mutableListOf(),
+                groups = mutableListOf(group, otherGroup)
+            )
+            group = group.copy(artifacts = mutableListOf(artifact))
+            val user = User(
+                id = 1, name = "User 1", email = email, password = "password", groups = mutableListOf(
+                    Group(id = 1, name = "Group 1", members = mutableListOf(), description = "")
+                ), privateGroup = Group(2, "Group 2", members = mutableListOf(), description = "")
+            )
+            Mockito.`when`(artifactRepository.findByIdOrNull(anyLong())).then {
+                if (it.arguments[0] == artifact.id) {
+                    Optional.of(artifact)
+                } else {
+                    Optional.empty()
+                }
+            }
+            Mockito.`when`(userRepository.findByEmail(anyString())).then {
+                when (it.arguments[0]) {
+                    user.email -> user
+                    groupOwner.email -> groupOwner
+                    else -> throw RuntimeException("${it.arguments[0]} not handled")
+                }
+            }
+            Mockito.`when`(groupRepository.findByIdOrNull(anyLong())).then { Optional.of(group) }
+            val exception = assertThrows<ActionNotAllowedException> {
+                artifactService.updateArtifact(
+                    user.email, artifact.id, ArtifactRequest(
+                        artifact.name,
+                        artifact.description,
+                        artifact.owners.map(User::id),
+                        artifact.groups.map(Group::id).filter { it != otherGroup.id },
+                        artifact.sharedWith.map(User::id)
+                    )
+                )
+            }
+            assertEquals(
+                "User ${user.id} is not an admin of all the groups they attempted to remove",
+                exception.message
+            )
         }
 
         @Test

@@ -7,6 +7,7 @@ import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.`is`
 import org.hamcrest.Matchers.containsInAnyOrder
 import org.hamcrest.Matchers.hasEntry
+import org.hamcrest.Matchers.hasItem
 import org.hamcrest.Matchers.hasItems
 import org.hamcrest.Matchers.hasProperty
 import org.hamcrest.Matchers.not
@@ -322,7 +323,55 @@ class ArtifactControllerTest {
 
             @Test
             fun `it should allow group owners to remove the artifact from the group`() {
-                TODO()
+                var user = userRepository.findByEmail(email)!!
+                var ownedGroup = groupRepository.save(
+                    Group(
+                        name = "Group 1",
+                        description = "description",
+                        artifacts = mutableListOf(),
+                        admins = mutableListOf(user),
+                        members = mutableListOf(user)
+                    )
+                )
+                user = userRepository.save(user.copy(ownedGroups = mutableListOf(ownedGroup)))
+                val artifact = artifactRepository.save(
+                    Artifact(
+                        name = "Artifact 1",
+                        description = "Description",
+                        owners = mutableListOf(),
+                        groups = mutableListOf(ownedGroup),
+                        sharedWith = mutableListOf()
+                    )
+                )
+                ownedGroup = groupRepository.save(ownedGroup.copy(artifacts = mutableListOf(artifact)))
+                val updateArtifactRequest =
+                    ArtifactRequest(
+                        name = artifact.name,
+                        description = artifact.description,
+                        owners = artifact.owners.map(User::id),
+                        groups = artifact.groups.map(Group::id).filter { it != ownedGroup.id },
+                        sharedWith = artifact.sharedWith.map(User::id)
+                    )
+                val updateArtifactResponse = client.put()
+                    .uri("/artifact/${artifact.id}")
+                    .accept(MediaType.APPLICATION_JSON_UTF8)
+                    .contentType(MediaType.APPLICATION_JSON_UTF8)
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer $token")
+                    .syncBody(updateArtifactRequest)
+                    .exchange()
+                    .expectStatus().isOk
+                    .expectBody()
+                    .returnResult()
+                    .responseBody!!
+                val updatedArtifactResponse =
+                    ObjectMapper().registerKotlinModule().readValue<Map<String, Any>>(updateArtifactResponse)
+                assertEquals((updatedArtifactResponse["id"] as Int).toLong(), artifact.id)
+                assertEquals(updatedArtifactResponse["name"] as String, artifact.name)
+                assertEquals(updatedArtifactResponse["description"] as String, artifact.description)
+
+                val updatedArtifact =
+                    artifactRepository.findByIdOrNull((updatedArtifactResponse["id"] as Int).toLong())!!
+                assertThat(updatedArtifact, hasProperty("groups", not(hasItem(hasProperty("id", `is`(ownedGroup.id))))))
             }
 
             @Test
