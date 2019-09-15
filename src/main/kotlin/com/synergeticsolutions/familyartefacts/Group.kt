@@ -26,11 +26,17 @@ data class Group(
     @GeneratedValue(strategy = GenerationType.AUTO)
     val id: Long = 0,
     val name: String,
+    val description: String,
     @LazyCollection(value = LazyCollectionOption.FALSE)
     @ManyToMany(mappedBy = "groups")
     @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator::class, property = "id")
     @JsonIdentityReference(alwaysAsId = true)
-    val members: MutableList<User>,
+    var members: MutableList<User> = mutableListOf(),
+    @LazyCollection(value = LazyCollectionOption.FALSE)
+    @ManyToMany(mappedBy = "ownedGroups")
+    @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator::class, property = "id")
+    @JsonIdentityReference(alwaysAsId = true)
+    var admins: MutableList<User> = mutableListOf(),
     @LazyCollection(value = LazyCollectionOption.FALSE)
     @ManyToMany
     @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator::class, property = "id")
@@ -38,6 +44,6 @@ data class Group(
     val artifacts: MutableList<Artifact> = mutableListOf()
 ) {
     override fun toString(): String {
-        return "Group(id=$id, name=$name, members=${members.map(User::id)}, artifacts=${artifacts.map(Artifact::id)}"
+        return "Group $id"
     }
 }
