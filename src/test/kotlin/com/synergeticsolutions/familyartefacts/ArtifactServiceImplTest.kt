@@ -56,7 +56,7 @@ class ArtifactServiceImplTest {
                         "User1",
                         "example@example.com",
                         "password",
-                        privateGroup = Group(1, "Group1", members = mutableListOf())
+                        privateGroup = Group(1, "Group1", members = mutableListOf(), description = "")
                     )
                 )
             Mockito.`when`(userRepository.findByIdOrNull(anyLong())).thenReturn(null)
@@ -79,7 +79,7 @@ class ArtifactServiceImplTest {
                         "User1",
                         "example@example.com",
                         "password",
-                        privateGroup = Group(1, "Group1", members = mutableListOf())
+                        privateGroup = Group(1, "Group1", members = mutableListOf(), description = "")
                     )
                 )
             Mockito.`when`(groupRepository.findByIdOrNull(anyLong())).thenReturn(null)
@@ -103,7 +103,7 @@ class ArtifactServiceImplTest {
                         "example@example.com",
                         "password",
                         privateGroup = Group(
-                            1, "Group 1", members = mutableListOf()
+                            1, "Group 1", members = mutableListOf(), description = ""
                         )
                     )
                 )
@@ -128,7 +128,7 @@ class ArtifactServiceImplTest {
                         "User1",
                         "example@example.com",
                         "password",
-                        privateGroup = Group(1, "Group 1", members = mutableListOf())
+                        privateGroup = Group(1, "Group 1", members = mutableListOf(), description = "")
                     )
                 )
             Mockito.`when`(userRepository.findByIdOrNull(anyLong())).thenReturn(null)
@@ -153,7 +153,7 @@ class ArtifactServiceImplTest {
                         "User1",
                         "example@example.com",
                         "password",
-                        privateGroup = Group(2, "Group 1", members = mutableListOf())
+                        privateGroup = Group(2, "Group 1", members = mutableListOf(), description = "")
                     )
                 )
             Mockito.`when`(userRepository.findByIdOrNull(anyLong())).thenReturn(null)
@@ -180,7 +180,7 @@ class ArtifactServiceImplTest {
                         "User1",
                         "example@example.com",
                         "password",
-                        privateGroup = Group(2, "Group 1", members = mutableListOf())
+                        privateGroup = Group(2, "Group 1", members = mutableListOf(), description = "")
                     )
                 )
             Mockito.`when`(userRepository.findByIdOrNull(anyLong())).then {
@@ -189,7 +189,7 @@ class ArtifactServiceImplTest {
                     "User ${it.arguments[0]}",
                     "example${it.arguments[0]}@email.com",
                     "password",
-                    privateGroup = Group(2, "Group 1", members = mutableListOf())
+                    privateGroup = Group(2, "Group 1", members = mutableListOf(), description = "")
                 )
             }
             Mockito.`when`(userRepository.findAllById(any<Iterable<Long>>())).then {
@@ -200,7 +200,7 @@ class ArtifactServiceImplTest {
                         email = "example$id@example.com",
                         password = "password",
                         privateGroup = Group(
-                            1, "Group1", members = mutableListOf()
+                            1, "Group1", members = mutableListOf(), description = ""
                         )
                     )
                 }
@@ -235,7 +235,7 @@ class ArtifactServiceImplTest {
                         "User1",
                         "example@example.com",
                         "password",
-                        privateGroup = Group(2, "Group 1", members = mutableListOf())
+                        privateGroup = Group(2, "Group 1", members = mutableListOf(), description = "")
                     )
                 )
             Mockito.`when`(userRepository.findByIdOrNull(anyLong())).then {
@@ -244,7 +244,7 @@ class ArtifactServiceImplTest {
                     "User ${it.arguments[0]}",
                     "example${it.arguments[0]}@email.com",
                     "password",
-                    privateGroup = Group(2, "Group 1", members = mutableListOf())
+                    privateGroup = Group(2, "Group 1", members = mutableListOf(), description = "")
                 )
             }
             Mockito.`when`(groupRepository.findAllById(any<Iterable<Long>>())).then {
@@ -252,7 +252,7 @@ class ArtifactServiceImplTest {
                     Group(
                         id = id,
                         name = "Artifact $id",
-                        members = mutableListOf()
+                        members = mutableListOf(), description = ""
                     )
                 }
             }
@@ -286,7 +286,7 @@ class ArtifactServiceImplTest {
                         "User1",
                         "example@example.com",
                         "password",
-                        privateGroup = Group(2, "Group 1", members = mutableListOf())
+                        privateGroup = Group(2, "Group 1", members = mutableListOf(), description = "")
                     )
                 )
             Mockito.`when`(userRepository.findByIdOrNull(anyLong())).then {
@@ -295,7 +295,7 @@ class ArtifactServiceImplTest {
                     "User ${it.arguments[0]}",
                     "example${it.arguments[0]}@email.com",
                     "password",
-                    privateGroup = Group(2, "Group 1", members = mutableListOf())
+                    privateGroup = Group(2, "Group 1", members = mutableListOf(), description = "")
                 )
             }
             Mockito.`when`(userRepository.findAllById(any<Iterable<Long>>())).then {
@@ -306,7 +306,7 @@ class ArtifactServiceImplTest {
                         email = "example$id@example.com",
                         password = "password",
                         privateGroup = Group(
-                            1, "Group1", members = mutableListOf()
+                            1, "Group1", members = mutableListOf(), description = ""
                         )
                     )
                 }
@@ -341,7 +341,7 @@ class ArtifactServiceImplTest {
                         "User 1",
                         "example1@example.com",
                         "password",
-                        privateGroup = Group(2, "Group 1", members = mutableListOf())
+                        privateGroup = Group(2, "Group 1", members = mutableListOf(), description = "")
                     )
                 )
             Mockito.`when`(userRepository.findByIdOrNull(anyLong())).then {
@@ -350,7 +350,7 @@ class ArtifactServiceImplTest {
                     "User ${it.arguments[0]}",
                     "example${it.arguments[0]}@email.com",
                     "password",
-                    privateGroup = Group(2, "Group 1", members = mutableListOf())
+                    privateGroup = Group(2, "Group 1", members = mutableListOf(), description = "")
                 )
             }
             Mockito.`when`(userRepository.findAllById(any<Iterable<Long>>())).then {
@@ -361,7 +361,7 @@ class ArtifactServiceImplTest {
                         email = "example$id@example.com",
                         password = "password",
                         privateGroup = Group(
-                            2, "Group 1", members = mutableListOf()
+                            2, "Group 1", members = mutableListOf(), description = ""
                         )
                     )
                 }
@@ -397,7 +397,7 @@ class ArtifactServiceImplTest {
                         "User1",
                         "example@example.com",
                         "password",
-                        privateGroup = Group(2, "Group 2", members = mutableListOf())
+                        privateGroup = Group(2, "Group 2", members = mutableListOf(), description = "")
                     )
                 )
             Mockito.`when`(userRepository.findByIdOrNull(anyLong())).then {
@@ -406,7 +406,9 @@ class ArtifactServiceImplTest {
                     "User ${it.arguments[0]}",
                     "example${it.arguments[0]}@email.com",
                     "password",
-                    privateGroup = Group(2, "Group 1", members = mutableListOf())
+                    privateGroup = Group(
+                        2, "Group 1", members = mutableListOf(), description = ""
+                )
                 )
             }
             Mockito.`when`(groupRepository.findAllById(any<Iterable<Long>>())).then {
@@ -414,7 +416,7 @@ class ArtifactServiceImplTest {
                     Group(
                         id = id,
                         name = "Group $id",
-                        members = mutableListOf()
+                        members = mutableListOf(), description = ""
                     )
                 }
             }
@@ -467,8 +469,8 @@ class ArtifactServiceImplTest {
                 .thenReturn(
                     User(
                         id = 1, name = "User 1", email = email, password = "password", groups = mutableListOf(
-                            Group(id = 1, name = "Group 1", members = mutableListOf())
-                        ), privateGroup = Group(2, "Group 2", members = mutableListOf())
+                            Group(id = 1, name = "Group 1", members = mutableListOf(), description = "")
+                        ), privateGroup = Group(2, "Group 2", members = mutableListOf(), description = "")
                     )
                 )
             Mockito.`when`(artifactRepository.findByGroups_Id(anyLong())).thenReturn(groupArtifacts)
@@ -490,28 +492,28 @@ class ArtifactServiceImplTest {
                     "Artifact 1",
                     "Description",
                     owners = mutableListOf(),
-                    groups = mutableListOf(Group(id = 1, name = "Group 1", members = mutableListOf()))
+                    groups = mutableListOf(Group(id = 1, name = "Group 1", members = mutableListOf(), description = ""))
                 ),
                 Artifact(
                     2,
                     "Artifact 2",
                     "Description",
                     owners = mutableListOf(),
-                    groups = mutableListOf(Group(id = 1, name = "Group 1", members = mutableListOf()))
+                    groups = mutableListOf(Group(id = 1, name = "Group 1", members = mutableListOf(), description = ""))
                 ),
                 Artifact(
                     3,
                     "Artifact 3",
                     "Description",
                     owners = mutableListOf(),
-                    groups = mutableListOf(Group(id = 1, name = "Group 1", members = mutableListOf()))
+                    groups = mutableListOf(Group(id = 1, name = "Group 1", members = mutableListOf(), description = ""))
                 ),
                 Artifact(
                     4,
                     "Artifact 4",
                     "Description",
                     owners = mutableListOf(),
-                    groups = mutableListOf(Group(id = 1, name = "Group 1", members = mutableListOf()))
+                    groups = mutableListOf(Group(id = 1, name = "Group 1", members = mutableListOf(), description = ""))
                 )
             )
             val ownerArtifacts = listOf(
@@ -520,28 +522,28 @@ class ArtifactServiceImplTest {
                     "Artifact 7",
                     "Description",
                     owners = mutableListOf(),
-                    groups = mutableListOf(Group(id = 2, name = "Group 2", members = mutableListOf()))
+                    groups = mutableListOf(Group(id = 2, name = "Group 2", members = mutableListOf(), description = ""))
                 ),
                 Artifact(
                     6,
                     "Artifact 8",
                     "Description",
                     owners = mutableListOf(),
-                    groups = mutableListOf(Group(id = 2, name = "Group 2", members = mutableListOf()))
+                    groups = mutableListOf(Group(id = 2, name = "Group 2", members = mutableListOf(), description = ""))
                 ),
                 Artifact(
                     7,
                     "Artifact 9",
                     "Description",
                     owners = mutableListOf(),
-                    groups = mutableListOf(Group(id = 2, name = "Group 2", members = mutableListOf()))
+                    groups = mutableListOf(Group(id = 2, name = "Group 2", members = mutableListOf(), description = ""))
                 ),
                 Artifact(
                     8,
                     "Artifact 10",
                     "Description",
                     owners = mutableListOf(),
-                    groups = mutableListOf(Group(id = 2, name = "Group 2", members = mutableListOf()))
+                    groups = mutableListOf(Group(id = 2, name = "Group 2", members = mutableListOf(), description = ""))
                 )
             )
             val sharedArtifacts = listOf(
@@ -550,36 +552,36 @@ class ArtifactServiceImplTest {
                     "Artifact 11",
                     "Description",
                     owners = mutableListOf(),
-                    groups = mutableListOf(Group(id = 2, name = "Group 2", members = mutableListOf()))
+                    groups = mutableListOf(Group(id = 2, name = "Group 2", members = mutableListOf(), description = ""))
                 ),
                 Artifact(
                     12,
                     "Artifact 12",
                     "Description",
                     owners = mutableListOf(),
-                    groups = mutableListOf(Group(id = 2, name = "Group 2", members = mutableListOf()))
+                    groups = mutableListOf(Group(id = 2, name = "Group 2", members = mutableListOf(), description = ""))
                 ),
                 Artifact(
                     13,
                     "Artifact 13",
                     "Description",
                     owners = mutableListOf(),
-                    groups = mutableListOf(Group(id = 2, name = "Group 2", members = mutableListOf()))
+                    groups = mutableListOf(Group(id = 2, name = "Group 2", members = mutableListOf(), description = ""))
                 ),
                 Artifact(
                     14,
                     "Artifact 14",
                     "Description",
                     owners = mutableListOf(),
-                    groups = mutableListOf(Group(id = 2, name = "Group 2", members = mutableListOf()))
+                    groups = mutableListOf(Group(id = 2, name = "Group 2", members = mutableListOf(), description = ""))
                 )
             )
             Mockito.`when`(userRepository.findByEmail(email))
                 .thenReturn(
                     User(
                         id = 1, name = "User 1", email = email, password = "password", groups = mutableListOf(
-                            Group(id = 1, name = "Group 1", members = mutableListOf())
-                        ), privateGroup = Group(2, "Group 2", members = mutableListOf())
+                            Group(id = 1, name = "Group 1", members = mutableListOf(), description = "")
+                        ), privateGroup = Group(2, "Group 2", members = mutableListOf(), description = "")
                     )
                 )
             Mockito.`when`(artifactRepository.findByGroups_Id(anyLong())).thenReturn(groupArtifacts)
@@ -598,8 +600,8 @@ class ArtifactServiceImplTest {
             val email = "example@example.com"
             val user = User(
                 id = 1, name = "User 1", email = email, password = "password", groups = mutableListOf(
-                    Group(id = 1, name = "Group 1", members = mutableListOf())
-                ), privateGroup = Group(2, "Group 2", members = mutableListOf())
+                    Group(id = 1, name = "Group 1", members = mutableListOf(), description = "")
+                ), privateGroup = Group(2, "Group 2", members = mutableListOf(), description = "")
             )
             val groupArtifacts = listOf(
                 Artifact(
@@ -607,28 +609,28 @@ class ArtifactServiceImplTest {
                     "Artifact 1",
                     "Description",
                     owners = mutableListOf(),
-                    groups = mutableListOf(Group(id = 1, name = "Group 1", members = mutableListOf()))
+                    groups = mutableListOf(Group(id = 1, name = "Group 1", members = mutableListOf(), description = ""))
                 ),
                 Artifact(
                     2,
                     "Artifact 2",
                     "Description",
                     owners = mutableListOf(),
-                    groups = mutableListOf(Group(id = 1, name = "Group 1", members = mutableListOf()))
+                    groups = mutableListOf(Group(id = 1, name = "Group 1", members = mutableListOf(), description = ""))
                 ),
                 Artifact(
                     3,
                     "Artifact 3",
                     "Description",
                     owners = mutableListOf(),
-                    groups = mutableListOf(Group(id = 1, name = "Group 1", members = mutableListOf()))
+                    groups = mutableListOf(Group(id = 1, name = "Group 1", members = mutableListOf(), description = ""))
                 ),
                 Artifact(
                     4,
                     "Artifact 4",
                     "Description",
                     owners = mutableListOf(),
-                    groups = mutableListOf(Group(id = 1, name = "Group 1", members = mutableListOf()))
+                    groups = mutableListOf(Group(id = 1, name = "Group 1", members = mutableListOf(), description = ""))
                 )
             )
             val ownerArtifacts = listOf(
@@ -637,28 +639,28 @@ class ArtifactServiceImplTest {
                     "Artifact 7",
                     "Description",
                     owners = mutableListOf(user),
-                    groups = mutableListOf(Group(id = 2, name = "Group 2", members = mutableListOf()))
+                    groups = mutableListOf(Group(id = 2, name = "Group 2", members = mutableListOf(), description = ""))
                 ),
                 Artifact(
                     6,
                     "Artifact 8",
                     "Description",
                     owners = mutableListOf(user),
-                    groups = mutableListOf(Group(id = 2, name = "Group 2", members = mutableListOf()))
+                    groups = mutableListOf(Group(id = 2, name = "Group 2", members = mutableListOf(), description = ""))
                 ),
                 Artifact(
                     7,
                     "Artifact 9",
                     "Description",
                     owners = mutableListOf(user),
-                    groups = mutableListOf(Group(id = 2, name = "Group 2", members = mutableListOf()))
+                    groups = mutableListOf(Group(id = 2, name = "Group 2", members = mutableListOf(), description = ""))
                 ),
                 Artifact(
                     8,
                     "Artifact 10",
                     "Description",
                     owners = mutableListOf(user),
-                    groups = mutableListOf(Group(id = 2, name = "Group 2", members = mutableListOf()))
+                    groups = mutableListOf(Group(id = 2, name = "Group 2", members = mutableListOf(), description = ""))
                 )
             )
             val sharedArtifacts = listOf(
@@ -667,28 +669,28 @@ class ArtifactServiceImplTest {
                     "Artifact 11",
                     "Description",
                     owners = mutableListOf(),
-                    groups = mutableListOf(Group(id = 2, name = "Group 2", members = mutableListOf()))
+                    groups = mutableListOf(Group(id = 2, name = "Group 2", members = mutableListOf(), description = ""))
                 ),
                 Artifact(
                     12,
                     "Artifact 12",
                     "Description",
                     owners = mutableListOf(),
-                    groups = mutableListOf(Group(id = 2, name = "Group 2", members = mutableListOf()))
+                    groups = mutableListOf(Group(id = 2, name = "Group 2", members = mutableListOf(), description = ""))
                 ),
                 Artifact(
                     13,
                     "Artifact 13",
                     "Description",
                     owners = mutableListOf(),
-                    groups = mutableListOf(Group(id = 2, name = "Group 2", members = mutableListOf()))
+                    groups = mutableListOf(Group(id = 2, name = "Group 2", members = mutableListOf(), description = ""))
                 ),
                 Artifact(
                     14,
                     "Artifact 14",
                     "Description",
                     owners = mutableListOf(),
-                    groups = mutableListOf(Group(id = 2, name = "Group 2", members = mutableListOf()))
+                    groups = mutableListOf(Group(id = 2, name = "Group 2", members = mutableListOf(), description = ""))
                 )
             )
             Mockito.`when`(userRepository.findByEmail(email)).thenReturn(user)
@@ -708,8 +710,8 @@ class ArtifactServiceImplTest {
             val email = "example@example.com"
             val user = User(
                 id = 1, name = "User 1", email = email, password = "password", groups = mutableListOf(
-                    Group(id = 1, name = "Group 1", members = mutableListOf())
-                ), privateGroup = Group(2, "Group 2", members = mutableListOf())
+                    Group(id = 1, name = "Group 1", members = mutableListOf(), description = "")
+                ), privateGroup = Group(2, "Group 2", members = mutableListOf(), description = "")
             )
             val groupArtifacts = listOf(
                 Artifact(
@@ -717,28 +719,28 @@ class ArtifactServiceImplTest {
                     "Artifact 1",
                     "Description",
                     owners = mutableListOf(),
-                    groups = mutableListOf(Group(id = 1, name = "Group 1", members = mutableListOf()))
+                    groups = mutableListOf(Group(id = 1, name = "Group 1", members = mutableListOf(), description = ""))
                 ),
                 Artifact(
                     2,
                     "Artifact 2",
                     "Description",
                     owners = mutableListOf(),
-                    groups = mutableListOf(Group(id = 1, name = "Group 1", members = mutableListOf()))
+                    groups = mutableListOf(Group(id = 1, name = "Group 1", members = mutableListOf(), description = ""))
                 ),
                 Artifact(
                     3,
                     "Artifact 3",
                     "Description",
                     owners = mutableListOf(),
-                    groups = mutableListOf(Group(id = 1, name = "Group 1", members = mutableListOf()))
+                    groups = mutableListOf(Group(id = 1, name = "Group 1", members = mutableListOf(), description = ""))
                 ),
                 Artifact(
                     4,
                     "Artifact 4",
                     "Description",
                     owners = mutableListOf(),
-                    groups = mutableListOf(Group(id = 1, name = "Group 1", members = mutableListOf()))
+                    groups = mutableListOf(Group(id = 1, name = "Group 1", members = mutableListOf(), description = ""))
                 )
             )
             val ownerArtifacts = listOf(
@@ -747,28 +749,28 @@ class ArtifactServiceImplTest {
                     "Artifact 7",
                     "Description",
                     owners = mutableListOf(user),
-                    groups = mutableListOf(Group(id = 2, name = "Group 2", members = mutableListOf()))
+                    groups = mutableListOf(Group(id = 2, name = "Group 2", members = mutableListOf(), description = ""))
                 ),
                 Artifact(
                     6,
                     "Artifact 8",
                     "Description",
                     owners = mutableListOf(user),
-                    groups = mutableListOf(Group(id = 2, name = "Group 2", members = mutableListOf()))
+                    groups = mutableListOf(Group(id = 2, name = "Group 2", members = mutableListOf(), description = ""))
                 ),
                 Artifact(
                     7,
                     "Artifact 9",
                     "Description",
                     owners = mutableListOf(user),
-                    groups = mutableListOf(Group(id = 2, name = "Group 2", members = mutableListOf()))
+                    groups = mutableListOf(Group(id = 2, name = "Group 2", members = mutableListOf(), description = ""))
                 ),
                 Artifact(
                     8,
                     "Artifact 10",
                     "Description",
                     owners = mutableListOf(user),
-                    groups = mutableListOf(Group(id = 2, name = "Group 2", members = mutableListOf()))
+                    groups = mutableListOf(Group(id = 2, name = "Group 2", members = mutableListOf(), description = ""))
                 )
             )
             val sharedArtifacts = listOf(
@@ -777,7 +779,14 @@ class ArtifactServiceImplTest {
                     "Artifact 11",
                     "Description",
                     owners = mutableListOf(),
-                    groups = mutableListOf(Group(id = 2, name = "Group 2", members = mutableListOf())),
+                    groups = mutableListOf(
+                        Group(
+                            id = 2,
+                            name = "Group 2",
+                            members = mutableListOf(),
+                            description = ""
+                        )
+                    ),
                     sharedWith = mutableListOf(user)
                 ),
                 Artifact(
@@ -785,7 +794,14 @@ class ArtifactServiceImplTest {
                     "Artifact 12",
                     "Description",
                     owners = mutableListOf(),
-                    groups = mutableListOf(Group(id = 2, name = "Group 2", members = mutableListOf())),
+                    groups = mutableListOf(
+                        Group(
+                            id = 2,
+                            name = "Group 2",
+                            members = mutableListOf(),
+                            description = ""
+                        )
+                    ),
                     sharedWith = mutableListOf(user)
                 ),
                 Artifact(
@@ -793,7 +809,14 @@ class ArtifactServiceImplTest {
                     "Artifact 13",
                     "Description",
                     owners = mutableListOf(),
-                    groups = mutableListOf(Group(id = 2, name = "Group 2", members = mutableListOf())),
+                    groups = mutableListOf(
+                        Group(
+                            id = 2,
+                            name = "Group 2",
+                            members = mutableListOf(),
+                            description = ""
+                        )
+                    ),
                     sharedWith = mutableListOf(user)
                 ),
                 Artifact(
@@ -801,7 +824,14 @@ class ArtifactServiceImplTest {
                     "Artifact 14",
                     "Description",
                     owners = mutableListOf(),
-                    groups = mutableListOf(Group(id = 2, name = "Group 2", members = mutableListOf())),
+                    groups = mutableListOf(
+                        Group(
+                            id = 2,
+                            name = "Group 2",
+                            members = mutableListOf(),
+                            description = ""
+                        )
+                    ),
                     sharedWith = mutableListOf(user)
                 )
             )
@@ -822,8 +852,8 @@ class ArtifactServiceImplTest {
             val email = "example@example.com"
             val user = User(
                 id = 1, name = "User 1", email = email, password = "password", groups = mutableListOf(
-                    Group(id = 1, name = "Group 1", members = mutableListOf())
-                ), privateGroup = Group(2, "Group 2", members = mutableListOf())
+                    Group(id = 1, name = "Group 1", members = mutableListOf(), description = "")
+                ), privateGroup = Group(2, "Group 2", members = mutableListOf(), description = "")
             )
             val groupArtifacts = listOf(
                 Artifact(
@@ -831,28 +861,28 @@ class ArtifactServiceImplTest {
                     "Artifact 1",
                     "Description",
                     owners = mutableListOf(),
-                    groups = mutableListOf(Group(id = 1, name = "Group 1", members = mutableListOf()))
+                    groups = mutableListOf(Group(id = 1, name = "Group 1", members = mutableListOf(), description = ""))
                 ),
                 Artifact(
                     2,
                     "Artifact 2",
                     "Description",
                     owners = mutableListOf(),
-                    groups = mutableListOf(Group(id = 1, name = "Group 1", members = mutableListOf()))
+                    groups = mutableListOf(Group(id = 1, name = "Group 1", members = mutableListOf(), description = ""))
                 ),
                 Artifact(
                     3,
                     "Artifact 3",
                     "Description",
                     owners = mutableListOf(),
-                    groups = mutableListOf(Group(id = 1, name = "Group 1", members = mutableListOf()))
+                    groups = mutableListOf(Group(id = 1, name = "Group 1", members = mutableListOf(), description = ""))
                 ),
                 Artifact(
                     4,
                     "Artifact 4",
                     "Description",
                     owners = mutableListOf(),
-                    groups = mutableListOf(Group(id = 1, name = "Group 1", members = mutableListOf()))
+                    groups = mutableListOf(Group(id = 1, name = "Group 1", members = mutableListOf(), description = ""))
                 )
             )
             val ownerArtifacts = listOf(
@@ -861,28 +891,28 @@ class ArtifactServiceImplTest {
                     "Artifact 1",
                     "Description",
                     owners = mutableListOf(),
-                    groups = mutableListOf(Group(id = 1, name = "Group 1", members = mutableListOf()))
+                    groups = mutableListOf(Group(id = 1, name = "Group 1", members = mutableListOf(), description = ""))
                 ),
                 Artifact(
                     6,
                     "Artifact 8",
                     "Description",
                     owners = mutableListOf(user),
-                    groups = mutableListOf(Group(id = 2, name = "Group 2", members = mutableListOf()))
+                    groups = mutableListOf(Group(id = 2, name = "Group 2", members = mutableListOf(), description = ""))
                 ),
                 Artifact(
                     7,
                     "Artifact 9",
                     "Description",
                     owners = mutableListOf(user),
-                    groups = mutableListOf(Group(id = 2, name = "Group 2", members = mutableListOf()))
+                    groups = mutableListOf(Group(id = 2, name = "Group 2", members = mutableListOf(), description = ""))
                 ),
                 Artifact(
                     8,
                     "Artifact 10",
                     "Description",
                     owners = mutableListOf(user),
-                    groups = mutableListOf(Group(id = 2, name = "Group 2", members = mutableListOf()))
+                    groups = mutableListOf(Group(id = 2, name = "Group 2", members = mutableListOf(), description = ""))
                 )
             )
             val sharedArtifacts = listOf(
@@ -891,14 +921,21 @@ class ArtifactServiceImplTest {
                     "Artifact 1",
                     "Description",
                     owners = mutableListOf(),
-                    groups = mutableListOf(Group(id = 1, name = "Group 1", members = mutableListOf()))
+                    groups = mutableListOf(Group(id = 1, name = "Group 1", members = mutableListOf(), description = ""))
                 ),
                 Artifact(
                     12,
                     "Artifact 12",
                     "Description",
                     owners = mutableListOf(),
-                    groups = mutableListOf(Group(id = 2, name = "Group 2", members = mutableListOf())),
+                    groups = mutableListOf(
+                        Group(
+                            id = 2,
+                            name = "Group 2",
+                            members = mutableListOf(),
+                            description = ""
+                        )
+                    ),
                     sharedWith = mutableListOf(user)
                 ),
                 Artifact(
@@ -906,7 +943,14 @@ class ArtifactServiceImplTest {
                     "Artifact 13",
                     "Description",
                     owners = mutableListOf(),
-                    groups = mutableListOf(Group(id = 2, name = "Group 2", members = mutableListOf())),
+                    groups = mutableListOf(
+                        Group(
+                            id = 2,
+                            name = "Group 2",
+                            members = mutableListOf(),
+                            description = ""
+                        )
+                    ),
                     sharedWith = mutableListOf(user)
                 ),
                 Artifact(
@@ -914,7 +958,14 @@ class ArtifactServiceImplTest {
                     "Artifact 14",
                     "Description",
                     owners = mutableListOf(),
-                    groups = mutableListOf(Group(id = 2, name = "Group 2", members = mutableListOf())),
+                    groups = mutableListOf(
+                        Group(
+                            id = 2,
+                            name = "Group 2",
+                            members = mutableListOf(),
+                            description = ""
+                        )
+                    ),
                     sharedWith = mutableListOf(user)
                 )
             )
@@ -937,8 +988,8 @@ class ArtifactServiceImplTest {
             val email = "example@example.com"
             var owningUser = User(
                 id = 2, name = "User 2", email = "example@example2.com", password = "password", groups = mutableListOf(
-                    Group(id = 1, name = "Group 1", members = mutableListOf())
-                ), privateGroup = Group(2, "Group 2", members = mutableListOf())
+                    Group(id = 1, name = "Group 1", members = mutableListOf(), description = "")
+                ), privateGroup = Group(2, "Group 2", members = mutableListOf(), description = "")
             )
             val artifact = Artifact(
                 1,
@@ -950,8 +1001,8 @@ class ArtifactServiceImplTest {
             owningUser = owningUser.copy(ownedArtifacts = mutableListOf(artifact))
             val user = User(
                 id = 1, name = "User 1", email = email, password = "password", groups = mutableListOf(
-                    Group(id = 1, name = "Group 1", members = mutableListOf())
-                ), privateGroup = Group(2, "Group 2", members = mutableListOf())
+                    Group(id = 1, name = "Group 1", members = mutableListOf(), description = "")
+                ), privateGroup = Group(2, "Group 2", members = mutableListOf(), description = "")
             )
             Mockito.`when`(artifactRepository.findByIdOrNull(anyLong())).then {
                 if (it.arguments[0] == artifact.id) {
@@ -995,8 +1046,8 @@ class ArtifactServiceImplTest {
             val email = "example@example.com"
             var owningUser = User(
                 id = 2, name = "User 2", email = "example@example2.com", password = "password", groups = mutableListOf(
-                    Group(id = 1, name = "Group 1", members = mutableListOf())
-                ), privateGroup = Group(2, "Group 2", members = mutableListOf())
+                    Group(id = 1, name = "Group 1", members = mutableListOf(), description = "")
+                ), privateGroup = Group(2, "Group 2", members = mutableListOf(), description = "")
             )
             var artifact = Artifact(
                 1,
@@ -1052,8 +1103,8 @@ class ArtifactServiceImplTest {
             val email = "example@example.com"
             var owningUser = User(
                 id = 2, name = "User 2", email = "example@example2.com", password = "password", groups = mutableListOf(
-                    Group(id = 1, name = "Group 1", members = mutableListOf())
-                ), privateGroup = Group(2, "Group 2", members = mutableListOf())
+                    Group(id = 1, name = "Group 1", members = mutableListOf(), description = "")
+                ), privateGroup = Group(2, "Group 2", members = mutableListOf(), description = "")
             )
             val artifact = Artifact(
                 1,
@@ -1065,8 +1116,8 @@ class ArtifactServiceImplTest {
             owningUser = owningUser.copy(ownedArtifacts = mutableListOf(artifact))
             val user = User(
                 id = 1, name = "User 1", email = email, password = "password", groups = mutableListOf(
-                    Group(id = 1, name = "Group 1", members = mutableListOf())
-                ), privateGroup = Group(2, "Group 2", members = mutableListOf())
+                    Group(id = 1, name = "Group 1", members = mutableListOf(), description = "")
+                ), privateGroup = Group(2, "Group 2", members = mutableListOf(), description = "")
             )
             Mockito.`when`(artifactRepository.findByIdOrNull(anyLong())).then {
                 if (it.arguments[0] == artifact.id) {
@@ -1090,8 +1141,8 @@ class ArtifactServiceImplTest {
             val email = "example@example.com"
             var owningUser = User(
                 id = 2, name = "User 2", email = "example@example2.com", password = "password", groups = mutableListOf(
-                    Group(id = 1, name = "Group 1", members = mutableListOf())
-                ), privateGroup = Group(2, "Group 2", members = mutableListOf())
+                    Group(id = 1, name = "Group 1", members = mutableListOf(), description = "")
+                ), privateGroup = Group(2, "Group 2", members = mutableListOf(), description = "")
             )
             var artifact = Artifact(
                 1,
@@ -1231,17 +1282,24 @@ class ArtifactServiceImplIntegrationTest {
                     Group(
                         name = "Group1",
                         members = mutableListOf(user),
-                        artifacts = mutableListOf()
+                        artifacts = mutableListOf(), description = ""
                     )
                 ),
                 groupRepository.save(
                     Group(
                         name = "Group2",
                         members = mutableListOf(user),
-                        artifacts = mutableListOf()
+                        artifacts = mutableListOf(), description = ""
                     )
                 ),
-                groupRepository.save(Group(name = "Group3", members = mutableListOf(user), artifacts = mutableListOf()))
+                groupRepository.save(
+                    Group(
+                        name = "Group3",
+                        members = mutableListOf(user),
+                        artifacts = mutableListOf(),
+                        description = ""
+                    )
+                )
             )
             val createdArtifact = artifactService.createArtifact(
                 user.email,

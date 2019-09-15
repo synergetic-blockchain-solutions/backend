@@ -105,8 +105,8 @@ class ArtifactControllerTest {
         fun `it should filter the artifacts by the given group ID`() {
             val usr = userRepository.findByEmail(email)!!
             val grp1 =
-                groupRepository.save(Group(name = "group1", members = mutableListOf(usr)))
-            val grp2 = groupRepository.save(Group(name = "group2", members = mutableListOf(usr)))
+                groupRepository.save(Group(name = "group1", members = mutableListOf(usr), description = ""))
+            val grp2 = groupRepository.save(Group(name = "group2", members = mutableListOf(usr), description = ""))
             val artifacts = mapOf(
                 "artifact1" to grp1.id,
                 "artifact2" to grp1.id,
@@ -180,8 +180,8 @@ class ArtifactControllerTest {
             val usr1 = userRepository.findByEmail(email)!!
             val usr2 = userService.createUser("user2", "exampl2@example.com", "password")
             val grp1 =
-                groupRepository.save(Group(name = "group1", members = mutableListOf(usr1)))
-            val grp2 = groupRepository.save(Group(name = "group2", members = mutableListOf(usr1)))
+                groupRepository.save(Group(name = "group1", members = mutableListOf(usr1), description = ""))
+            val grp2 = groupRepository.save(Group(name = "group2", members = mutableListOf(usr1), description = ""))
             val artifacts = listOf(
                 artifactService.createArtifact(
                     email,
