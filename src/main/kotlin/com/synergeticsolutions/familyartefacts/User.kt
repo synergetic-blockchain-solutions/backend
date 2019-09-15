@@ -53,6 +53,10 @@ data class User(
     @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator::class, property = "id")
     @JsonIdentityReference(alwaysAsId = true)
     val ownedArtifacts: MutableList<Artifact> = mutableListOf(),
+    @ManyToMany
+    @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator::class, property = "id")
+    @JsonIdentityReference(alwaysAsId = true)
+    var ownedGroups: MutableList<Group> = mutableListOf(),
     @OneToOne
     @LazyToOne(value = LazyToOneOption.FALSE)
     val privateGroup: Group

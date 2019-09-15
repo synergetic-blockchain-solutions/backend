@@ -47,7 +47,14 @@ class UserServiceImpl(
         logger.info("No user with email '$email' was found, creating user")
         val encPassword = passwordEncoder.encode(password)
 
-        val group = groupRepository.save(Group(name = "$name's Personal Group", members = mutableListOf()))
+        val group = groupRepository.save(
+            Group(
+                name = "$name's Personal Group",
+                description = "$name's Personal Group",
+                members = mutableListOf(),
+                admins = mutableListOf()
+            )
+        )
         val user = userRepository.save(
             User(
                 name = name,

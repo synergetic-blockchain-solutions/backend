@@ -28,12 +28,12 @@ class UserServiceImplUnitTest {
             name = "name",
             email = "email",
             password = "secret",
-            privateGroup = Group(2, "Group 2", members = mutableListOf())
+            privateGroup = Group(2, "Group 2", members = mutableListOf(), description = "")
         )
         Mockito.`when`(userRepository.save(any<User>())).thenReturn(user.copy(id = 1))
         Mockito.`when`(userRepository.findByEmail(anyString())).then { user }
         // Mockito.`when`(userRepository.findByIdOrNull(anyLong())).then { user }
-        Mockito.`when`(groupRepository.save(any<Group>())).thenReturn(Group(1, "group", mutableListOf()))
+        Mockito.`when`(groupRepository.save(any<Group>())).thenReturn(Group(1, "group", "description", mutableListOf()))
         Mockito.`when`(passwordEncoder.encode(anyString())).thenReturn(encodedPassword)
         val inOrder = Mockito.inOrder(passwordEncoder, userRepository)
 
@@ -52,7 +52,7 @@ class UserServiceImplUnitTest {
             name = "name",
             email = "email",
             password = "secret",
-            privateGroup = Group(2, "Group 2", members = mutableListOf())
+            privateGroup = Group(2, "Group 2", members = mutableListOf(), description = "")
         )
         Mockito.`when`(userRepository.existsByEmail(user.email)).thenReturn(true)
         assertThrows(UserAlreadyExistsException::class.java) {
