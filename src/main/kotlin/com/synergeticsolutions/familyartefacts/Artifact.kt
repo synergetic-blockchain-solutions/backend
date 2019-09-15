@@ -8,6 +8,7 @@ import javax.persistence.GeneratedValue
 import javax.persistence.GenerationType
 import javax.persistence.Id
 import javax.persistence.ManyToMany
+import javax.persistence.OneToMany
 import javax.persistence.Table
 import org.hibernate.annotations.LazyCollection
 import org.hibernate.annotations.LazyCollectionOption
@@ -34,7 +35,12 @@ data class Artifact(
     @ManyToMany(mappedBy = "sharedArtifacts")
     @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator::class, property = "id")
     @JsonIdentityReference(alwaysAsId = true)
-    val sharedWith: MutableList<User> = mutableListOf()
+    val sharedWith: MutableList<User> = mutableListOf(),
+    @LazyCollection(value = LazyCollectionOption.FALSE)
+    @OneToMany
+    @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator::class, property = "id")
+    @JsonIdentityReference(alwaysAsId = true)
+    val resources: MutableList<ArtifactResource> = mutableListOf()
 ) {
     override fun toString(): String {
         return listOf(
