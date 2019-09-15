@@ -62,8 +62,15 @@ data class User(
     val privateGroup: Group
 ) {
     override fun toString(): String {
-        return "User(id=$id, name=$name, email=$email, password=$password, groups=${groups.map(Group::id)}, sharedArtifacts=${sharedArtifacts.map(
-            Artifact::id
-        )}, ownedArtifacts=${ownedArtifacts.map(Artifact::id)}, privateGroup=${privateGroup.id})                                                                "
+        return listOf(
+            "id=$id",
+            "name=$name",
+            "email=$email",
+            "password=[Secured]",
+            "groups=${groups.map(Group::id)}",
+            "sharedArtifacts=${sharedArtifacts.map(Artifact::id)}",
+            "ownedArtifacts=${ownedArtifacts.map(Artifact::id)}",
+            "privateGroup=${privateGroup.id}"
+        ).joinToString(separator = ", ", prefix = "User(", postfix = ")")
     }
 }

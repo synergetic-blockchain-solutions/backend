@@ -37,8 +37,13 @@ data class Artifact(
     val sharedWith: MutableList<User> = mutableListOf()
 ) {
     override fun toString(): String {
-        return "Artifact(id=$id, name=$name, description=$description, owners=${owners.map(User::id)}, groups=${groups.map(
-            Group::id
-        )}, sharedWith=${sharedWith.map(User::id)}"
+        return listOf(
+            "id=$id",
+            "name=$name",
+            "description=$description",
+            "owners=${owners.map(User::id)}",
+            "groups=${groups.map(Group::id)}",
+            "sharedwith=${sharedWith.map(User::id)}"
+        ).joinToString(separator = ", ", prefix = "Artifact(", postfix = ")")
     }
 }

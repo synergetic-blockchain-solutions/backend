@@ -44,6 +44,13 @@ data class Group(
     val artifacts: MutableList<Artifact> = mutableListOf()
 ) {
     override fun toString(): String {
-        return "Group $id"
+        return listOf(
+            "id=$id",
+            "name=$name",
+            "description=$description",
+            "members=${members.map(User::id)}",
+            "admins=${admins.map(User::id)}",
+            "artifacts=${artifacts.map(Artifact::id)}"
+        ).joinToString(separator = ", ", prefix = "Group(", postfix = ")")
     }
 }
