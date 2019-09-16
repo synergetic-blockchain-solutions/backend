@@ -7,14 +7,18 @@ import javax.naming.AuthenticationException
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.data.repository.findByIdOrNull
+import org.springframework.http.HttpStatus
+import org.springframework.web.bind.annotation.ResponseStatus
 import javax.persistence.EntityManager
 
 class UserIsNotMemberException(msg: String) : RuntimeException(msg)
 class UserIsNotAdminException(msg: String) : RuntimeException(msg)
+@ResponseStatus(HttpStatus.BAD_REQUEST)
 class GroupNotFoundException(msg: String) : RuntimeException(msg)
 class UserNotFoundException(msg: String) : RuntimeException(msg)
 class MemberAlreadyInGroupException(msg: String) : RuntimeException(msg)
 class MemberIsAlreadyAdminException(msg: String) : RuntimeException(msg)
+@ResponseStatus(HttpStatus.FORBIDDEN)
 class ActionNotAllowedException() : AuthenticationException()
 
 @Service
