@@ -72,44 +72,23 @@ class GroupServiceImpl(
     }
 
 
-    override fun addMembers(email: String, newMemberIDs: List<Long>, groupID: Long): Group {
-        val owner = userRepository.findByEmail(email) ?: throw UsernameNotFoundException("No user with email $email was found")
-        val group = groupRepository.findByIdOrNull(groupID) ?: throw GroupNotFoundException("No group with id $groupID was found")
-        if (!group.admins.contains(owner)) {
-            throw ActionNotAllowedException()
-        }
-        newMemberIDs.forEach{
-            if (!userRepository.existsById(it)) {
-                throw UserNotFoundException("No user with ID $it was found")
-            }
-        }
-        val newMembers = userRepository.findAllById(newMemberIDs).toMutableList()
-        newMembers.forEach {
+    override fun addMembers(email: String, membersToAdd: List<User>, group: Group): Group {
+
+        membersToAdd.forEach {
             if (!group.members.contains(it)) {
                 group.members.add(it)
             } else throw MemberAlreadyInGroupException("Member with email ${it.email} is already in the group")
         }
         val updatedGroup = groupRepository.save(group)
-        newMembers.forEach {
+        membersToAdd.forEach {
             it.groups.add(group)
         }
-        userRepository.saveAll(newMembers)
+        userRepository.saveAll(membersToAdd)
         return updatedGroup
     }
 
-    override fun addAdmins(email: String, newAdminIDs: List<Long>, groupID: Long) {
-        val group = groupRepository.findByIdOrNull(groupID) ?: throw GroupNotFoundException("No group with id $groupID was found")
-        val owner = userRepository.findByEmail(email) ?: throw UsernameNotFoundException("No user with email $email was found")
-        if (!group.admins.contains(owner)) {
-            throw ActionNotAllowedException()
-        }
-        newAdminIDs.forEach{
-            if (!userRepository.existsById(it)) {
-                throw UserNotFoundException("No user with ID $it was found")
-            }
-        }
-        val newAdmins = userRepository.findAllById(newAdminIDs).toMutableList()
-        newAdmins.forEach {
+    override fun addAdmins(email: String, adminsToAdd: List<User>, group: Group): Group {
+        adminsToAdd.forEach {
             if (!group.members.contains(it)) {
                 throw UserIsNotMemberException("User with email ${it.email} is not a member")
             } else {
@@ -120,25 +99,16 @@ class GroupServiceImpl(
                 }
             }
         }
-        groupRepository.save(group)
-        newAdmins.forEach {
+        val savedGroup = groupRepository.save(group)
+        adminsToAdd.forEach {
             it.ownedGroups.add(group)
         }
-        userRepository.saveAll(newAdmins)
+        userRepository.saveAll(adminsToAdd)
+        return savedGroup
     }
 
-    override fun removeMembers(email: String, memberIDs: List<Long>, groupID: Long) {
-        val group = groupRepository.findByIdOrNull(groupID) ?: throw GroupNotFoundException("No group with id $groupID was found")
-        val owner = userRepository.findByEmail(email) ?: throw UsernameNotFoundException("No user with email $email was found")
-        if (!group.admins.contains(owner)) {
-            throw ActionNotAllowedException()
-        }
-        memberIDs.forEach{
-            if (!userRepository.existsById(it)) {
-                throw UserNotFoundException("No user with ID $it was found")
-            }
-        }
-        val membersToRemove = userRepository.findAllById(memberIDs).toMutableList()
+    override fun removeMembers(email: String, membersToRemove: List<User>, group: Group): Group {
+
         membersToRemove.forEach {
             if (group.members.contains(it)) {
                 group.members.remove(it)
@@ -153,21 +123,10 @@ class GroupServiceImpl(
             }
         }
         userRepository.saveAll(membersToRemove)
-        groupRepository.save(group)
+        return groupRepository.save(group)
     }
 
-    override fun removeAdmins(email: String, adminIDs: List<Long>, groupID: Long) {
-        val group = groupRepository.findByIdOrNull(groupID) ?: throw GroupNotFoundException("No group with id $groupID was found")
-        val owner = userRepository.findByEmail(email) ?: throw UsernameNotFoundException("No user with email $email was found")
-        if (!group.admins.contains(owner)) {
-            throw ActionNotAllowedException()
-        }
-        adminIDs.forEach{
-            if (!userRepository.existsById(it)) {
-                throw UserNotFoundException("No user with ID $it was found")
-            }
-        }
-        val adminsToRemove = userRepository.findAllById(adminIDs).toMutableList()
+    override fun removeAdmins(email: String, adminsToRemove: List<User>, group: Group): Group {
         adminsToRemove.forEach {
             if (group.admins.contains(it)) {
                 group.admins.remove(it)
@@ -177,16 +136,44 @@ class GroupServiceImpl(
             }
         }
         userRepository.saveAll(adminsToRemove)
-        groupRepository.save(group)
+        return groupRepository.save(group)
     }
 
     //Not finished
     override fun updateGroup(email: String, groupID: Long, groupRequest: GroupRequest) : Group {
-        return Group(id = 2,
-                name = "Group Name",
-                description = "Group description",
-                members = mutableListOf(),
-                admins = mutableListOf())
+        val user =
+                userRepository.findByEmail(email)
+                        ?: throw UsernameNotFoundException("User with email $email does not exist")
+        var group =
+                groupRepository.findByIdOrNull(groupID)
+                        ?: throw GroupNotFoundException("Could not find group with ID $groupID")
+        if (!group.admins.contains(user)) {
+            throw ActionNotAllowedException()
+        }
+        groupRequest.members?.forEach{
+            if (!userRepository.existsById(it)) {
+                throw UserNotFoundException("No user with ID $it was found")
+            }
+        }
+        groupRequest.admins?.forEach{
+            if (!userRepository.existsById(it)) {
+                throw UserNotFoundException("No user with ID $it was found")
+            }
+        }
+
+        val updatedAdmins = userRepository.findAllById(groupRequest.admins ?: listOf())
+        val adminsToRemove = group.admins.subtract(updatedAdmins).toList()
+        val adminsToAdd = updatedAdmins.subtract(group.admins).toList()
+        group = addAdmins(email, adminsToAdd, group)
+        group = removeAdmins(email, adminsToRemove, group)
+
+        val updatedMembers = userRepository.findAllById(groupRequest.members ?: listOf())
+        val membersToRemove = group.members.subtract(updatedMembers).toList()
+        val membersToAdd = updatedAdmins.subtract(group.members).toList()
+        group = addMembers(email, membersToAdd, group)
+        group = removeMembers(email, membersToRemove, group)
+
+        return groupRepository.save(group)
     }
 
     override fun deleteGroup(email: String, groupID: Long): Group {
