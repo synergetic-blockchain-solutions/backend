@@ -26,7 +26,7 @@ class GroupServiceImplTest {
         @Test
         fun `it should not create the group when the current user is not in the database`() {
             Mockito.`when`(userRepository.findByEmail(anyString())).thenReturn(null)
-            assertThrows<GroupNotFoundException> {
+            assertThrows<UsernameNotFoundException> {
                 groupService.createGroup(
                         "example@example.com",
                         "Group Name",
@@ -100,21 +100,28 @@ class GroupServiceImplTest {
     }
 
     @Nested
-    inner class AddMembers {
+    inner class UpdateGroup {
 
         @Test
-        fun `it should not add members if the current user is not in the database`() {
+        fun `it should not update group if the current user is not in the database`() {
             Mockito.`when`(userRepository.findByEmail(anyString())).thenReturn(null)
+            val groupRequest = GroupRequest(
+                    name = "Group 1",
+                    description = "Group description",
+                    members = listOf(2),
+                    admins = listOf(2)
+            )
             assertThrows<UsernameNotFoundException> {
-                groupService.addMembers(
+                groupService.updateGroup(
                         email = "example@example.com",
-                        newMemberIDs = listOf(2),
-                        groupID = 1)
+                        groupID = 1,
+                        groupRequest = groupRequest
+                )
             }
         }
 
         @Test
-        fun `it should not add members if the group is not in the database`() {
+        fun `it should not update group if the group is not in the database`() {
             Mockito.`when`(userRepository.findByEmail(anyString()))
                     .thenReturn(
                             User(
@@ -128,17 +135,24 @@ class GroupServiceImplTest {
                                             description = "description",
                                             members = mutableListOf(),
                                             admins = mutableListOf())))
+            val groupRequest = GroupRequest(
+                    name = "Group 1",
+                    description = "Group description",
+                    members = listOf(2),
+                    admins = listOf(2)
+            )
             Mockito.`when`(groupRepository.findByIdOrNull(anyLong())).then { Optional.empty<Group>() }
             assertThrows<GroupNotFoundException> {
-                groupService.addMembers(
+                groupService.updateGroup(
                         email = "example@example.com",
-                        newMemberIDs = listOf(2),
-                        groupID = 1)
+                        groupRequest = groupRequest,
+                        groupID = 1
+                        )
             }
         }
 
         @Test
-        fun `it should not allow adding members if user is not an admin`() {
+        fun `it should not allow updating group if user is not an admin`() {
             Mockito.`when`(userRepository.findByEmail(anyString()))
                     .thenReturn(
                             User(
@@ -161,16 +175,22 @@ class GroupServiceImplTest {
                                     members = mutableListOf(),
                                     admins = mutableListOf()))
                     }
+            val groupRequest = GroupRequest(
+                    name = "Group 1",
+                    description = "Group description",
+                    members = listOf(2),
+                    admins = listOf(2)
+            )
             assertThrows<ActionNotAllowedException> {
-                groupService.addMembers(
+                groupService.updateGroup(
                         email = "example@example.com",
-                        newMemberIDs = listOf(2),
+                        groupRequest = groupRequest,
                         groupID = 1)
             }
         }
 
         @Test
-        fun `it should not add members if one of the member IDs are not in the database`() {
+        fun `it should not update group if one of the member IDs are not in the database`() {
             val user = User(
                     1,
                     "User1",
@@ -185,21 +205,60 @@ class GroupServiceImplTest {
             Mockito.`when`(userRepository.findByEmail(anyString()))
                     .thenReturn(user)
             Mockito.`when`(groupRepository.findByIdOrNull(anyLong()))
-                    .then {
-                        Optional.of(Group(
+                    .thenReturn (Group(
                                 id = 2,
                                 name = "Group Name",
                                 description = "Group description",
                                 members = mutableListOf(user),
                                 admins = mutableListOf(user)))
-                    }
+            val groupRequest = GroupRequest(
+                    name = "Group 1",
+                    description = "Group description",
+                    members = listOf(2),
+                    admins = listOf(2)
+            )
             assertThrows<UserNotFoundException> {
-                groupService.addMembers("example@example.com", listOf(2), 2)
+                groupService.updateGroup(
+                        "example@example.com",
+                        groupRequest = groupRequest,
+                        groupID = 2)
             }
         }
 
-
-
+        @Test
+        fun `it should not update group if one of the members are not in the database`() {
+            val user = User(
+                    1,
+                    "User1",
+                    "example@example.com",
+                    "password",
+                    privateGroup = Group(
+                            1,
+                            "Group1",
+                            description = "description",
+                            members = mutableListOf(),
+                            admins = mutableListOf()))
+            Mockito.`when`(userRepository.findByEmail(anyString()))
+                    .thenReturn(user)
+            Mockito.`when`(groupRepository.findByIdOrNull(anyLong())).thenReturn(Group(
+                    name = "Group 1",
+                    description = "Group description",
+                    members = mutableListOf()
+            ))
+            Mockito.`when`(userRepository.findByIdOrNull(anyLong())).thenReturn(null)
+            val groupRequest = GroupRequest(
+                    name = "Group 1",
+                    description = "Group description",
+                    members = listOf(2),
+                    admins = listOf(2)
+            )
+            assertThrows<UserNotFoundException> {
+                groupService.updateGroup(
+                        "example@example.com",
+                        groupRequest = groupRequest,
+                        groupID = 2)
+            }
+        }
     }
 
 }

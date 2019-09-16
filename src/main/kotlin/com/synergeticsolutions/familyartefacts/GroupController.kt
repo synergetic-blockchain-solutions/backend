@@ -47,11 +47,10 @@ class GroupController(
     }
 
     @PutMapping(path = ["/{id}"])
-    fun updateArtifact(@PathVariable id: Long, @RequestBody group: GroupRequest): ResponseEntity<Group> {
+    fun updateArtifact(@PathVariable id: Long, @RequestBody groupRequest: GroupRequest): ResponseEntity<Group> {
         val currentUser = SecurityContextHolder.getContext().authentication ?: throw NoAuthenticationException()
-        val updatedArtifact = groupService.updateGroup(currentUser.principal as String, id, group)
-        logger.info("Updated artifact $updatedArtifact")
-        return ResponseEntity.ok(updatedArtifact)
+        val updatedGroup = groupService.updateGroup(currentUser.principal as String, id, groupRequest)
+        return ResponseEntity.ok(updatedGroup)
     }
 
     @DeleteMapping(path = ["/{id}"])
@@ -65,5 +64,6 @@ class GroupController(
 data class GroupRequest(
             val name: String,
             val description: String,
-            val members: List<Long>?
+            val members: List<Long>?,
+            val admins: List<Long>?
     )
