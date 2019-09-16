@@ -240,11 +240,11 @@ class GroupServiceImplTest {
                             admins = mutableListOf()))
             Mockito.`when`(userRepository.findByEmail(anyString()))
                     .thenReturn(user)
-            Mockito.`when`(groupRepository.findByIdOrNull(anyLong())).thenReturn(Group(
-                    name = "Group 1",
+            val group = Group(name = "Group 1",
                     description = "Group description",
-                    members = mutableListOf()
-            ))
+                    members = mutableListOf(user),
+                    admins = mutableListOf(user))
+            Mockito.`when`(groupRepository.findByIdOrNull(anyLong())).then { Optional.of(group) }
             Mockito.`when`(userRepository.findByIdOrNull(anyLong())).thenReturn(null)
             val groupRequest = GroupRequest(
                     name = "Group 1",
