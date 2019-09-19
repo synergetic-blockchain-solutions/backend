@@ -1,19 +1,16 @@
 package com.synergeticsolutions.familyartefacts
 
-import com.fasterxml.jackson.annotation.JsonBackReference
 import com.fasterxml.jackson.annotation.JsonIdentityInfo
 import com.fasterxml.jackson.annotation.JsonIdentityReference
 import com.fasterxml.jackson.annotation.ObjectIdGenerators
-import org.hibernate.annotations.LazyCollection
-import org.hibernate.annotations.LazyCollectionOption
-import javax.persistence.CascadeType
 import javax.persistence.Entity
-import javax.persistence.FetchType
 import javax.persistence.GeneratedValue
 import javax.persistence.GenerationType
 import javax.persistence.Id
 import javax.persistence.ManyToMany
 import javax.persistence.Table
+import org.hibernate.annotations.LazyCollection
+import org.hibernate.annotations.LazyCollectionOption
 
 /**
  * [Group] represents a group of users in which artefacts can be shared.
@@ -42,7 +39,6 @@ data class Group(
     var admins: MutableList<User> = mutableListOf()
 ) {
     override fun toString(): String {
-        return "Group $id"
+        return "Group: $id; Description: $description "
     }
-
 }

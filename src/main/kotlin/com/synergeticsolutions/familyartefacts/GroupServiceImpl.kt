@@ -1,62 +1,80 @@
 package com.synergeticsolutions.familyartefacts
 
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.security.core.userdetails.UsernameNotFoundException
-import org.springframework.stereotype.Service
 import javax.naming.AuthenticationException
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpStatus
+import org.springframework.security.core.userdetails.UsernameNotFoundException
+import org.springframework.stereotype.Service
 import org.springframework.web.bind.annotation.ResponseStatus
-import javax.persistence.EntityManager
 
+@ResponseStatus(HttpStatus.BAD_REQUEST)
 class UserIsNotMemberException(msg: String) : RuntimeException(msg)
+@ResponseStatus(HttpStatus.BAD_REQUEST)
 class UserIsNotAdminException(msg: String) : RuntimeException(msg)
 @ResponseStatus(HttpStatus.BAD_REQUEST)
 class GroupNotFoundException(msg: String) : RuntimeException(msg)
+@ResponseStatus(HttpStatus.BAD_REQUEST)
 class UserNotFoundException(msg: String) : RuntimeException(msg)
+@ResponseStatus(HttpStatus.BAD_REQUEST)
 class MemberAlreadyInGroupException(msg: String) : RuntimeException(msg)
+@ResponseStatus(HttpStatus.BAD_REQUEST)
 class MemberIsAlreadyAdminException(msg: String) : RuntimeException(msg)
+
 @ResponseStatus(HttpStatus.FORBIDDEN)
-class ActionNotAllowedException() : AuthenticationException()
+class ActionNotAllowedException(msg: String) : AuthenticationException(msg)
 
 @Service
 class GroupServiceImpl(
-        @Autowired
-        val userRepository: UserRepository,
-        @Autowired
-        val groupRepository: GroupRepository
+    @Autowired
+    val userRepository: UserRepository,
+    @Autowired
+    val groupRepository: GroupRepository
 
 ) : GroupService {
 
     val logger: Logger = LoggerFactory.getLogger(this::class.java)
 
-    override fun findGroups(email: String, ownerID: Long?, memberID: Long?): List<Group> {
+    override fun findGroups(email: String, adminID: Long?, memberID: Long?): List<Group> {
         val user = userRepository.findByEmail(email) ?: throw UsernameNotFoundException("No user with email $email was found")
         val ownedGroups = groupRepository.findByAdmins_Email(email)
         val memberGroup = groupRepository.findByMembers_Email(email)
         var groups = ownedGroups.union(memberGroup).toList()
 
-        if (ownerID != null) {
-            groups = groups.filter { it.admins.map(User::id).contains(ownerID) }
+        if (adminID != null) {
+            groups = groups.filter { it.admins.map(User::id).contains(adminID) }
         }
 
         if (memberID != null) {
             groups = groups.filter { it.members.map(User::id).contains(memberID) }
         }
 
-        return groups
+        return groups.toSet().toList()
+    }
+
+    override fun findGroupById(email: String, groupID: Long): Group {
+        val user =
+                userRepository.findByEmail(email) ?: throw UserNotFoundException("No user with email $email was found")
+
+        val accessibleGroups = user.ownedGroups.map(Group::id) + user.groups.map(Group::id)
+        val group = groupRepository.findByIdOrNull(groupID)
+                ?: throw GroupNotFoundException("No group with ID $groupID was found")
+        if (!accessibleGroups.contains(groupID)) {
+            throw ActionNotAllowedException("User ${user.id} does not have access to group $groupID")
+        }
+        return group
     }
 
     override fun createGroup(
-            email: String,
-            groupName: String,
-            description: String,
-            memberIDs: List<Long>
+        email: String,
+        groupName: String,
+        description: String,
+        memberIDs: List<Long>
     ): Group {
         val owner = userRepository.findByEmail(email) ?: throw UsernameNotFoundException("No user with email $email was found")
-        memberIDs.forEach{
+        memberIDs.forEach {
             if (!userRepository.existsById(it)) {
                 throw UserNotFoundException("No user with ID $it was found")
             }
@@ -75,9 +93,7 @@ class GroupServiceImpl(
         return savedGroup
     }
 
-
     override fun addMembers(email: String, membersToAdd: List<User>, group: Group): Group {
-
         membersToAdd.forEach {
             if (!group.members.contains(it)) {
                 group.members.add(it)
@@ -121,7 +137,6 @@ class GroupServiceImpl(
                     group.admins.remove(it)
                     it.ownedGroups.remove(group)
                 }
-
             } else {
                 throw UserIsNotMemberException("User with email ${it.email} is not a member")
             }
@@ -143,8 +158,7 @@ class GroupServiceImpl(
         return groupRepository.save(group)
     }
 
-    //Not finished
-    override fun updateGroup(email: String, groupID: Long, groupRequest: GroupRequest) : Group {
+    override fun updateGroup(email: String, groupID: Long, groupRequest: GroupRequest): Group {
         val user =
                 userRepository.findByEmail(email)
                         ?: throw UsernameNotFoundException("User with email $email does not exist")
@@ -152,14 +166,14 @@ class GroupServiceImpl(
                 groupRepository.findByIdOrNull(groupID)
                         ?: throw GroupNotFoundException("Could not find group with ID $groupID")
         if (!group.admins.contains(user)) {
-            throw ActionNotAllowedException()
+            throw ActionNotAllowedException("User with email $email is not allowed to update the group")
         }
-        groupRequest.members?.forEach{
+        groupRequest.members?.forEach {
             if (!userRepository.existsById(it)) {
                 throw UserNotFoundException("No user with ID $it was found")
             }
         }
-        groupRequest.admins?.forEach{
+        groupRequest.admins?.forEach {
             if (!userRepository.existsById(it)) {
                 throw UserNotFoundException("No user with ID $it was found")
             }
@@ -177,6 +191,8 @@ class GroupServiceImpl(
         group = addMembers(email, membersToAdd, group)
         group = removeMembers(email, membersToRemove, group)
 
+        group = group.copy(description = groupRequest.description)
+        group = group.copy(name = groupRequest.name)
         return groupRepository.save(group)
     }
 
@@ -184,15 +200,11 @@ class GroupServiceImpl(
         val group = groupRepository.findByIdOrNull(groupID) ?: throw GroupNotFoundException("No group with id $groupID was found")
         val owner = userRepository.findByEmail(email) ?: throw UsernameNotFoundException("No user with email $email was found")
         if (!group.admins.contains(owner)) {
-            throw ActionNotAllowedException()
+            throw ActionNotAllowedException("User with email $email is not allowed to delete the group")
         }
         group.members.forEach { it.groups.remove(group) }
         group.admins.forEach { it.ownedGroups.remove(group) }
         groupRepository.delete(group)
         return group
     }
-
-
-
-
 }

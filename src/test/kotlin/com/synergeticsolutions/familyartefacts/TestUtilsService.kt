@@ -5,10 +5,10 @@ import org.springframework.stereotype.Service
 
 @Service
 class TestUtilsService(
-        @Autowired
-        private val userRepository: UserRepository,
-        @Autowired
-        private val groupRepository: GroupRepository
+    @Autowired
+    private val userRepository: UserRepository,
+    @Autowired
+    private val groupRepository: GroupRepository
 ) {
 
     fun clearDatabase() {

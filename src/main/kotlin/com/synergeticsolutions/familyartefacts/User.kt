@@ -1,12 +1,21 @@
 package com.synergeticsolutions.familyartefacts
 
-import com.fasterxml.jackson.annotation.*
+import com.fasterxml.jackson.annotation.JsonIdentityInfo
+import com.fasterxml.jackson.annotation.JsonIdentityReference
+import com.fasterxml.jackson.annotation.JsonIgnore
+import com.fasterxml.jackson.annotation.ObjectIdGenerators
+import javax.persistence.Column
+import javax.persistence.Entity
+import javax.persistence.GeneratedValue
+import javax.persistence.GenerationType
+import javax.persistence.Id
+import javax.persistence.ManyToMany
+import javax.persistence.OneToOne
+import javax.persistence.Table
 import org.hibernate.annotations.LazyCollection
 import org.hibernate.annotations.LazyCollectionOption
 import org.hibernate.annotations.LazyToOne
 import org.hibernate.annotations.LazyToOneOption
-import org.springframework.data.jpa.domain.AbstractPersistable_.id
-import javax.persistence.*
 
 /**
  * The [User] entity is a representation of registered users.
