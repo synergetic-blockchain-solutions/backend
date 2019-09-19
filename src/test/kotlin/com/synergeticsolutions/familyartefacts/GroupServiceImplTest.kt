@@ -1,24 +1,25 @@
 package com.synergeticsolutions.familyartefacts
 
-//import org.hamcrest.Matcher
+import java.util.Optional
 import org.hamcrest.MatcherAssert.assertThat
-import org.hamcrest.Matchers.*
+import org.hamcrest.Matchers.equalTo
+import org.hamcrest.Matchers.hasItem
+import org.hamcrest.Matchers.hasProperty
 import org.junit.jupiter.api.Nested
-//import org.hamcrest.Matchers.*
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.mockito.ArgumentCaptor
-import org.mockito.ArgumentMatchers.*
-//import org.mockito.ArgumentMatchers
+import org.mockito.ArgumentMatchers.any
+import org.mockito.ArgumentMatchers.anyLong
+import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mockito
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.security.core.userdetails.UsernameNotFoundException
-import java.util.*
 
 class GroupServiceImplTest {
     private val userRepository: UserRepository = Mockito.mock(UserRepository::class.java)
     private val groupRepository: GroupRepository = Mockito.mock(GroupRepository::class.java)
-    private val groupService : GroupService = GroupServiceImpl(userRepository, groupRepository)
+    private val groupService: GroupService = GroupServiceImpl(userRepository, groupRepository)
 
     @Nested
     inner class CreateGroup {
@@ -84,7 +85,6 @@ class GroupServiceImplTest {
                     description = "Group description",
                     memberIDs = listOf(2))
 
-
             val argCapturer = ArgumentCaptor.forClass(Group::class.java)
             Mockito.verify(groupRepository).save(argCapturer.capture())
             val matcher0 = hasProperty<Group>(
@@ -96,7 +96,6 @@ class GroupServiceImplTest {
                     hasItem<User>(hasProperty("email", equalTo("example@example.com"))))
             assertThat(argCapturer.value, matcher1)
         }
-
     }
 
     @Nested
@@ -205,7 +204,8 @@ class GroupServiceImplTest {
             Mockito.`when`(userRepository.findByEmail(anyString()))
                     .thenReturn(user)
             Mockito.`when`(groupRepository.findByIdOrNull(anyLong()))
-                    .thenReturn (Group(
+                .thenReturn(
+                    Group(
                                 id = 2,
                                 name = "Group Name",
                                 description = "Group description",
@@ -260,5 +260,4 @@ class GroupServiceImplTest {
             }
         }
     }
-
 }

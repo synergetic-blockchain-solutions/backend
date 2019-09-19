@@ -25,9 +25,6 @@ class LoginTest() {
     @Autowired
     private lateinit var testUtils: TestUtilsService
 
-    @Autowired
-    private lateinit var testUtils: TestUtilsService
-
     @BeforeEach
     fun beforeEach() {
         testUtils.clearDatabase()

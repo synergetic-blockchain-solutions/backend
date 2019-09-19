@@ -17,8 +17,7 @@ class TestUtilsService(
         groupRepository.saveAll(groupRepository.findAll().map {
             it.copy(
                 members = mutableListOf(),
-                artifacts = mutableListOf()
-                    members = mutableListOf(),
+                artifacts = mutableListOf(),
                     admins = mutableListOf()
             )
         })
