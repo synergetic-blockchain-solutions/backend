@@ -53,7 +53,7 @@ class RegistrationController {
         logger.info("Registering new user '${registration.name}' with email '${registration.email}")
         val user = userService.createUser(registration.name, registration.email, registration.password)
         logger.info("User '${user.name}' was successfully created")
-        logger.debug("User: id=${user.id} name=${user.name} email=${user.email} groups=${user.groups}")
+        logger.debug("$user")
         return ResponseEntity.status(HttpStatus.CREATED).body(user)
     }
 }

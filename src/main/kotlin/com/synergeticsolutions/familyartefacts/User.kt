@@ -1,16 +1,21 @@
 package com.synergeticsolutions.familyartefacts
 
+import com.fasterxml.jackson.annotation.JsonIdentityInfo
+import com.fasterxml.jackson.annotation.JsonIdentityReference
 import com.fasterxml.jackson.annotation.JsonIgnore
-import com.fasterxml.jackson.annotation.JsonManagedReference
-import javax.persistence.CascadeType
+import com.fasterxml.jackson.annotation.ObjectIdGenerators
 import javax.persistence.Column
 import javax.persistence.Entity
-import javax.persistence.FetchType
 import javax.persistence.GeneratedValue
 import javax.persistence.GenerationType
 import javax.persistence.Id
 import javax.persistence.ManyToMany
+import javax.persistence.OneToOne
 import javax.persistence.Table
+import org.hibernate.annotations.LazyCollection
+import org.hibernate.annotations.LazyCollectionOption
+import org.hibernate.annotations.LazyToOne
+import org.hibernate.annotations.LazyToOneOption
 
 /**
  * The [User] entity is a representation of registered users.
@@ -33,11 +38,39 @@ data class User(
     val email: String,
     @field:JsonIgnore
     val password: String,
-    @JsonManagedReference
-    @ManyToMany(cascade = [CascadeType.ALL], fetch = FetchType.EAGER)
-    var groups: List<Group> = listOf()
+    @ManyToMany
+    @LazyCollection(value = LazyCollectionOption.FALSE)
+    @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator::class, property = "id")
+    @JsonIdentityReference(alwaysAsId = true)
+    var groups: MutableList<Group> = mutableListOf(),
+    @LazyCollection(value = LazyCollectionOption.FALSE)
+    @ManyToMany
+    @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator::class, property = "id")
+    @JsonIdentityReference(alwaysAsId = true)
+    val sharedArtifacts: MutableList<Artifact> = mutableListOf(),
+    @LazyCollection(value = LazyCollectionOption.FALSE)
+    @ManyToMany
+    @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator::class, property = "id")
+    @JsonIdentityReference(alwaysAsId = true)
+    val ownedArtifacts: MutableList<Artifact> = mutableListOf(),
+    @ManyToMany
+    @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator::class, property = "id")
+    @JsonIdentityReference(alwaysAsId = true)
+    var ownedGroups: MutableList<Group> = mutableListOf(),
+    @OneToOne
+    @LazyToOne(value = LazyToOneOption.FALSE)
+    val privateGroup: Group
 ) {
     override fun toString(): String {
-        return "User $id"
+        return listOf(
+            "id=$id",
+            "name=$name",
+            "email=$email",
+            "password=[Secured]",
+            "groups=${groups.map(Group::id)}",
+            "sharedArtifacts=${sharedArtifacts.map(Artifact::id)}",
+            "ownedArtifacts=${ownedArtifacts.map(Artifact::id)}",
+            "privateGroup=${privateGroup.id}"
+        ).joinToString(separator = ", ", prefix = "User(", postfix = ")")
     }
 }

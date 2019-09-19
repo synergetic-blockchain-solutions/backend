@@ -24,8 +24,16 @@ class UserServiceImplUnitTest {
     @Test
     fun `it should encrypt the password before saving it in the user repository`() {
         val encodedPassword = "encodedSecret"
-        val user = User(name = "name", email = "email", password = "secret")
+        val user = User(
+            name = "name",
+            email = "email",
+            password = "secret",
+            privateGroup = Group(2, "Group 2", members = mutableListOf(), description = "")
+        )
         Mockito.`when`(userRepository.save(any<User>())).thenReturn(user.copy(id = 1))
+        Mockito.`when`(userRepository.findByEmail(anyString())).then { user }
+        // Mockito.`when`(userRepository.findByIdOrNull(anyLong())).then { user }
+        Mockito.`when`(groupRepository.save(any<Group>())).thenReturn(Group(1, "group", "description", mutableListOf()))
         Mockito.`when`(passwordEncoder.encode(anyString())).thenReturn(encodedPassword)
         val inOrder = Mockito.inOrder(passwordEncoder, userRepository)
 
@@ -40,7 +48,12 @@ class UserServiceImplUnitTest {
 
     @Test
     fun `it should not allow the creation of users with emails that already exist`() {
-        val user = User(name = "name", email = "email", password = "secret")
+        val user = User(
+            name = "name",
+            email = "email",
+            password = "secret",
+            privateGroup = Group(2, "Group 2", members = mutableListOf(), description = "")
+        )
         Mockito.`when`(userRepository.existsByEmail(user.email)).thenReturn(true)
         assertThrows(UserAlreadyExistsException::class.java) {
             userService.createUser(
@@ -64,12 +77,12 @@ class UserServiceImplIntegrationTest {
     @Autowired
     lateinit var userService: UserService
 
+    @Autowired
+    lateinit var testUtilsService: TestUtilsService
+
     @BeforeEach
     fun clearRepository() {
-        groupRepository.saveAll(groupRepository.findAll().map { it.copy(members = listOf()) })
-        userRepository.saveAll(userRepository.findAll().map { it.copy(groups = listOf()) })
-        groupRepository.deleteAll()
-        userRepository.deleteAll()
+        testUtilsService.clearDatabase()
     }
 
     @Test

@@ -30,12 +30,12 @@ class RegistrationControllerTest {
     @Autowired
     lateinit var groupRepository: GroupRepository
 
+    @Autowired
+    private lateinit var testUtils: TestUtilsService
+
     @BeforeEach
-    fun clearRepository() {
-        groupRepository.saveAll(groupRepository.findAll().map { it.copy(members = listOf()) })
-        userRepository.saveAll(userRepository.findAll().map { it.copy(groups = listOf()) })
-        groupRepository.deleteAll()
-        userRepository.deleteAll()
+    fun beforeEach() {
+        testUtils.clearDatabase()
     }
 
     @Test
@@ -147,12 +147,11 @@ class RegistrationControllerTest {
         val user = ObjectMapper().registerKotlinModule().readValue<Map<String, Any>>(body)
 
         @Suppress("UNCHECKED_CAST")
-        val usersGroups = user["groups"] as List<Map<String, Any>>
-        assertEquals(usersGroups.size, 1)
+        val privateGroup = user["privateGroup"] as Map<String, Any>
 
-        val groupId = usersGroups.first().getValue("id") as Int
-        val group = groupRepository.findByIdOrNull(groupId.toLong())!!
-        assertEquals(group.members.size, 1)
+        val groupId = (privateGroup.getValue("id") as Int).toLong()
+        val group = groupRepository.findByIdOrNull(groupId)!!
+        assertEquals(1, group.members.size)
         assertEquals(group.members.first().id, (user["id"] as Int).toLong())
     }
 }
