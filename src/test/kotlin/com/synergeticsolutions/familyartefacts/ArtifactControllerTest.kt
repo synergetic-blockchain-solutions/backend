@@ -71,7 +71,6 @@ class ArtifactControllerTest {
     fun beforeEach() {
         testUtils.clearDatabase()
         val user = userService.createUser("name", email, password)
-        userRepository.save(user)
         token = getToken(email, password)
     }
 
