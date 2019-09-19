@@ -417,6 +417,11 @@ class ArtifactControllerTest {
                     .exchange()
                     .expectStatus().isForbidden
             }
+
+            @Test
+            fun `it should not allow the removal of associated resources`() {
+                TODO()
+            }
         }
 
         @Nested
@@ -490,6 +495,11 @@ class ArtifactControllerTest {
                     .header(HttpHeaders.AUTHORIZATION, "Bearer $altToken")
                     .exchange()
                     .expectStatus().isForbidden
+            }
+
+            @Test
+            fun `it should delete associated resources as well`() {
+                TODO()
             }
         }
     }
