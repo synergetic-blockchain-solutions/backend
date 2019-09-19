@@ -1,6 +1,5 @@
 package com.synergeticsolutions.familyartefacts
 
-import java.util.Optional
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.contains
 import org.hamcrest.Matchers.containsInAnyOrder
@@ -23,7 +22,9 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.test.context.junit.jupiter.SpringExtension
+import java.util.Optional
 
+@Suppress("UNCHECKED_CAST")
 class ArtifactServiceImplTest {
     private val userRepository: UserRepository = Mockito.mock(UserRepository::class.java)
     private val groupRepository: GroupRepository = Mockito.mock(GroupRepository::class.java)
@@ -408,7 +409,7 @@ class ArtifactServiceImplTest {
                     "password",
                     privateGroup = Group(
                         2, "Group 1", members = mutableListOf(), description = ""
-                )
+                    )
                 )
             }
             Mockito.`when`(groupRepository.findAllById(any<Iterable<Long>>())).then {
@@ -1211,7 +1212,6 @@ class ArtifactServiceImplTest {
 
         @Test
         fun `it should allow artifact owners to make changes to the artifact`() {
-            val email = "example@example.com"
             var owningUser = User(
                 id = 2, name = "User 2", email = "example@example2.com", password = "password", groups = mutableListOf(
                     Group(id = 1, name = "Group 1", members = mutableListOf(), description = "")
@@ -1306,7 +1306,6 @@ class ArtifactServiceImplTest {
 
         @Test
         fun `it should allow the artifact's owners to delete it`() {
-            val email = "example@example.com"
             var owningUser = User(
                 id = 2, name = "User 2", email = "example@example2.com", password = "password", groups = mutableListOf(
                     Group(id = 1, name = "Group 1", members = mutableListOf(), description = "")

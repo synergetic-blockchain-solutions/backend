@@ -70,7 +70,7 @@ class ArtifactControllerTest {
     @BeforeEach
     fun beforeEach() {
         testUtils.clearDatabase()
-        val user = userService.createUser("name", email, password)
+        userService.createUser("name", email, password)
         token = getToken(email, password)
     }
 
@@ -283,6 +283,7 @@ class ArtifactControllerTest {
                     .responseBody!!
                 val returnedArtifact =
                     ObjectMapper().registerKotlinModule().readValue<Map<String, Any>>(String(createArtifactResponse))
+                @Suppress("UNCHECKED_CAST")
                 val updateArtifactRequest =
                     ArtifactRequest(
                         name = returnedArtifact["name"] as String,
@@ -332,7 +333,7 @@ class ArtifactControllerTest {
                         members = mutableListOf(user)
                     )
                 )
-                user = userRepository.save(user.copy(ownedGroups = mutableListOf(ownedGroup)))
+                userRepository.save(user.copy(ownedGroups = mutableListOf(ownedGroup)))
                 val artifact = artifactRepository.save(
                     Artifact(
                         name = "Artifact 1",
@@ -397,6 +398,7 @@ class ArtifactControllerTest {
                 val returnedArtifact =
                     ObjectMapper().registerKotlinModule().readValue<Map<String, Any>>(String(createArtifactResponse))
 
+                @Suppress("UNCHECKED_CAST")
                 val updateArtifactRequest =
                     ArtifactRequest(
                         name = returnedArtifact["name"] as String,
