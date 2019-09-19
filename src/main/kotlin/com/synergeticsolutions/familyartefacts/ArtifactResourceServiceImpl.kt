@@ -8,7 +8,7 @@ class ArtifactResourceServiceImpl : ArtifactResourceService {
         TODO("not implemented") // To change body of created functions use File | Settings | File Templates.
     }
 
-    override fun updateResource(
+    override fun update(
         email: String,
         artifactId: Long,
         resourceId: Long,

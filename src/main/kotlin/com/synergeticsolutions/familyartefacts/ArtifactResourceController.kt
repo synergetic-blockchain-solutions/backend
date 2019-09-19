@@ -62,7 +62,7 @@ class ArtifactResourceController(
         @RequestBody resource: ByteArrayResource,
         principal: Principal
     ): ArtifactResource {
-        return artifactResourceService.updateResource(principal.name, artifactId, resourceId, resource.byteArray)
+        return artifactResourceService.update(principal.name, artifactId, resourceId, resource.byteArray)
     }
 
     /**
