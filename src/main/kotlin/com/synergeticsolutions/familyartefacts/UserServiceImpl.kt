@@ -66,6 +66,7 @@ class UserServiceImpl(
         group.members.add(user)
         group.admins.add(user)
         val updatedGroup = groupRepository.save(group)
+
         val updatedUser = userRepository.findByEmail(user.email)!!
         logger.debug("Created user: $updatedUser")
         logger.debug("Personal group: $updatedGroup")

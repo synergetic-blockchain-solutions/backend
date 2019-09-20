@@ -1,7 +1,6 @@
 package com.synergeticsolutions.familyartefacts
 
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertThrows
+import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
@@ -111,12 +110,15 @@ class UserServiceImplIntegrationTest {
     }
 
     @Test
-    fun `it should create a group where the user is member`() {
+    fun `it should create a private group where the user is member and admin`() {
         val createdUser = userService.createUser("name", "example2@example.com", "password")
         val foundUser = userRepository.findByIdOrNull(createdUser.id)!!
-        assertEquals(1, createdUser.groups.size)
-        val foundGroup = groupRepository.findByIdOrNull(createdUser.groups.first().id)!!
-        assertEquals(1, foundUser.groups.size)
-        assertEquals(createdUser.id, foundGroup.members.first().id)
+        val foundGroup = groupRepository.findByIdOrNull(createdUser.privateGroup.id)!!
+        assertNotNull(createdUser.privateGroup)
+        assertNotNull(foundUser.privateGroup)
+        assertEquals(1, foundGroup.members.size)
+        assertEquals(1, foundGroup.admins.size)
+        //assertEquals(createdUser.id, foundGroup.members.first().id)
+        //assertEquals(createdUser.id, foundGroup.admins.first().id)
     }
 }
