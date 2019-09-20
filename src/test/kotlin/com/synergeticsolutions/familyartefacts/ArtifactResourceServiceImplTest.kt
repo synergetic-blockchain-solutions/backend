@@ -1,35 +1,153 @@
 package com.synergeticsolutions.familyartefacts
 
+import java.util.Optional
+import org.hamcrest.MatcherAssert.assertThat
+import org.hamcrest.Matchers.`is`
+import org.hamcrest.Matchers.allOf
+import org.hamcrest.Matchers.equalTo
+import org.hamcrest.Matchers.hasItem
+import org.hamcrest.Matchers.hasProperty
+import org.hamcrest.Matchers.not
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
+import org.mockito.ArgumentCaptor
+import org.mockito.ArgumentMatchers.any
+import org.mockito.ArgumentMatchers.anyLong
+import org.mockito.ArgumentMatchers.anyString
+import org.mockito.Mockito
+import org.springframework.data.repository.findByIdOrNull
 
 class ArtifactResourceServiceImplTest {
-    val artifactResourceServiceImpl = ArtifactResourceServiceImpl()
+
+    private val artifactResourceRepository: ArtifactResourceRepository =
+        Mockito.mock(ArtifactResourceRepository::class.java)
+    private val artifactRepository: ArtifactRepository = Mockito.mock(ArtifactRepository::class.java)
+    private val userRepository: UserRepository = Mockito.mock(UserRepository::class.java)
+
+    val artifactResourceService =
+        ArtifactResourceServiceImpl(artifactResourceRepository, artifactRepository, userRepository)
 
     @Nested
     inner class Create {
         @Test
-        fun `it should not create the resource if the artifact ID does not exist`() {
-            TODO()
+        fun `it should not create the resource if the creator's email does not correspond to a user in the database`() {
+            Mockito.`when`(userRepository.findByEmail(anyString())).thenReturn(null)
+
+            assertThrows<UserNotFoundException> {
+                artifactResourceService.create(
+                    "example@example.com",
+                    1,
+                    ArtifactResourceMetadata("name", "description"),
+                    resource = Resource("contentType", "resource".toByteArray())
+                )
+            }
         }
 
         @Test
-        fun `it should not create the resource if the creator's email does not correspond to a user in the database`() {
-            TODO()
+        fun `it should not create the resource if the artifact ID does not exist`() {
+            Mockito.`when`(userRepository.findByEmail(anyString()))
+                .thenReturn(
+                    User(
+                        name = "name",
+                        email = "email",
+                        password = "password",
+                        privateGroup = Group(name = "name", description = "description")
+                    )
+                )
+            Mockito.`when`(artifactRepository.findByIdOrNull(anyLong())).then { Optional.empty<ArtifactResource>() }
+            assertThrows<ArtifactNotFoundException> {
+                artifactResourceService.create(
+                    "example@example.com",
+                    1,
+                    ArtifactResourceMetadata("name", "description"),
+                    resource = Resource("contentType", "resource".toByteArray())
+                )
+            }
         }
 
         @Test
         fun `it should save the resource's content (mime) type`() {
-            TODO()
+            var user = User(
+                name = "name",
+                email = "email",
+                password = "password",
+                privateGroup = Group(name = "name", description = "description")
+            )
+            val artifact = Artifact(
+                name = "Artifact",
+                description = "Description",
+                groups = mutableListOf(),
+                owners = mutableListOf(user)
+            )
+            user = user.copy(ownedArtifacts = mutableListOf(artifact))
+            val resource = ArtifactResource(
+                name = "Name",
+                description = "description",
+                artifact = artifact,
+                contentType = "contentType",
+                resource = "resource".toByteArray()
+            )
+            Mockito.`when`(userRepository.findByEmail(anyString()))
+                .thenReturn(user)
+            Mockito.`when`(artifactRepository.findByIdOrNull(anyLong()))
+                .then { Optional.of(artifact) }
+            Mockito.`when`(artifactResourceRepository.save(any<ArtifactResource>())).then { it.arguments[0] }
+            Mockito.`when`(artifactResourceRepository.findByIdOrNull(anyLong()))
+                .then { Optional.of(resource) }
+            artifactResourceService.create(
+                "example@example.com",
+                artifact.id,
+                ArtifactResourceMetadata("name", "description"),
+                resource = Resource("contentType", "resource".toByteArray())
+            )
+            val argumentCaptor = ArgumentCaptor.forClass(ArtifactResource::class.java)
+            Mockito.verify(artifactResourceRepository).save(argumentCaptor.capture())
+            assertThat(argumentCaptor.value, hasProperty("contentType", equalTo("contentType")))
         }
 
         @Test
         fun `it should associate the resource with the specified artifact`() {
-            TODO()
-        }
+            var user = User(
+                name = "name",
+                email = "email",
+                password = "password",
+                privateGroup = Group(name = "name", description = "description")
+            )
+            val artifact = Artifact(
+                name = "Artifact",
+                description = "Description",
+                groups = mutableListOf(),
+                owners = mutableListOf(user)
+            )
+            user = user.copy(ownedArtifacts = mutableListOf(artifact))
+            val resource = ArtifactResource(
+                name = "Name",
+                description = "description",
+                artifact = artifact,
+                contentType = "contentType",
+                resource = "resource".toByteArray()
+            )
+            Mockito.`when`(userRepository.findByEmail(anyString()))
+                .thenReturn(user)
+            Mockito.`when`(artifactRepository.findByIdOrNull(anyLong()))
+                .then { Optional.of(artifact) }
+            Mockito.`when`(artifactResourceRepository.save(any<ArtifactResource>())).then { it.arguments[0] }
+            Mockito.`when`(artifactResourceRepository.findByIdOrNull(anyLong()))
+                .then { Optional.of(resource) }
+            artifactResourceService.create(
+                "example@example.com",
+                artifact.id,
+                ArtifactResourceMetadata(resource.name, resource.description),
+                resource = Resource(resource.contentType, resource.resource)
+            )
+            val artifactResourceArgumentCaptor = ArgumentCaptor.forClass(ArtifactResource::class.java)
+            Mockito.verify(artifactResourceRepository).save(artifactResourceArgumentCaptor.capture())
+            assertThat(artifactResourceArgumentCaptor.value, hasProperty("artifact", equalTo(artifact)))
 
-        @Test
-        fun `it should save the resource in object storage`() {
+            val artifactArgumentCaptor = ArgumentCaptor.forClass(Artifact::class.java)
+            Mockito.verify(artifactRepository).save(artifactArgumentCaptor.capture())
+            assertThat(artifactArgumentCaptor.value, hasProperty("resources", hasItem(resource)))
         }
     }
 
@@ -37,20 +155,105 @@ class ArtifactResourceServiceImplTest {
     inner class Update {
         @Test
         fun `it should allow artifact owners to update the resource`() {
-            TODO()
+            var user = User(
+                name = "name",
+                email = "email",
+                password = "password",
+                privateGroup = Group(name = "name", description = "description")
+            )
+            val artifact = Artifact(
+                name = "Artifact",
+                description = "Description",
+                groups = mutableListOf(),
+                owners = mutableListOf(user)
+            )
+            user = user.copy(ownedArtifacts = mutableListOf(artifact))
+            val resource = ArtifactResource(
+                name = "Name",
+                description = "description",
+                artifact = artifact,
+                contentType = "contentType",
+                resource = "resource".toByteArray()
+            )
+            Mockito.`when`(userRepository.findByEmail(anyString()))
+                .thenReturn(user)
+            Mockito.`when`(artifactRepository.findByIdOrNull(anyLong()))
+                .then { Optional.of(artifact) }
+            Mockito.`when`(artifactResourceRepository.save(any<ArtifactResource>())).then { it.arguments[0] }
+            Mockito.`when`(artifactResourceRepository.findByIdOrNull(anyLong()))
+                .then { Optional.of(resource) }
+            artifactResourceService.update(
+                email = "example@example.com",
+                artifactId = artifact.id,
+                resourceId = 1,
+                metadata = ArtifactResourceMetadata(
+                    "Updated name", "Updated description"
+                ),
+                resource = Resource(resource.contentType, resource.resource)
+            )
+
+            val argumentCaptor = ArgumentCaptor.forClass(ArtifactResource::class.java)
+            Mockito.verify(artifactResourceRepository).save(argumentCaptor.capture())
+            assertThat(
+                argumentCaptor.value, allOf(
+                    hasProperty("name", `is`("Updated name")),
+                    hasProperty("description", `is`("Updated description"))
+                )
+            )
         }
 
         @Test
         fun `it should not allow non artifact owners to update the resource`() {
-            TODO()
-        }
-
-        @Test
-        fun `it should update the resource in object storage if not null`() {
-        }
-
-        @Test
-        fun `it should update the metadata in the artifact resource repository if not null`() {
+            val user = User(
+                name = "name",
+                email = "useremail",
+                password = "password",
+                privateGroup = Group(name = "name", description = "description")
+            )
+            var owner = User(
+                name = "owner",
+                email = "owneremail",
+                password = "password",
+                privateGroup = Group(name = "name", description = "description")
+            )
+            val artifact = Artifact(
+                name = "Artifact",
+                description = "Description",
+                groups = mutableListOf(),
+                owners = mutableListOf(owner)
+            )
+            owner = owner.copy(ownedArtifacts = mutableListOf(artifact))
+            val resource = ArtifactResource(
+                name = "Name",
+                description = "description",
+                artifact = artifact,
+                contentType = "contentType",
+                resource = "resource".toByteArray()
+            )
+            Mockito.`when`(userRepository.findByEmail(anyString()))
+                .then {
+                    when {
+                        it.arguments[0] == user.email -> user
+                        it.arguments[0] == owner.email -> owner
+                        else -> throw NotImplementedError("${it.arguments[0]} not handled")
+                    }
+                }
+            Mockito.`when`(artifactRepository.findByIdOrNull(anyLong()))
+                .then { Optional.of(artifact) }
+            Mockito.`when`(artifactResourceRepository.save(any<ArtifactResource>())).then { it.arguments[0] }
+            Mockito.`when`(artifactResourceRepository.findByIdOrNull(anyLong()))
+                .then { Optional.of(resource) }
+            assertThrows<ActionNotAllowedException> {
+                artifactResourceService.update(
+                    email = user.email,
+                    artifactId = artifact.id,
+                    resourceId = 1,
+                    metadata = ArtifactResourceMetadata(
+                        "Updated name", "Updated description"
+                    ),
+                    resource = Resource(resource.contentType, resource.resource)
+                )
+            }
         }
     }
 
@@ -58,27 +261,131 @@ class ArtifactResourceServiceImplTest {
     inner class Delete {
         @Test
         fun `it should allow artifact owners to delete the resource`() {
-            TODO()
+            var user = User(
+                name = "name",
+                email = "email",
+                password = "password",
+                privateGroup = Group(name = "name", description = "description")
+            )
+            val artifact = Artifact(
+                name = "Artifact",
+                description = "Description",
+                groups = mutableListOf(),
+                owners = mutableListOf(user)
+            )
+            user = user.copy(ownedArtifacts = mutableListOf(artifact))
+            val resource = ArtifactResource(
+                name = "Name",
+                description = "description",
+                artifact = artifact,
+                contentType = "contentType",
+                resource = "resource".toByteArray()
+            )
+            Mockito.`when`(userRepository.findByEmail(anyString()))
+                .thenReturn(user)
+            Mockito.`when`(artifactRepository.findByIdOrNull(anyLong()))
+                .then { Optional.of(artifact) }
+            Mockito.`when`(artifactResourceRepository.save(any<ArtifactResource>())).then { it.arguments[0] }
+            Mockito.`when`(artifactResourceRepository.findByIdOrNull(anyLong()))
+                .then { Optional.of(resource) }
+            artifactResourceService.delete(
+                email = "example@example.com",
+                artifactId = artifact.id,
+                resourceId = 1
+            )
+
+            Mockito.verify(artifactResourceRepository).delete(any())
         }
 
         @Test
         fun `it should not allow non artifact owners to delete the resource`() {
-            TODO()
-        }
-
-        @Test
-        fun `it should remove the resource from the artifact resource repository`() {
-            TODO()
+            val user = User(
+                name = "name",
+                email = "useremail",
+                password = "password",
+                privateGroup = Group(name = "name", description = "description")
+            )
+            var owner = User(
+                name = "owner",
+                email = "owneremail",
+                password = "password",
+                privateGroup = Group(name = "name", description = "description")
+            )
+            val artifact = Artifact(
+                name = "Artifact",
+                description = "Description",
+                groups = mutableListOf(),
+                owners = mutableListOf(owner)
+            )
+            owner = owner.copy(ownedArtifacts = mutableListOf(artifact))
+            val resource = ArtifactResource(
+                name = "Name",
+                description = "description",
+                artifact = artifact,
+                contentType = "contentType",
+                resource = "resource".toByteArray()
+            )
+            Mockito.`when`(userRepository.findByEmail(anyString()))
+                .then {
+                    when {
+                        it.arguments[0] == user.email -> user
+                        it.arguments[0] == owner.email -> owner
+                        else -> throw NotImplementedError("${it.arguments[0]} not handled")
+                    }
+                }
+            Mockito.`when`(artifactRepository.findByIdOrNull(anyLong()))
+                .then { Optional.of(artifact) }
+            Mockito.`when`(artifactResourceRepository.save(any<ArtifactResource>())).then { it.arguments[0] }
+            Mockito.`when`(artifactResourceRepository.findByIdOrNull(anyLong()))
+                .then { Optional.of(resource) }
+            assertThrows<ActionNotAllowedException> {
+                artifactResourceService.delete(
+                    email = user.email,
+                    artifactId = artifact.id,
+                    resourceId = 1
+                )
+            }
         }
 
         @Test
         fun `it should update the artifact in the artifact repository to remove the resource from it`() {
-            TODO()
-        }
+            var user = User(
+                name = "name",
+                email = "email",
+                password = "password",
+                privateGroup = Group(name = "name", description = "description")
+            )
+            val artifact = Artifact(
+                name = "Artifact",
+                description = "Description",
+                groups = mutableListOf(),
+                owners = mutableListOf(user)
+            )
+            user = user.copy(ownedArtifacts = mutableListOf(artifact))
+            val resource = ArtifactResource(
+                name = "Name",
+                description = "description",
+                artifact = artifact,
+                contentType = "contentType",
+                resource = "resource".toByteArray()
+            )
+            Mockito.`when`(userRepository.findByEmail(anyString()))
+                .thenReturn(user)
+            Mockito.`when`(artifactRepository.findByIdOrNull(anyLong()))
+                .then { Optional.of(artifact) }
+            Mockito.`when`(artifactRepository.save(any<Artifact>())).then { it.arguments[0] }
+            Mockito.`when`(artifactResourceRepository.save(any<ArtifactResource>())).then { it.arguments[0] }
+            Mockito.`when`(artifactResourceRepository.findByIdOrNull(anyLong()))
+                .then { Optional.of(resource) }
+            artifactResourceService.delete(
+                email = "example@example.com",
+                artifactId = artifact.id,
+                resourceId = 1
+            )
 
-        @Test
-        fun `it should delete the resource from object storage`() {
-            TODO()
+            val argumentCaptor = ArgumentCaptor.forClass(Artifact::class.java)
+            Mockito.verify(artifactRepository).save(argumentCaptor.capture())
+            assertThat(argumentCaptor.value, hasProperty("resources", not(hasItem(artifact))))
         }
     }
 }
