@@ -452,7 +452,7 @@ class ArtifactControllerTest {
                 multipartDataRequest.part("metadata", metadata, MediaType.APPLICATION_JSON_UTF8)
                 multipartDataRequest.part(
                     "resource",
-                    ClassPathResource("shattersecrets-spw18.pdf").file.readBytes()
+                    ClassPathResource("test-image.jpg").file.readBytes()
                 )
 
                 val createResourceResponse = client.post()
@@ -592,7 +592,7 @@ class ArtifactControllerTest {
                 multipartDataRequest.part("metadata", metadata, MediaType.APPLICATION_JSON_UTF8)
                 multipartDataRequest.part(
                     "resource",
-                    ClassPathResource("shattersecrets-spw18.pdf").file.readBytes()
+                    ClassPathResource("test-image.jpg").file.readBytes()
                 )
 
                 val createResourceResponse = client.post()
