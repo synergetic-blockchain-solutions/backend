@@ -3,6 +3,7 @@ package com.synergeticsolutions.familyartefacts
 import com.fasterxml.jackson.annotation.JsonIdentityInfo
 import com.fasterxml.jackson.annotation.JsonIdentityReference
 import com.fasterxml.jackson.annotation.ObjectIdGenerators
+import javax.persistence.CascadeType
 import javax.persistence.Entity
 import javax.persistence.GeneratedValue
 import javax.persistence.GenerationType
@@ -37,7 +38,7 @@ data class Artifact(
     @JsonIdentityReference(alwaysAsId = true)
     val sharedWith: MutableList<User> = mutableListOf(),
     @LazyCollection(value = LazyCollectionOption.FALSE)
-    @OneToMany
+    @OneToMany(cascade = [CascadeType.ALL])
     @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator::class, property = "id")
     @JsonIdentityReference(alwaysAsId = true)
     val resources: MutableList<ArtifactResource> = mutableListOf()
