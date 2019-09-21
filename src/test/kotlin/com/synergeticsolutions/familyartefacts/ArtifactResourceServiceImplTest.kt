@@ -39,7 +39,8 @@ class ArtifactResourceServiceImplTest {
                     "example@example.com",
                     1,
                     ArtifactResourceMetadata("name", "description"),
-                    resource = Resource("contentType", "resource".toByteArray())
+                    resource = "resource".toByteArray(),
+                    contentType = "text/plain"
                 )
             }
         }
@@ -61,49 +62,10 @@ class ArtifactResourceServiceImplTest {
                     "example@example.com",
                     1,
                     ArtifactResourceMetadata("name", "description"),
-                    resource = Resource("contentType", "resource".toByteArray())
+                    resource = "resource".toByteArray(),
+                    contentType = "text/plain"
                 )
             }
-        }
-
-        @Test
-        fun `it should save the resource's content (mime) type`() {
-            var user = User(
-                name = "name",
-                email = "email",
-                password = "password",
-                privateGroup = Group(name = "name", description = "description")
-            )
-            val artifact = Artifact(
-                name = "Artifact",
-                description = "Description",
-                groups = mutableListOf(),
-                owners = mutableListOf(user)
-            )
-            user = user.copy(ownedArtifacts = mutableListOf(artifact))
-            val resource = ArtifactResource(
-                name = "Name",
-                description = "description",
-                artifact = artifact,
-                contentType = "contentType",
-                resource = "resource".toByteArray()
-            )
-            Mockito.`when`(userRepository.findByEmail(anyString()))
-                .thenReturn(user)
-            Mockito.`when`(artifactRepository.findByIdOrNull(anyLong()))
-                .then { Optional.of(artifact) }
-            Mockito.`when`(artifactResourceRepository.save(any<ArtifactResource>())).then { it.arguments[0] }
-            Mockito.`when`(artifactResourceRepository.findByIdOrNull(anyLong()))
-                .then { Optional.of(resource) }
-            artifactResourceService.create(
-                "example@example.com",
-                artifact.id,
-                ArtifactResourceMetadata("name", "description"),
-                resource = Resource("contentType", "resource".toByteArray())
-            )
-            val argumentCaptor = ArgumentCaptor.forClass(ArtifactResource::class.java)
-            Mockito.verify(artifactResourceRepository).save(argumentCaptor.capture())
-            assertThat(argumentCaptor.value, hasProperty("contentType", equalTo("contentType")))
         }
 
         @Test
@@ -125,8 +87,8 @@ class ArtifactResourceServiceImplTest {
                 name = "Name",
                 description = "description",
                 artifact = artifact,
-                contentType = "contentType",
-                resource = "resource".toByteArray()
+                resource = "resource".toByteArray(),
+                contentType = "text/plain"
             )
             Mockito.`when`(userRepository.findByEmail(anyString()))
                 .thenReturn(user)
@@ -139,7 +101,8 @@ class ArtifactResourceServiceImplTest {
                 "example@example.com",
                 artifact.id,
                 ArtifactResourceMetadata(resource.name, resource.description),
-                resource = Resource(resource.contentType, resource.resource)
+                resource = resource.resource,
+                contentType = "text/plain"
             )
             val artifactResourceArgumentCaptor = ArgumentCaptor.forClass(ArtifactResource::class.java)
             Mockito.verify(artifactResourceRepository).save(artifactResourceArgumentCaptor.capture())
@@ -172,7 +135,7 @@ class ArtifactResourceServiceImplTest {
                 name = "Name",
                 description = "description",
                 artifact = artifact,
-                contentType = "contentType",
+                contentType = "text/plain",
                 resource = "resource".toByteArray()
             )
             Mockito.`when`(userRepository.findByEmail(anyString()))
@@ -189,7 +152,8 @@ class ArtifactResourceServiceImplTest {
                 metadata = ArtifactResourceMetadata(
                     "Updated name", "Updated description"
                 ),
-                resource = Resource(resource.contentType, resource.resource)
+                resource = resource.resource,
+                contentType = "text/plain"
             )
 
             val argumentCaptor = ArgumentCaptor.forClass(ArtifactResource::class.java)
@@ -227,7 +191,7 @@ class ArtifactResourceServiceImplTest {
                 name = "Name",
                 description = "description",
                 artifact = artifact,
-                contentType = "contentType",
+                contentType = "text/plain",
                 resource = "resource".toByteArray()
             )
             Mockito.`when`(userRepository.findByEmail(anyString()))
@@ -251,7 +215,8 @@ class ArtifactResourceServiceImplTest {
                     metadata = ArtifactResourceMetadata(
                         "Updated name", "Updated description"
                     ),
-                    resource = Resource(resource.contentType, resource.resource)
+                    resource = resource.resource,
+                    contentType = "text/plain"
                 )
             }
         }
@@ -278,7 +243,7 @@ class ArtifactResourceServiceImplTest {
                 name = "Name",
                 description = "description",
                 artifact = artifact,
-                contentType = "contentType",
+                contentType = "text/plain",
                 resource = "resource".toByteArray()
             )
             Mockito.`when`(userRepository.findByEmail(anyString()))
@@ -322,7 +287,7 @@ class ArtifactResourceServiceImplTest {
                 name = "Name",
                 description = "description",
                 artifact = artifact,
-                contentType = "contentType",
+                contentType = "text/plain",
                 resource = "resource".toByteArray()
             )
             Mockito.`when`(userRepository.findByEmail(anyString()))
@@ -366,7 +331,7 @@ class ArtifactResourceServiceImplTest {
                 name = "Name",
                 description = "description",
                 artifact = artifact,
-                contentType = "contentType",
+                contentType = "text/plain",
                 resource = "resource".toByteArray()
             )
             Mockito.`when`(userRepository.findByEmail(anyString()))
