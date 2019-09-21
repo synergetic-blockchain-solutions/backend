@@ -192,7 +192,7 @@ class ArtifactResourceControllerTest(
                 artifactId = artifact.id,
                 metadata = ArtifactResourceMetadata(name = "Resource name", description = "Resource description"),
                 contentType = MediaType.IMAGE_PNG_VALUE,
-                resource = ClassPathResource("test-image.jpg").file.readBytes()
+                resource = ClassPathResource("test-image.jpg").file.readBytes(), fileName = "test-image.jpg"
             )
 
             client.get()
@@ -217,7 +217,7 @@ class ArtifactResourceControllerTest(
                 artifactId = artifact.id,
                 metadata = ArtifactResourceMetadata(name = "Resource name", description = "Resource description"),
                 contentType = MediaType.IMAGE_PNG_VALUE,
-                resource = ClassPathResource("test-image.jpg").file.readBytes()
+                resource = ClassPathResource("test-image.jpg").file.readBytes(), fileName = "test-image.jpg"
             )
             client.get()
                 .uri("/artifact/${artifact.id}/resource/${resource.id}/metadata")
@@ -361,7 +361,7 @@ class ArtifactResourceControllerTest(
                 artifactId = artifact.id,
                 metadata = ArtifactResourceMetadata(name = "Resource name", description = "Resource description"),
                 contentType = MediaType.IMAGE_PNG_VALUE,
-                resource = ClassPathResource("test-image.jpg").file.readBytes()
+                resource = ClassPathResource("test-image.jpg").file.readBytes(), fileName = "test-image.jpg"
             )
 
             client.delete()
@@ -385,7 +385,7 @@ class ArtifactResourceControllerTest(
                 artifactId = artifact.id,
                 metadata = ArtifactResourceMetadata(name = "Resource name", description = "Resource description"),
                 contentType = MediaType.IMAGE_PNG_VALUE,
-                resource = ClassPathResource("test-image.jpg").file.readBytes()
+                resource = ClassPathResource("test-image.jpg").file.readBytes(), fileName = "test-image.jpg"
             )
 
             client.delete()

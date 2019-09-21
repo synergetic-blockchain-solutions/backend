@@ -22,6 +22,7 @@ data class ArtifactResource(
     val name: String,
     val description: String,
     val contentType: String,
+    val fileName: String,
     @JsonIgnore
     @Lob
     val resource: ByteArray,

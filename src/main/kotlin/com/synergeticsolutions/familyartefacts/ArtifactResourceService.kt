@@ -6,7 +6,8 @@ interface ArtifactResourceService {
         artifactId: Long,
         metadata: ArtifactResourceMetadata,
         resource: ByteArray,
-        contentType: String
+        contentType: String,
+        fileName: String
     ): ArtifactResource
 
     fun findResourceById(email: String, artifactId: Long, resourceId: Long): Resource
