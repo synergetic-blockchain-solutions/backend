@@ -5,19 +5,20 @@ interface ArtifactResourceService {
         email: String,
         artifactId: Long,
         metadata: ArtifactResourceMetadata,
-        resource: Resource
+        resource: ByteArray,
+        contentType: String
     ): ArtifactResource
 
-    fun findResourceById(email: String, artifactId: Long, resourceId: Long): ByteArray
+    fun findResourceById(email: String, artifactId: Long, resourceId: Long): Resource
     fun findMetadataById(email: String, artifactId: Long, resourceId: Long): ArtifactResourceMetadata
     fun update(
         email: String,
         artifactId: Long,
         resourceId: Long,
         metadata: ArtifactResourceMetadata? = null,
-        resource: Resource? = null
+        resource: ByteArray? = null,
+        contentType: String? = null
     ): ArtifactResource
 
     fun delete(email: String, artifactId: Long, resourceId: Long): ArtifactResourceMetadata
-    fun findContactTypeById(email: String, artifactId: Long, resourceId: Long): String
 }

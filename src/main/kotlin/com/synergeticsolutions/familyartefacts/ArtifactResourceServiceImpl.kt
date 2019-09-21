@@ -15,17 +15,6 @@ class ArtifactResourceServiceImpl(
     @Autowired
     val userRepository: UserRepository
 ) : ArtifactResourceService {
-    override fun findContactTypeById(email: String, artifactId: Long, resourceId: Long): String {
-        val user = userRepository.findByEmail(email) ?: throw UserNotFoundException("No user with email $email found")
-        val accessibleArtifacts = user.ownedArtifacts + user.sharedArtifacts + user.groups.flatMap { it.artifacts }
-        if (!accessibleArtifacts.map(Artifact::id).contains(artifactId)) {
-            throw ActionNotAllowedException("User ${user.id} does not have access to artifact $artifactId")
-        }
-        val resource = artifactResourceRepository.findByIdOrNull(resourceId) ?: throw ArtifactResourceNotFoundException(
-            "Could not find artifact resource $resourceId"
-        )
-        return resource.contentType
-    }
 
     override fun findMetadataById(email: String, artifactId: Long, resourceId: Long): ArtifactResourceMetadata {
         val user = userRepository.findByEmail(email) ?: throw UserNotFoundException("No user with email $email found")
@@ -43,7 +32,7 @@ class ArtifactResourceServiceImpl(
         )
     }
 
-    override fun findResourceById(email: String, artifactId: Long, resourceId: Long): ByteArray {
+    override fun findResourceById(email: String, artifactId: Long, resourceId: Long): Resource {
         val user = userRepository.findByEmail(email) ?: throw UserNotFoundException("No user with email $email found")
         val accessibleArtifacts = user.ownedArtifacts + user.sharedArtifacts + user.groups.flatMap { it.artifacts }
         if (!accessibleArtifacts.map(Artifact::id).contains(artifactId)) {
@@ -51,7 +40,7 @@ class ArtifactResourceServiceImpl(
         }
         val resource = artifactResourceRepository.findByIdOrNull(resourceId)
             ?: throw ArtifactResourceNotFoundException("Could not find artifact resource $resourceId")
-        return resource.resource
+        return Resource(resource = resource.resource, contentType = resource.contentType)
     }
 
     override fun update(
@@ -59,7 +48,8 @@ class ArtifactResourceServiceImpl(
         artifactId: Long,
         resourceId: Long,
         metadata: ArtifactResourceMetadata?,
-        resource: Resource?
+        resource: ByteArray?,
+        contentType: String?
     ): ArtifactResource {
         val user = userRepository.findByEmail(email) ?: throw UserNotFoundException("No user with email $email found")
         val accessibleArtifacts = user.ownedArtifacts + user.sharedArtifacts + user.groups.flatMap { it.artifacts }
@@ -80,9 +70,12 @@ class ArtifactResourceServiceImpl(
 
         resource?.let {
             resourceEntity = resourceEntity.copy(
-                contentType = it.contentType,
-                resource = it.resource
+                resource = it
             )
+        }
+
+        contentType?.let {
+            resourceEntity = resourceEntity.copy(contentType = it)
         }
 
         return artifactResourceRepository.save(resourceEntity)
@@ -110,7 +103,8 @@ class ArtifactResourceServiceImpl(
         email: String,
         artifactId: Long,
         metadata: ArtifactResourceMetadata,
-        resource: Resource
+        resource: ByteArray,
+        contentType: String
     ): ArtifactResource {
         val user =
             userRepository.findByEmail(email) ?: throw UserNotFoundException("Could not find user with email $email")
@@ -123,9 +117,9 @@ class ArtifactResourceServiceImpl(
             ArtifactResource(
                 name = metadata.name,
                 description = metadata.description,
-                contentType = resource.contentType,
-                resource = resource.resource,
-                artifact = artifact
+                resource = resource,
+                artifact = artifact,
+                contentType = contentType
             )
         )
         artifactRepository.save(artifact.copy(resources = (artifact.resources + artifactResource).toMutableList()))

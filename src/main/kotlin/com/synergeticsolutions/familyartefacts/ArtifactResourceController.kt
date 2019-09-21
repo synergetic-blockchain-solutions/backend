@@ -3,17 +3,19 @@ package com.synergeticsolutions.familyartefacts
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
+import java.io.ByteArrayOutputStream
+import java.io.InputStream
 import java.security.Principal
+import javax.servlet.http.HttpServletRequest
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.core.io.ByteArrayResource
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
+import org.springframework.http.ResponseEntity
 import org.springframework.util.LinkedMultiValueMap
-import org.springframework.util.MultiValueMap
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -23,10 +25,9 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
-import org.springframework.web.bind.annotation.RequestPart
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
-import org.springframework.web.multipart.MultipartFile
+import org.springframework.web.multipart.support.StandardMultipartHttpServletRequest
 
 @RestController
 @RequestMapping(path = ["/artifact/{artifactId}/resource"])
@@ -45,18 +46,27 @@ class ArtifactResourceController(
     @PostMapping(consumes = [MediaType.MULTIPART_FORM_DATA_VALUE])
     fun createResourceWithMetadata(
         @PathVariable artifactId: Long,
-        @RequestPart("metadata") metadata: ByteArray,
-        @RequestPart("resource") resource: ByteArray,
+        request: HttpServletRequest,
         principal: Principal
     ): ArtifactResource {
-        val resourceMetadata = ObjectMapper().registerKotlinModule().readValue<ArtifactResourceMetadata>(metadata)
+        if (!(request.parameterMap.containsKey("metadata"))) {
+            throw MetadataPartRequired()
+        } else if (!(request.parameterMap.containsKey("resource"))) {
+            throw ResourcePartRequired()
+        }
+
+        val metadataPart = checkNotNull(
+            request.parameterMap["metadata"]?.firstOrNull(),
+            { "Checked that the parameter map contained 'metadata' earlier" }
+        )
+        val resource = request.getPart("resource").inputStream.toByteArray()
+        val contentType = (request as StandardMultipartHttpServletRequest).getMultipartContentType("resource")
+        val metadata = ObjectMapper().registerKotlinModule().readValue<ArtifactResourceMetadata>(metadataPart)
         return artifactResourceService.create(
             principal.name, artifactId,
-            metadata = resourceMetadata,
-            resource = Resource(
-                contentType = "",
-                resource = resource
-            )
+            metadata = metadata,
+            contentType = contentType,
+            resource = resource
         )
     }
 
@@ -65,39 +75,41 @@ class ArtifactResourceController(
      *
      * Get the resource [resourceId] associated with the artifact [artifactId].
      */
-    @GetMapping(path = ["/{resourceId}"], produces = [MediaType.MULTIPART_FORM_DATA_VALUE])
+    @GetMapping(path = ["/{resourceId}"])
     fun getResourceById(
         @PathVariable artifactId: Long,
         @PathVariable resourceId: Long,
         @RequestParam(name = "metadata", required = false, defaultValue = "true") includeMetadata: Boolean,
         @RequestParam(name = "resource", required = false, defaultValue = "true") includeResource: Boolean,
         principal: Principal
-    ): MultiValueMap<String, Any> {
-        if (!(includeMetadata || includeResource)) {
-            throw InvalidRequestParamCombinationException("Must include at least one of metadata or resource")
-        }
+    ): ResponseEntity<Any> {
 
-        val response = LinkedMultiValueMap<String, Any>()
-
-        if (includeMetadata) {
-            logger.debug("Including metadata in response")
+        if (includeMetadata && includeResource) {
+            val response = LinkedMultiValueMap<String, Any>()
             val metadata = artifactResourceService.findMetadataById(principal.name, artifactId, resourceId)
             val metadataHeaders = HttpHeaders().apply { contentType = MediaType.APPLICATION_JSON_UTF8 }
             val metadataHttpEntity = HttpEntity(metadata, metadataHeaders)
             response.add("metadata", metadataHttpEntity)
-        }
-
-        if (includeResource) {
-            logger.debug("Including resource in response")
             val resource = artifactResourceService.findResourceById(principal.name, artifactId, resourceId)
-            val associatedContentType =
-                artifactResourceService.findContactTypeById(principal.name, artifactId, resourceId)
-            val resourceHeaders = HttpHeaders().apply { contentType = MediaType.parseMediaType(associatedContentType) }
+            val resourceHeaders = HttpHeaders().apply { contentType = MediaType.parseMediaType(resource.contentType) }
             val resourceHttpEntity = HttpEntity(resource, resourceHeaders)
             response.add("resource", resourceHttpEntity)
-        }
 
-        return response
+            return ResponseEntity.ok()
+                .contentType(MediaType.MULTIPART_FORM_DATA)
+                .body(response)
+        } else if (includeMetadata) {
+            return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_UTF8_VALUE)
+                .body(artifactResourceService.findMetadataById(principal.name, artifactId, resourceId))
+        } else if (includeResource) {
+            val resource = artifactResourceService.findResourceById(principal.name, artifactId, resourceId)
+            return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(resource.contentType))
+                .body(resource.resource)
+        } else {
+            throw InvalidRequestParamCombinationException("Must include at least one of metadata or resource")
+        }
     }
 
     /**
@@ -109,21 +121,30 @@ class ArtifactResourceController(
     fun updateResourceAndMetadata(
         @PathVariable artifactId: Long,
         @PathVariable resourceId: Long,
-        @RequestParam("metadata") metadata: ByteArray,
-        @RequestParam("resource") resource: MultipartFile,
+        request: HttpServletRequest,
         principal: Principal
     ): ArtifactResource {
         logger.info("Updating metadata and resource of resource $resourceId")
-        val resourceMetadata = ObjectMapper().registerKotlinModule().readValue<ArtifactResourceMetadata>(metadata)
+        if (!(request.parameterMap.containsKey("metadata"))) {
+            throw MetadataPartRequired()
+        } else if (!(request.parameterMap.containsKey("resource"))) {
+            throw ResourcePartRequired()
+        }
+        val metadataPart = checkNotNull(
+            request.parameterMap["metadata"]?.firstOrNull(),
+            { "Checked that the parameter map contained 'metadata' earlier" }
+        )
+        val resource = request.getPart("resource").inputStream.toByteArray()
+        val contentType = (request as StandardMultipartHttpServletRequest).getMultipartContentType("resource")
+        val metadata = ObjectMapper().registerKotlinModule()
+            .readValue<ArtifactResourceMetadata>(metadataPart)
         return artifactResourceService.update(
             principal.name,
             artifactId,
             resourceId,
-            metadata = resourceMetadata,
-            resource = Resource(
-                contentType = resource.contentType ?: throw ResourceContentTypeRequiredException(),
-                resource = resource.bytes
-            )
+            metadata = metadata,
+            contentType = contentType,
+            resource = resource
         )
     }
 
@@ -140,7 +161,12 @@ class ArtifactResourceController(
         principal: Principal
     ): ArtifactResource {
         logger.info("Updating metadata of resource $resourceId")
-        return artifactResourceService.update(principal.name, artifactId, resourceId, metadata = metadata)
+        return artifactResourceService.update(
+            principal.name,
+            artifactId,
+            resourceId,
+            metadata = metadata
+        )
     }
 
     /**
@@ -153,7 +179,7 @@ class ArtifactResourceController(
         @PathVariable artifactId: Long,
         @PathVariable resourceId: Long,
         @RequestHeader(HttpHeaders.CONTENT_TYPE) contentType: String,
-        @RequestBody resource: ByteArrayResource,
+        @RequestBody resource: ByteArray,
         principal: Principal
     ): ArtifactResource {
         logger.info("Updating resource of resource $resourceId")
@@ -161,7 +187,8 @@ class ArtifactResourceController(
             principal.name,
             artifactId,
             resourceId,
-            resource = Resource(contentType = contentType, resource = resource.byteArray)
+            resource = resource,
+            contentType = contentType
         )
     }
 
@@ -173,4 +200,14 @@ class ArtifactResourceController(
     @DeleteMapping(path = ["/{resourceId}"])
     fun deleteResourceById(@PathVariable artifactId: Long, @PathVariable resourceId: Long, principal: Principal): ArtifactResourceMetadata =
         artifactResourceService.delete(principal.name, artifactId, resourceId)
+}
+
+private fun InputStream.toByteArray(): ByteArray {
+    val outputStream = ByteArrayOutputStream()
+    this.use { input ->
+        outputStream.use { output ->
+            input.copyTo(output)
+        }
+    }
+    return outputStream.toByteArray()
 }
