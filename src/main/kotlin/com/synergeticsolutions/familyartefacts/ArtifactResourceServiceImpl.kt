@@ -16,11 +16,23 @@ class ArtifactResourceServiceImpl(
     val userRepository: UserRepository
 ) : ArtifactResourceService {
 
+    private fun isOwner(email: String, artifactId: Long = 0, resourceId: Long = 0): Boolean =
+        if (artifactId > 0 && resourceId > 0) {
+            val user = userRepository.findByEmail(email) ?: throw UserNotFoundException("No user with email $email found")
+            val artifact = artifactRepository.findByIdOrNull(artifactId) ?: throw ArtifactNotFoundException("Not artifact with ID $artifactId found")
+            val resource = artifactResourceRepository.findByIdOrNull(resourceId) ?: throw ArtifactResourceNotFoundException("No artifact resource with ID $resourceId found")
+            artifact.owners.contains(user) && artifact.resources.contains(resource)
+        } else if (artifactId > 0) {
+            val user = userRepository.findByEmail(email) ?: throw UserNotFoundException("No user with email $email found")
+            val artifact = artifactRepository.findByIdOrNull(artifactId) ?: throw ArtifactNotFoundException("Not artifact with ID $artifactId found")
+            artifact.owners.contains(user)
+        } else {
+            throw IllegalArgumentException("If resourceId is specified, artifactId must also be specified")
+        }
+
     override fun findMetadataById(email: String, artifactId: Long, resourceId: Long): ArtifactResourceMetadata {
-        val user = userRepository.findByEmail(email) ?: throw UserNotFoundException("No user with email $email found")
-        val accessibleArtifacts = user.ownedArtifacts + user.sharedArtifacts + user.groups.flatMap { it.artifacts }
-        if (!accessibleArtifacts.map(Artifact::id).contains(artifactId)) {
-            throw ActionNotAllowedException("User ${user.id} does not have access to artifact $artifactId")
+        if (!isOwner(email, artifactId = artifactId, resourceId = resourceId)) {
+            throw ActionNotAllowedException("User with email $email does not have access to artifact resource $resourceId")
         }
         val resource = artifactResourceRepository.findByIdOrNull(resourceId) ?: throw ArtifactResourceNotFoundException(
             "Could not find artifact resource $resourceId"
@@ -33,10 +45,8 @@ class ArtifactResourceServiceImpl(
     }
 
     override fun findResourceById(email: String, artifactId: Long, resourceId: Long): Resource {
-        val user = userRepository.findByEmail(email) ?: throw UserNotFoundException("No user with email $email found")
-        val accessibleArtifacts = user.ownedArtifacts + user.sharedArtifacts + user.groups.flatMap { it.artifacts }
-        if (!accessibleArtifacts.map(Artifact::id).contains(artifactId)) {
-            throw ActionNotAllowedException("User ${user.id} does not have access to artifact $artifactId")
+        if (!isOwner(email, artifactId = artifactId, resourceId = resourceId)) {
+            throw ActionNotAllowedException("User with email $email does not have access to artifact resource $resourceId")
         }
         val resource = artifactResourceRepository.findByIdOrNull(resourceId)
             ?: throw ArtifactResourceNotFoundException("Could not find artifact resource $resourceId")
@@ -51,10 +61,8 @@ class ArtifactResourceServiceImpl(
         resource: ByteArray?,
         contentType: String?
     ): ArtifactResource {
-        val user = userRepository.findByEmail(email) ?: throw UserNotFoundException("No user with email $email found")
-        val accessibleArtifacts = user.ownedArtifacts + user.sharedArtifacts + user.groups.flatMap { it.artifacts }
-        if (!accessibleArtifacts.map(Artifact::id).contains(artifactId)) {
-            throw ActionNotAllowedException("User ${user.id} does not have access to artifact $artifactId")
+        if (!isOwner(email, artifactId = artifactId, resourceId = resourceId)) {
+            throw ActionNotAllowedException("User with email $email does not have access to artifact resource $resourceId")
         }
 
         var resourceEntity = artifactResourceRepository.findByIdOrNull(resourceId)
@@ -75,10 +83,8 @@ class ArtifactResourceServiceImpl(
     }
 
     override fun delete(email: String, artifactId: Long, resourceId: Long): ArtifactResourceMetadata {
-        val user = userRepository.findByEmail(email) ?: throw UserNotFoundException("No user with email $email found")
-        val accessibleArtifacts = user.ownedArtifacts + user.sharedArtifacts + user.groups.flatMap { it.artifacts }
-        if (!accessibleArtifacts.map(Artifact::id).contains(artifactId)) {
-            throw ActionNotAllowedException("User ${user.id} does not have access to artifact $artifactId")
+        if (!isOwner(email, artifactId = artifactId, resourceId = resourceId)) {
+            throw ActionNotAllowedException("User with email $email does not have access to artifact resource $resourceId")
         }
         val resource = artifactResourceRepository.findByIdOrNull(resourceId) ?: throw ArtifactResourceNotFoundException(
             "Could not find artifact resource $resourceId"
@@ -99,13 +105,10 @@ class ArtifactResourceServiceImpl(
         resource: ByteArray,
         contentType: String
     ): ArtifactResource {
-        val user =
-            userRepository.findByEmail(email) ?: throw UserNotFoundException("Could not find user with email $email")
-        val artifact = artifactRepository.findByIdOrNull(artifactId)
-            ?: throw ArtifactNotFoundException("Could not find artifact $artifactId")
-        if (!user.ownedArtifacts.map(Artifact::id).contains(artifactId)) {
-            throw ActionNotAllowedException("User ${user.id} is not an owner of artifact $artifactId")
+        if (!isOwner(email, artifactId = artifactId)) {
+            throw ActionNotAllowedException("User with email $email does not have access to artifact $artifactId")
         }
+        val artifact = artifactRepository.findByIdOrNull(artifactId) ?: throw ArtifactNotFoundException("Could not find artifact with ID $artifactId")
         val artifactResource = artifactResourceRepository.save(
             ArtifactResource(
                 name = metadata.name,

@@ -76,13 +76,15 @@ class ArtifactResourceServiceImplTest {
                 password = "password",
                 privateGroup = Group(name = "name", description = "description")
             )
-            val artifact = Artifact(
+            var artifact = Artifact(
+                id = 1,
                 name = "Artifact",
                 description = "Description",
                 groups = mutableListOf(),
                 owners = mutableListOf(user)
             )
             user = user.copy(ownedArtifacts = mutableListOf(artifact))
+            artifact = artifact.copy(owners = mutableListOf(user))
             val resource = ArtifactResource(
                 name = "Name",
                 description = "description",
@@ -124,7 +126,8 @@ class ArtifactResourceServiceImplTest {
                 password = "password",
                 privateGroup = Group(name = "name", description = "description")
             )
-            val artifact = Artifact(
+            var artifact = Artifact(
+                id = 1,
                 name = "Artifact",
                 description = "Description",
                 groups = mutableListOf(),
@@ -138,6 +141,7 @@ class ArtifactResourceServiceImplTest {
                 contentType = "text/plain",
                 resource = "resource".toByteArray()
             )
+            artifact = artifact.copy(owners = mutableListOf(user), resources = mutableListOf(resource))
             Mockito.`when`(userRepository.findByEmail(anyString()))
                 .thenReturn(user)
             Mockito.`when`(artifactRepository.findByIdOrNull(anyLong()))
@@ -181,6 +185,7 @@ class ArtifactResourceServiceImplTest {
                 privateGroup = Group(name = "name", description = "description")
             )
             val artifact = Artifact(
+                id = 1,
                 name = "Artifact",
                 description = "Description",
                 groups = mutableListOf(),
@@ -233,13 +238,15 @@ class ArtifactResourceServiceImplTest {
                 password = "password",
                 privateGroup = Group(name = "name", description = "description")
             )
-            val artifact = Artifact(
+            var artifact = Artifact(
+                id = 1,
                 name = "Artifact",
                 description = "Description",
                 groups = mutableListOf(),
                 owners = mutableListOf(user)
             )
             user = user.copy(ownedArtifacts = mutableListOf(artifact))
+
             val resource = ArtifactResource(
                 name = "Name",
                 description = "description",
@@ -247,6 +254,8 @@ class ArtifactResourceServiceImplTest {
                 contentType = "text/plain",
                 resource = "resource".toByteArray()
             )
+            artifact = artifact.copy(owners = mutableListOf(user), resources = mutableListOf(resource))
+
             Mockito.`when`(userRepository.findByEmail(anyString()))
                 .thenReturn(user)
             Mockito.`when`(artifactRepository.findByIdOrNull(anyLong()))
@@ -278,6 +287,7 @@ class ArtifactResourceServiceImplTest {
                 privateGroup = Group(name = "name", description = "description")
             )
             val artifact = Artifact(
+                id = 1,
                 name = "Artifact",
                 description = "Description",
                 groups = mutableListOf(),
@@ -321,13 +331,15 @@ class ArtifactResourceServiceImplTest {
                 password = "password",
                 privateGroup = Group(name = "name", description = "description")
             )
-            val artifact = Artifact(
+            var artifact = Artifact(
+                id = 1,
                 name = "Artifact",
                 description = "Description",
                 groups = mutableListOf(),
                 owners = mutableListOf(user)
             )
             user = user.copy(ownedArtifacts = mutableListOf(artifact))
+
             val resource = ArtifactResource(
                 name = "Name",
                 description = "description",
@@ -335,6 +347,8 @@ class ArtifactResourceServiceImplTest {
                 contentType = "text/plain",
                 resource = "resource".toByteArray()
             )
+            artifact = artifact.copy(owners = mutableListOf(user), resources = mutableListOf(resource))
+
             Mockito.`when`(userRepository.findByEmail(anyString()))
                 .thenReturn(user)
             Mockito.`when`(artifactRepository.findByIdOrNull(anyLong()))
