@@ -2,7 +2,7 @@ version: '3.0'
 
 services:
   backend:
-    command: ./mvnw -B clean test
+    command: ./mvnw -B test
     volumes:
       - '$PWD/target:/app/target'
       - '$PWD/src:/app/src:ro'
