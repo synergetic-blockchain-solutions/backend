@@ -1,6 +1,8 @@
 package com.synergeticsolutions.familyartefacts
 
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
@@ -118,7 +120,7 @@ class UserServiceImplIntegrationTest {
         assertNotNull(foundUser.privateGroup)
         assertEquals(1, foundGroup.members.size)
         assertEquals(1, foundGroup.admins.size)
-        //assertEquals(createdUser.id, foundGroup.members.first().id)
-        //assertEquals(createdUser.id, foundGroup.admins.first().id)
+        // assertEquals(createdUser.id, foundGroup.members.first().id)
+        // assertEquals(createdUser.id, foundGroup.admins.first().id)
     }
 }
