@@ -355,3 +355,148 @@ the resource. It will have the following fields:
 - `contentType`: The content type (or mime type) of the artifact, this is to
   help with how to display the resource and the content type when returning it.
 - `artifact`: The ID of the artifact the resource is associated with.
+
+## `GET /artifact/{artifactId}/resource/{resourceId}/resource`
+
+Get the actual resource `{resourceId}`.
+
+### Example request
+
+``` http request
+GET http://localhost:8080/artifact/{artifactId}/resource/{resourceId}/resource
+Accept: application/json
+Content-Type: application/json
+Authorization: Bearer {token}
+```
+
+### Response
+
+A successful response from this endpoint will be the resource `resourceId`. The
+content type will depend on what the content type of the resource saved actually
+was.
+
+## `GET /artifact/{artifactId}/resource/{resourceId}/metadata`
+
+Get the metadata associated with the resource.
+
+### Example request
+
+``` http request
+GET http://localhost:8080/artifact/{artifactId}/resource/{resourceId}/metadata
+Accept: application/json
+Content-Type: application/json
+Authorization: Bearer {token}
+```
+
+### Response
+
+A successful response from this endpoint will be a JSON document of the metadata
+associated with the resource.
+
+- `name`: Name of the resource
+- `description`: Description of the resource
+- `tags`: Collection of tags associated with the resource
+
+## `PUT /artifact/{artifactId}/resource/{resourceId}`
+
+Resources can be updated in three possible was using this endpoint.
+
+1. Update both the metadata and resource
+2. Update metadata only
+3. Update resource only
+
+Usage varies between each and is described in their specific section.
+
+### Update both metadata and resource
+
+This endpoint updates both the metadata and the resource. It requires the
+`multipart/form-data` content type.
+
+#### Example request
+
+``` http request
+POST http://localhost:8080/artifact/{artifactId}/resource/{resourceId}
+Accept: application/json
+Content-Type: multipart/form-data; boundary=-----------xxxxxxxxxxxxxxxxxx
+Authorization: Bearer {token}
+
+-----------xxxxxxxxxxxxxxxxxx
+Content-Disposition: application/json; name="metadata"
+
+{
+    "name": "Resource 1",
+    "description": "Updated description"
+    "tags": ["tag1", "tag2"]
+}
+
+-----------xxxxxxxxxxxxxxxxxx
+Content-Disposition: image/png; name="resource"
+
+{image}
+```
+
+### Update metadata only
+
+This endpoint updates only the metadata. It requires the `application/json`
+content type.
+
+#### Example request
+
+``` http request
+PUT http://localhost:8080/artifact/{artifactId}/resource/{resourceId}
+Accept: application/json
+Content-Type: application/json
+Authorization: Bearer {token}
+
+{
+    "name": "Resource 1",
+    "description": "Updated description"
+    "tags": ["tag1", "tag2"]
+}
+```
+
+### Update resource only
+
+Any requests that are not `multipart/form-data` or `application/json` will go
+through to this endpoint. This updates only the resource. The content type
+associated with the resource will be the one in the `Content-Type` header.
+
+#### Example request
+
+``` http request
+POST http://localhost:8080/artifact/{artifactId}/resource/{resourceId}
+Accept: application/json
+Content-Type: image/png
+Authorization: Bearer {token}
+
+{image}
+```
+
+### Response
+
+A successful response from all three endpoints will be a JSON representation of
+the resource (same as the [resource creation
+endpoint](#`POST-/artifact/{artifactId}/resource`)).
+
+
+
+## `DELETE /artifact/{artifactId}/resource/{resourceId}`
+
+Delete a resource. This endpoint is only accessible by owners of the artifact
+with ID `artifactId`.
+
+### Example request
+
+
+``` http request
+DELETE http://localhost:8080/artifact/{artifactId}/resource/{resourceId}
+Accept: application/json
+Content-Type: application/json
+Authorization: Bearer {token}
+```
+
+### Response
+
+A successful response from this endpoint will be a JSON document representing
+the resource (same as the [resource creation
+endpoint](#`POST-/artifact/{artifactId}/resource`))
