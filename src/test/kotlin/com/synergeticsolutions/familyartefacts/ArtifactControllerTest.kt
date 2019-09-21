@@ -25,9 +25,7 @@ import org.springframework.core.io.ClassPathResource
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
-import org.springframework.http.client.MultipartBodyBuilder
 import org.springframework.test.web.reactive.server.WebTestClient
-import org.springframework.web.reactive.function.BodyInserters
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureWebTestClient
@@ -447,27 +445,18 @@ class ArtifactControllerTest {
                 val returnedArtifact =
                     ObjectMapper().registerKotlinModule().readValue<Map<String, Any>>(String(createArtifactResponse))
 
-                val metadata = ArtifactResourceMetadata(name = "Resource name", description = "Resource description")
-                val multipartDataRequest = MultipartBodyBuilder()
-                multipartDataRequest.part("metadata", metadata, MediaType.APPLICATION_JSON_UTF8)
-                multipartDataRequest.part(
-                    "resource",
-                    ClassPathResource("test-image.jpg").file.readBytes()
+                val artifact = artifactRepository.findByIdOrNull((returnedArtifact["id"] as Int).toLong())!!
+                val resource = artifactResourceRepository.save(
+                    ArtifactResource(
+                        name = "Resource name",
+                        description = "Resource description",
+                        resource = ClassPathResource("test-image.jpg").file.readBytes(),
+                        contentType = MediaType.IMAGE_PNG_VALUE,
+                        artifact = artifact
+                    )
                 )
 
-                val createResourceResponse = client.post()
-                    .uri("/artifact/${returnedArtifact["id"]}/resource")
-                    .accept(MediaType.APPLICATION_JSON_UTF8)
-                    .contentType(MediaType.MULTIPART_FORM_DATA)
-                    .header(HttpHeaders.AUTHORIZATION, "Bearer $token")
-                    .body(BodyInserters.fromMultipartData(multipartDataRequest.build()))
-                    .exchange()
-                    .expectStatus().isCreated
-                    .expectBody()
-                    .returnResult()
-                    .responseBody!!
-                val returnedResource =
-                    ObjectMapper().registerKotlinModule().readValue<Map<String, Any>>(String(createResourceResponse))
+                artifactRepository.save(artifact.copy(resources = mutableListOf(resource)))
 
                 @Suppress("UNCHECKED_CAST")
                 val updateArtifactRequest = mapOf<String, Any>(
@@ -587,29 +576,20 @@ class ArtifactControllerTest {
                 val returnedArtifact =
                     ObjectMapper().registerKotlinModule().readValue<Map<String, Any>>(String(createArtifactResponse))
 
-                val metadata = ArtifactResourceMetadata(name = "Resource name", description = "Resource description")
-                val multipartDataRequest = MultipartBodyBuilder()
-                multipartDataRequest.part("metadata", metadata, MediaType.APPLICATION_JSON_UTF8)
-                multipartDataRequest.part(
-                    "resource",
-                    ClassPathResource("test-image.jpg").file.readBytes()
+                val artifact = artifactRepository.findByIdOrNull((returnedArtifact["id"] as Int).toLong())!!
+                val resource = artifactResourceRepository.save(
+                    ArtifactResource(
+                        name = "Resource name",
+                        description = "Resource description",
+                        resource = ClassPathResource("test-image.jpg").file.readBytes(),
+                        contentType = MediaType.IMAGE_PNG_VALUE,
+                        artifact = artifact
+                    )
                 )
 
-                val createResourceResponse = client.post()
-                    .uri("/artifact/${returnedArtifact["id"]}/resource")
-                    .accept(MediaType.APPLICATION_JSON_UTF8)
-                    .contentType(MediaType.MULTIPART_FORM_DATA)
-                    .header(HttpHeaders.AUTHORIZATION, "Bearer $token")
-                    .body(BodyInserters.fromMultipartData(multipartDataRequest.build()))
-                    .exchange()
-                    .expectStatus().isCreated
-                    .expectBody()
-                    .returnResult()
-                    .responseBody!!
-                val returnedResource =
-                    ObjectMapper().registerKotlinModule().readValue<Map<String, Any>>(String(createResourceResponse))
+                artifactRepository.save(artifact.copy(resources = mutableListOf(resource)))
                 client.delete()
-                    .uri("/artifact/${returnedArtifact["id"]}/resource/${returnedResource["id"]}")
+                    .uri("/artifact/${returnedArtifact["id"]}/resource/${resource.id}")
                     .accept(MediaType.APPLICATION_JSON_UTF8)
                     .header(HttpHeaders.AUTHORIZATION, "Bearer $token")
                     .exchange()
@@ -618,7 +598,7 @@ class ArtifactControllerTest {
                     .returnResult()
                     .responseBody!!
 
-                assertFalse(artifactResourceRepository.existsById((returnedResource["id"] as Int).toLong()))
+                assertFalse(artifactResourceRepository.existsById(resource.id))
             }
         }
     }
