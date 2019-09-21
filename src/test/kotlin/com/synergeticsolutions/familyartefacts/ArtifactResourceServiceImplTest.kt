@@ -40,7 +40,7 @@ class ArtifactResourceServiceImplTest {
                     1,
                     ArtifactResourceMetadata("name", "description"),
                     resource = "resource".toByteArray(),
-                    contentType = "text/plain", fileName = "test-image.jpg"
+                    contentType = "text/plain"
                 )
             }
         }
@@ -63,7 +63,7 @@ class ArtifactResourceServiceImplTest {
                     1,
                     ArtifactResourceMetadata("name", "description"),
                     resource = "resource".toByteArray(),
-                    contentType = "text/plain", fileName = "test-image.jpg"
+                    contentType = "text/plain"
                 )
             }
         }
@@ -88,7 +88,7 @@ class ArtifactResourceServiceImplTest {
                 description = "description",
                 artifact = artifact,
                 resource = "resource".toByteArray(),
-                contentType = "text/plain", fileName = "test-image.jpg"
+                contentType = "text/plain"
             )
             Mockito.`when`(userRepository.findByEmail(anyString()))
                 .thenReturn(user)
@@ -102,7 +102,7 @@ class ArtifactResourceServiceImplTest {
                 artifact.id,
                 ArtifactResourceMetadata(resource.name, resource.description),
                 resource = resource.resource,
-                contentType = "text/plain", fileName = "test-image.jpg"
+                contentType = "text/plain"
             )
             val artifactResourceArgumentCaptor = ArgumentCaptor.forClass(ArtifactResource::class.java)
             Mockito.verify(artifactResourceRepository).save(artifactResourceArgumentCaptor.capture())
@@ -135,7 +135,7 @@ class ArtifactResourceServiceImplTest {
                 name = "Name",
                 description = "description",
                 artifact = artifact,
-                contentType = "text/plain", fileName = "test-image.jpg",
+                contentType = "text/plain",
                 resource = "resource".toByteArray()
             )
             Mockito.`when`(userRepository.findByEmail(anyString()))
@@ -191,7 +191,7 @@ class ArtifactResourceServiceImplTest {
                 name = "Name",
                 description = "description",
                 artifact = artifact,
-                contentType = "text/plain", fileName = "test-image.jpg",
+                contentType = "text/plain",
                 resource = "resource".toByteArray()
             )
             Mockito.`when`(userRepository.findByEmail(anyString()))
@@ -217,6 +217,7 @@ class ArtifactResourceServiceImplTest {
                     ),
                     resource = resource.resource,
                     contentType = "text/plain"
+
                 )
             }
         }
@@ -243,7 +244,7 @@ class ArtifactResourceServiceImplTest {
                 name = "Name",
                 description = "description",
                 artifact = artifact,
-                contentType = "text/plain", fileName = "test-image.jpg",
+                contentType = "text/plain",
                 resource = "resource".toByteArray()
             )
             Mockito.`when`(userRepository.findByEmail(anyString()))
@@ -287,7 +288,7 @@ class ArtifactResourceServiceImplTest {
                 name = "Name",
                 description = "description",
                 artifact = artifact,
-                contentType = "text/plain", fileName = "test-image.jpg",
+                contentType = "text/plain",
                 resource = "resource".toByteArray()
             )
             Mockito.`when`(userRepository.findByEmail(anyString()))
@@ -331,7 +332,7 @@ class ArtifactResourceServiceImplTest {
                 name = "Name",
                 description = "description",
                 artifact = artifact,
-                contentType = "text/plain", fileName = "test-image.jpg",
+                contentType = "text/plain",
                 resource = "resource".toByteArray()
             )
             Mockito.`when`(userRepository.findByEmail(anyString()))

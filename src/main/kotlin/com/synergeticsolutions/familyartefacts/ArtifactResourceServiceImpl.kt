@@ -40,7 +40,7 @@ class ArtifactResourceServiceImpl(
         }
         val resource = artifactResourceRepository.findByIdOrNull(resourceId)
             ?: throw ArtifactResourceNotFoundException("Could not find artifact resource $resourceId")
-        return Resource(resource = resource.resource, contentType = resource.contentType, fileName = resource.fileName)
+        return Resource(resource = resource.resource, contentType = resource.contentType)
     }
 
     override fun update(
@@ -68,15 +68,8 @@ class ArtifactResourceServiceImpl(
             )
         }
 
-        resource?.let {
-            resourceEntity = resourceEntity.copy(
-                resource = it
-            )
-        }
-
-        contentType?.let {
-            resourceEntity = resourceEntity.copy(contentType = it)
-        }
+        resource?.let { resourceEntity = resourceEntity.copy(resource = it) }
+        contentType?.let { resourceEntity = resourceEntity.copy(contentType = it) }
 
         return artifactResourceRepository.save(resourceEntity)
     }
@@ -104,8 +97,7 @@ class ArtifactResourceServiceImpl(
         artifactId: Long,
         metadata: ArtifactResourceMetadata,
         resource: ByteArray,
-        contentType: String,
-        fileName: String
+        contentType: String
     ): ArtifactResource {
         val user =
             userRepository.findByEmail(email) ?: throw UserNotFoundException("Could not find user with email $email")
@@ -120,8 +112,7 @@ class ArtifactResourceServiceImpl(
                 description = metadata.description,
                 resource = resource,
                 artifact = artifact,
-                contentType = contentType,
-                fileName = fileName
+                contentType = contentType
             )
         )
         artifactRepository.save(artifact.copy(resources = (artifact.resources + artifactResource).toMutableList()))

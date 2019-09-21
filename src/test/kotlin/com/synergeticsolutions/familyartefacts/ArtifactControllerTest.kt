@@ -452,7 +452,7 @@ class ArtifactControllerTest {
                         description = "Resource description",
                         resource = ClassPathResource("test-image.jpg").file.readBytes(),
                         contentType = MediaType.IMAGE_PNG_VALUE,
-                        artifact = artifact, fileName = "test-image.jpg"
+                        artifact = artifact
                     )
                 )
 
@@ -583,7 +583,7 @@ class ArtifactControllerTest {
                         description = "Resource description",
                         resource = ClassPathResource("test-image.jpg").file.readBytes(),
                         contentType = MediaType.IMAGE_PNG_VALUE,
-                        artifact = artifact, fileName = "test-image.jpg"
+                        artifact = artifact
                     )
                 )
 

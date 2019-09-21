@@ -1,6 +1,6 @@
 package com.synergeticsolutions.familyartefacts
 
-data class Resource(val contentType: String, val fileName: String, val resource: ByteArray) {
+data class Resource(val contentType: String, val resource: ByteArray) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
@@ -8,7 +8,6 @@ data class Resource(val contentType: String, val fileName: String, val resource:
         other as Resource
 
         if (contentType != other.contentType) return false
-        if (fileName != other.fileName) return false
         if (!resource.contentEquals(other.resource)) return false
 
         return true
@@ -16,7 +15,6 @@ data class Resource(val contentType: String, val fileName: String, val resource:
 
     override fun hashCode(): Int {
         var result = contentType.hashCode()
-        result = 31 * result + fileName.hashCode()
         result = 31 * result + resource.contentHashCode()
         return result
     }

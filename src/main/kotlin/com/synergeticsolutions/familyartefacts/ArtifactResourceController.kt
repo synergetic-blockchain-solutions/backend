@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import java.io.ByteArrayOutputStream
-import java.io.File
 import java.io.InputStream
 import java.security.Principal
 import javax.servlet.http.HttpServletRequest
@@ -58,9 +57,7 @@ class ArtifactResourceController(
         val contentType =
             checkNotNull(files["resource"], { "Checked that file map contained 'resource' earlier" }).contentType
                 ?: throw ResourceContentTypeRequiredException()
-        val fileName = files["resource"]?.originalFilename ?: throw FilenameRequired()
-        val path = File(fileName).path
-        return Resource(contentType, path, resource)
+        return Resource(contentType, resource)
     }
 
     /**
@@ -81,8 +78,7 @@ class ArtifactResourceController(
             principal.name, artifactId,
             metadata = metadata,
             contentType = resource.contentType,
-            resource = resource.resource,
-            fileName = resource.fileName
+            resource = resource.resource
         )
     }
 
