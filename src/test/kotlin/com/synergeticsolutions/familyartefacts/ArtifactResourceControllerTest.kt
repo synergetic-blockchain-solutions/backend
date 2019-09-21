@@ -99,7 +99,7 @@ class ArtifactResourceControllerTest(
         multipartDataRequest.part("metadata", metadata, MediaType.APPLICATION_JSON_UTF8)
         multipartDataRequest.part(
             "resource",
-            ClassPathResource("test-image.jpg").file.readBytes(),
+            ClassPathResource("test-image.jpg"),
             MediaType.IMAGE_JPEG
         )
 
@@ -164,7 +164,7 @@ class ArtifactResourceControllerTest(
             multipartDataRequest.part("metadata", metadata, MediaType.APPLICATION_JSON_UTF8)
             multipartDataRequest.part(
                 "resource",
-                ClassPathResource("test-image.jpg").file.readBytes(),
+                ClassPathResource("test-image.jpg"),
                 MediaType.IMAGE_JPEG
             )
 
@@ -252,7 +252,7 @@ class ArtifactResourceControllerTest(
             multipartDataRequest.part("metadata", metadata, MediaType.APPLICATION_JSON_UTF8)
             multipartDataRequest.part(
                 "resource",
-                ClassPathResource("test-image2.png").file.readBytes(),
+                ClassPathResource("test-image2.png"),
                 MediaType.IMAGE_PNG
             )
 
@@ -287,7 +287,7 @@ class ArtifactResourceControllerTest(
             multipartDataRequest.part("metadata", metadata, MediaType.APPLICATION_JSON_UTF8)
             multipartDataRequest.part(
                 "resource",
-                ClassPathResource("test-image2.png").file.readBytes(),
+                ClassPathResource("test-image2.png"),
                 MediaType.IMAGE_PNG
             )
             client.put()
@@ -341,13 +341,13 @@ class ArtifactResourceControllerTest(
                 .uri("/artifact/$artifactId/resource/$resourceId")
                 .header(HttpHeaders.AUTHORIZATION, "Bearer $user1Token")
                 .contentType(MediaType.IMAGE_PNG)
-                .syncBody(ClassPathResource("test-image2.png").file.readBytes())
+                .syncBody(ClassPathResource("test-image2.png"))
                 .exchange()
                 .expectStatus().isOk
                 .expectBody()
 
             val resource = artifactResourceRepository.findByIdOrNull(resourceId)!!
-            assertEquals(ClassPathResource("test-image2.png").file.readBytes(), resource.resource)
+            assertTrue(ClassPathResource("test-image2.png").file.readBytes().contentEquals(resource.resource))
         }
     }
 
