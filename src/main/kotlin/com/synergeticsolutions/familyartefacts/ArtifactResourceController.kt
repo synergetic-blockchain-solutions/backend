@@ -71,45 +71,29 @@ class ArtifactResourceController(
     }
 
     /**
-     * GET /artifact/{artifactId}/resource/{resourceId}
+     * GET /artifact/{artifactId}/resource/{resourceId}/metadata
      *
-     * Get the resource [resourceId] associated with the artifact [artifactId].
+     * Get the metadata for resource [resourceId] associated with the artifact [artifactId].
      */
-    @GetMapping(path = ["/{resourceId}"])
+    @GetMapping(path = ["/{resourceId}/metadata"], produces = [MediaType.APPLICATION_JSON_UTF8_VALUE])
+    fun getResourceMetadataById(
+        @PathVariable artifactId: Long,
+        @PathVariable resourceId: Long,
+        principal: Principal
+    ): ArtifactResourceMetadata {
+        return artifactResourceService.findMetadataById(principal.name, artifactId, resourceId)
+    }
+
+    @GetMapping(path = ["/{resourceId}/resource"], produces = [MediaType.APPLICATION_JSON_UTF8_VALUE])
     fun getResourceById(
         @PathVariable artifactId: Long,
         @PathVariable resourceId: Long,
-        @RequestParam(name = "metadata", required = false, defaultValue = "true") includeMetadata: Boolean,
-        @RequestParam(name = "resource", required = false, defaultValue = "true") includeResource: Boolean,
         principal: Principal
-    ): ResponseEntity<Any> {
-
-        if (includeMetadata && includeResource) {
-            val response = LinkedMultiValueMap<String, Any>()
-            val metadata = artifactResourceService.findMetadataById(principal.name, artifactId, resourceId)
-            val metadataHeaders = HttpHeaders().apply { contentType = MediaType.APPLICATION_JSON_UTF8 }
-            val metadataHttpEntity = HttpEntity(metadata, metadataHeaders)
-            response.add("metadata", metadataHttpEntity)
-            val resource = artifactResourceService.findResourceById(principal.name, artifactId, resourceId)
-            val resourceHeaders = HttpHeaders().apply { contentType = MediaType.parseMediaType(resource.contentType) }
-            val resourceHttpEntity = HttpEntity(resource, resourceHeaders)
-            response.add("resource", resourceHttpEntity)
-
-            return ResponseEntity.ok()
-                .contentType(MediaType.MULTIPART_FORM_DATA)
-                .body(response)
-        } else if (includeMetadata) {
-            return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_UTF8_VALUE)
-                .body(artifactResourceService.findMetadataById(principal.name, artifactId, resourceId))
-        } else if (includeResource) {
-            val resource = artifactResourceService.findResourceById(principal.name, artifactId, resourceId)
-            return ResponseEntity.ok()
-                .contentType(MediaType.parseMediaType(resource.contentType))
-                .body(resource.resource)
-        } else {
-            throw InvalidRequestParamCombinationException("Must include at least one of metadata or resource")
-        }
+    ): ResponseEntity<ByteArrayResource> {
+        val resource = artifactResourceService.findResourceById(principal.name, artifactId, resourceId)
+        return ResponseEntity.ok()
+            .contentType(MediaType.parseMediaType(resource.contentType))
+            .body(ByteArrayResource(resource.resource))
     }
 
     /**

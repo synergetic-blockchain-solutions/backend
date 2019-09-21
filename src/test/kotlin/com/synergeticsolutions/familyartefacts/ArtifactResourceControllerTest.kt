@@ -196,7 +196,13 @@ class ArtifactResourceControllerTest(
             )
 
             client.get()
-                .uri("/artifact/${artifact.id}/resource/${resource.id}")
+                .uri("/artifact/${artifact.id}/resource/${resource.id}/metadata")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer $user1Token")
+                .exchange()
+                .expectStatus().isOk
+                .expectBody()
+            client.get()
+                .uri("/artifact/${artifact.id}/resource/${resource.id}/resource")
                 .header(HttpHeaders.AUTHORIZATION, "Bearer $user1Token")
                 .exchange()
                 .expectStatus().isOk
@@ -214,7 +220,13 @@ class ArtifactResourceControllerTest(
                 resource = ClassPathResource("test-image.jpg").file.readBytes()
             )
             client.get()
-                .uri("/artifact/${artifact.id}/resource/${resource.id}")
+                .uri("/artifact/${artifact.id}/resource/${resource.id}/metadata")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer $user2Token")
+                .exchange()
+                .expectStatus().isForbidden
+                .expectBody()
+            client.get()
+                .uri("/artifact/${artifact.id}/resource/${resource.id}/resource")
                 .header(HttpHeaders.AUTHORIZATION, "Bearer $user2Token")
                 .exchange()
                 .expectStatus().isForbidden
