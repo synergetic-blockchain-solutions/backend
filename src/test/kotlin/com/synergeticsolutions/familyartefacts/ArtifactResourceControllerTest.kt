@@ -3,7 +3,6 @@ package com.synergeticsolutions.familyartefacts
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
-import java.io.File
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.CoreMatchers.hasItem
 import org.hamcrest.MatcherAssert.assertThat
@@ -257,7 +256,6 @@ class ArtifactResourceControllerTest(
                 .jsonPath("$.description").value(equalTo(metadata.description))
 
             val resource = artifactResourceRepository.findByIdOrNull(resourceId)!!
-            File("output.png").writeBytes(resource.resource)
             assertEquals(ClassPathResource("test-image2.png").file.readBytes(), resource.resource)
         }
 
