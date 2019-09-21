@@ -133,7 +133,7 @@ class ArtifactResourceControllerTest(
             val returnedResource = createResource()
             assertTrue(artifactResourceRepository.existsById((returnedResource["id"] as Int).toLong()))
             val resource = artifactResourceRepository.findByIdOrNull((returnedResource["id"] as Int).toLong())!!
-            assertEquals(ClassPathResource("test-image.jpg").file.readBytes(), resource.resource)
+            assertTrue(ClassPathResource("test-image.jpg").file.readBytes().contentEquals(resource.resource))
         }
 
         @Test
@@ -268,7 +268,7 @@ class ArtifactResourceControllerTest(
                 .jsonPath("$.description").value(equalTo(metadata.description))
 
             val resource = artifactResourceRepository.findByIdOrNull(resourceId)!!
-            assertEquals(ClassPathResource("test-image2.png").file.readBytes(), resource.resource)
+            assertTrue(ClassPathResource("test-image2.png").file.readBytes().contentEquals(resource.resource))
         }
 
         @Test
