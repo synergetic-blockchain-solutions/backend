@@ -68,7 +68,7 @@ class ArtifactResourceServiceImpl(
      * To get this information, the user must have access to the resource [resourceId].
      */
     override fun findMetadataById(email: String, artifactId: Long, resourceId: Long): ArtifactResourceMetadata {
-        if (!isOwner(email, artifactId = artifactId, resourceId = resourceId)) {
+        if (!hasAccess(email, artifactId = artifactId, resourceId = resourceId)) {
             throw ActionNotAllowedException("User with email $email does not have access to artifact resource $resourceId")
         }
         val resource = artifactResourceRepository.findByIdOrNull(resourceId) ?: throw ArtifactResourceNotFoundException(
@@ -82,7 +82,7 @@ class ArtifactResourceServiceImpl(
     }
 
     override fun findResourceById(email: String, artifactId: Long, resourceId: Long): Resource {
-        if (!isOwner(email, artifactId = artifactId, resourceId = resourceId)) {
+        if (!hasAccess(email, artifactId = artifactId, resourceId = resourceId)) {
             throw ActionNotAllowedException("User with email $email does not have access to artifact resource $resourceId")
         }
         val resource = artifactResourceRepository.findByIdOrNull(resourceId)
