@@ -53,19 +53,20 @@ class UserServiceImpl(
                         description = "$name's Personal Group",
                         members = mutableListOf(),
                         admins = mutableListOf()))
-        val user = User(
-                name = name,
-                email = email,
-                password = encPassword,
-                privateGroup = group,
-                groups = mutableListOf(),
-                ownedGroups = mutableListOf()
+        val user = userRepository.save(
+                User(
+                        name = name,
+                        email = email,
+                        password = encPassword,
+                        privateGroup = group,
+                        groups = mutableListOf(group),
+                        ownedGroups = mutableListOf(group)
+                )
         )
         group.members.add(user)
         group.admins.add(user)
         val updatedGroup = groupRepository.save(group)
-        user.copy(privateGroup = group)
-        val savedUser = userRepository.save(user)
+
         val updatedUser = userRepository.findByEmail(user.email)!!
         logger.debug("Created user: $updatedUser")
         logger.debug("Personal group: $updatedGroup")
