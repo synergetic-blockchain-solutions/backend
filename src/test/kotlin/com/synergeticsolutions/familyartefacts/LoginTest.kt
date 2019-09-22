@@ -19,6 +19,11 @@ class LoginTest() {
     private lateinit var groupRepository: GroupRepository
     @Autowired
     private lateinit var userRepository: UserRepository
+    @Autowired
+    private lateinit var artifactRepository: ArtifactRepository
+
+    @Autowired
+    private lateinit var testUtils: TestUtilsService
 
     @Autowired
     private lateinit var testUtils: TestUtilsService

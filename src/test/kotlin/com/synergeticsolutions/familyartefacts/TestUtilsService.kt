@@ -8,24 +8,34 @@ class TestUtilsService(
     @Autowired
     private val userRepository: UserRepository,
     @Autowired
-    private val groupRepository: GroupRepository
+    private val groupRepository: GroupRepository,
+    @Autowired
+    private val artifactRepository: ArtifactRepository
 ) {
 
     fun clearDatabase() {
         groupRepository.saveAll(groupRepository.findAll().map {
             it.copy(
-                    members = mutableListOf(),
-                    admins = mutableListOf()
+                members = mutableListOf(),
+                artifacts = mutableListOf()
             )
         })
         userRepository.saveAll(userRepository.findAll().map {
             it.copy(
-                    groups = mutableListOf(),
-                    ownedGroups = mutableListOf()
+                groups = mutableListOf(),
+                ownedArtifacts = mutableListOf(),
+                sharedArtifacts = mutableListOf()
             )
         })
-
+        artifactRepository.saveAll(artifactRepository.findAll().map {
+            it.copy(
+                groups = mutableListOf(),
+                sharedWith = mutableListOf(),
+                owners = mutableListOf()
+            )
+        })
         userRepository.deleteAll()
         groupRepository.deleteAll()
+        artifactRepository.deleteAll()
     }
 }
