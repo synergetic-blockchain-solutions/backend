@@ -86,7 +86,7 @@ class GroupControllerTest {
                     .expectStatus().isOk
                     .expectBody()
                     .jsonPath("$").isArray
-                    .jsonPath("$").value(hasSize<Group>(4)) // Is 4 because the user is also a member of their personal group
+                    .jsonPath("$").value(hasSize<Group>(3))
         }
 
         @Test
@@ -105,7 +105,7 @@ class GroupControllerTest {
                     .expectStatus().isOk
                     .expectBody()
                     .jsonPath("$").isArray
-                    .jsonPath("$").value(hasSize<Group>(3)) // Is 3 because user is also an admin of their personal group
+                    .jsonPath("$").value(hasSize<Group>(2))
         }
     }
 

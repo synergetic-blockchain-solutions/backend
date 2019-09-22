@@ -157,7 +157,7 @@ class GroupServiceImplTest {
         @Test
         fun `it should not create the group when the current user is not in the database`() {
             Mockito.`when`(userRepository.findByEmail(anyString())).thenReturn(null)
-            assertThrows<UserNotFoundException> {
+            assertThrows<UsernameNotFoundException> {
                 groupService.createGroup(
                         "example@example.com",
                         "Group Name",
