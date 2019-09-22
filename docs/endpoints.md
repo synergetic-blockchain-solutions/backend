@@ -173,3 +173,113 @@ Delete the artifact with ID. This endpoint is only accessible by artifact owners
 A successful response will be a JSON representation of the deleted artifact. The
 artifact object returned is the same as that returned by the [create artifact
 endpoint](#POST/-artifact).
+
+## `POST /group`
+
+Create a group. The created group will always have the creator as an admin and member of the group
+
+### Example Request
+
+    POST http://localhost:8080/group
+    Accept: application/json
+    Content-Type: application/json
+    Authorization: Bearer {token}
+
+    {
+        "name": "Group 1",
+        "description": "Group description",
+        "members": [],
+        "admins": []
+    }
+
+### Response
+
+A successful response will be a JSON document representing
+the created group. It will be the same as the request document with the
+following differences:
+
+- "id" field: the group ID
+- "admins" field may have the creator's ID in addition to the other IDs if it
+  was not explicitly passed in
+- "members" field may have the creator's ID in addition to the other IDs if it
+  was not explicitly passed in
+  
+  
+
+## `GET /group`
+
+Get all groups the user has access to by being admin or member.
+Groups can also be filtered by:
+
+- `adminID (int)` - Only return groups that are owned by the user with this ID
+- `memberID (int)` - Only return groups that are the user with this ID is member
+
+These parameters are optional and can be combined to find group where the user is both admin and member
+(which is basically groups where the user is the admin)
+
+### Example Request
+
+  GET http://localhost:8080/group
+  Accept: application/json
+  Content-Type: application/json
+  Authorization: Bearer {token}
+
+### Response
+
+A successful response will be a JSON document with a list of all the groups
+the user has access to and potentially filtered by the given query parameters.
+
+## `GET /group/{id}`
+
+Get group with ID. The group is only accessible if the user is either admin or member
+
+### Example Request
+
+    GET http://localhost:8080/group/{id}
+    Accept: application/json
+    Content-Type: application/json
+    Authorization: Bearer {token}
+
+### Response
+
+A successful response will be a JSON document with a representation of the group
+
+## `PUT /group/{id}`
+
+Update the group with ID by specifying the details that the user wants the group to become.
+Only the admins of the group can perform this action.
+
+### Example Request
+
+    PUT http://localhost:8080/group
+    Accept: application/json
+    Content-Type: application/json
+    Authorization: Bearer {token}
+
+    {
+        "name": "Group 1",
+        "description": "Updated description",
+        "members": [],
+        "admins": []
+    }
+
+### Response
+
+A successful response will be a JSON representation of the updated group.
+
+## `DELETE /group/{id}`
+
+Delete the group with ID. Only the admin of the group can perform this action
+
+### Example Request
+
+    DELETE http://localhost:8080/group
+    Accept: application/json
+    Content-Type: application/json
+    Authorization: Bearer {token}
+
+### Response
+
+A successful response will be a JSON representation of the deleted group.
+
+
