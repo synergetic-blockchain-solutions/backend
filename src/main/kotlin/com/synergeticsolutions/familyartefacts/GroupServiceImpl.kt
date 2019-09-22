@@ -1,6 +1,5 @@
 package com.synergeticsolutions.familyartefacts
 
-import javax.naming.AuthenticationException
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpStatus
@@ -13,16 +12,9 @@ class UserIsNotMemberException(msg: String) : RuntimeException(msg)
 @ResponseStatus(HttpStatus.BAD_REQUEST)
 class UserIsNotAdminException(msg: String) : RuntimeException(msg)
 @ResponseStatus(HttpStatus.BAD_REQUEST)
-class GroupNotFoundException(msg: String) : RuntimeException(msg)
-@ResponseStatus(HttpStatus.BAD_REQUEST)
-class UserNotFoundException(msg: String) : RuntimeException(msg)
-@ResponseStatus(HttpStatus.BAD_REQUEST)
 class MemberAlreadyInGroupException(msg: String) : RuntimeException(msg)
 @ResponseStatus(HttpStatus.BAD_REQUEST)
 class MemberIsAlreadyAdminException(msg: String) : RuntimeException(msg)
-
-@ResponseStatus(HttpStatus.FORBIDDEN)
-class ActionNotAllowedException(msg: String) : AuthenticationException(msg)
 
 /**
  * Service for performing actions with groups
