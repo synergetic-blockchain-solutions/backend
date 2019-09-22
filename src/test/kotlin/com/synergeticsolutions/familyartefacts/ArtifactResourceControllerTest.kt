@@ -186,7 +186,7 @@ class ArtifactResourceControllerTest(
     inner class GetArtifactResource {
         @Test
         fun `it should allow users with artifact access to access to the resources`() {
-            val artifact = artifactService.createArtifact(user1.email, "Artifact name", "Artifact description")
+            val artifact = artifactService.createArtifact(user1.email, "Artifact name", "Artifact description", sharedWith = listOf(user2.id))
             val resource = artifactResourceService.create(
                 user1.email,
                 artifactId = artifact.id,
@@ -197,13 +197,13 @@ class ArtifactResourceControllerTest(
 
             client.get()
                 .uri("/artifact/${artifact.id}/resource/${resource.id}/metadata")
-                .header(HttpHeaders.AUTHORIZATION, "Bearer $user1Token")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer $user2Token")
                 .exchange()
                 .expectStatus().isOk
                 .expectBody()
             client.get()
                 .uri("/artifact/${artifact.id}/resource/${resource.id}/resource")
-                .header(HttpHeaders.AUTHORIZATION, "Bearer $user1Token")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer $user2Token")
                 .exchange()
                 .expectStatus().isOk
                 .expectBody()
