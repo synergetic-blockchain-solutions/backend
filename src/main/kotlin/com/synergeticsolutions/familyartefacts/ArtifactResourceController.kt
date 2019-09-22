@@ -35,6 +35,12 @@ class ArtifactResourceController(
 ) {
     val logger: Logger = LoggerFactory.getLogger(this::class.java)
 
+    /**
+     * Retrieve the "metadata" part of a multipart/form-data request.
+     *
+     * @param[request] HTTP request to retrieve the 'metadata' part from
+     * @return [ArtifactResourceMetadata] that was stored in the 'metadata' part
+     */
     private fun getMetadataFromRequest(request: HttpServletRequest): ArtifactResourceMetadata {
         val parameters = request.parameterMap
         if (!parameters.containsKey("metadata")) {
@@ -47,6 +53,12 @@ class ArtifactResourceController(
         return ObjectMapper().registerKotlinModule().readValue<ArtifactResourceMetadata>(metadataPart)
     }
 
+    /**
+     * Retrieve the 'resource' part from a multipart/form-data request.
+     *
+     * @param[request] HTTP request to retrieve the 'resource' part from
+     * @return [Resource] containing the resource and its content type
+     */
     private fun getResourceFromRequest(request: HttpServletRequest): Resource {
         val files = (request as StandardMultipartHttpServletRequest).fileMap
         if (!files.containsKey("resource")) {
@@ -187,6 +199,12 @@ class ArtifactResourceController(
         artifactResourceService.delete(principal.name, artifactId, resourceId)
 }
 
+/**
+ * Convert an [InputStream] to a [ByteArray].
+ *
+ * @receiver [InputStream] to be converted.
+ * @return [ByteArray] of the input stream
+ */
 private fun InputStream.toByteArray(): ByteArray {
     val outputStream = ByteArrayOutputStream()
     this.use { input ->

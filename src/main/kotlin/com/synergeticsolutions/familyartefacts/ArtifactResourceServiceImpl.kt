@@ -16,6 +16,24 @@ class ArtifactResourceServiceImpl(
     val userRepository: UserRepository
 ) : ArtifactResourceService {
 
+    /**
+     * Check if the user associated with [email] is an owner of artifact
+     * [artifactId] and by extension resource [resourceId].
+     *
+     * The following criteria must be fulfilled for a [User] to be considered
+     * an owner of the resource [resourceId].
+     *
+     * 1. User is an owner of artifact [artifactId]
+     * 2. If resource [resourceId] exists, it must be associated with artifact [artifactId]
+     *
+     * **Note:** Zero (0) is not a valid value for an ID so is used as the default
+     * value. If [artifactId] or [resourceId] is less than zero it will be ignored.
+     *
+     * @param[email] Email of the [User] to check if they're an owner of resource [resourceId]
+     * @param[artifactId] ID of the [Artifact] that resource [resourceId] is associated with
+     * @param[resourceId] ID of the [ArtifactResource] to check if the [User] is an owner of
+     * @return Whether the [User] is an owner of the [ArtifactResource]
+     */
     private fun isOwner(email: String, artifactId: Long = 0, resourceId: Long = 0): Boolean =
         if (artifactId > 0 && resourceId > 0) {
             val user = userRepository.findByEmail(email) ?: throw UserNotFoundException("No user with email $email found")
@@ -30,6 +48,25 @@ class ArtifactResourceServiceImpl(
             throw IllegalArgumentException("If resourceId is specified, artifactId must also be specified")
         }
 
+    private fun hasAccess(email: String, artifactId: Long, resourceId: Long): Boolean {
+        val user = userRepository.findByEmail(email) ?: throw UserNotFoundException("No user with email $email found")
+        val artifact = artifactRepository.findByIdOrNull(artifactId) ?: throw ArtifactNotFoundException("Not artifact with ID $artifactId found")
+        val resource = artifactResourceRepository.findByIdOrNull(resourceId) ?: throw ArtifactResourceNotFoundException("No artifact resource with ID $resourceId found")
+        return artifact.resources.contains(resource) && (
+            // User is an owner of the artifact
+            user.ownedArtifacts.contains(artifact) ||
+                // Artifact has been shared with the user
+                user.sharedArtifacts.contains(artifact) ||
+                // At least one of the groups the user is associated with has the artifact associated with ti
+                user.groups.any { it.artifacts.contains(artifact) }
+            )
+    }
+
+    /**
+     * Find the metadata associated with the [ArtifactResource] [resourceId].
+     *
+     * To get this information, the user must have access to the resource [resourceId].
+     */
     override fun findMetadataById(email: String, artifactId: Long, resourceId: Long): ArtifactResourceMetadata {
         if (!isOwner(email, artifactId = artifactId, resourceId = resourceId)) {
             throw ActionNotAllowedException("User with email $email does not have access to artifact resource $resourceId")

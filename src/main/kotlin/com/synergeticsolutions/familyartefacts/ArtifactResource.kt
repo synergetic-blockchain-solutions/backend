@@ -14,6 +14,17 @@ import javax.persistence.ManyToOne
 import org.hibernate.annotations.LazyCollection
 import org.hibernate.annotations.LazyCollectionOption
 
+/**
+ * Resource associated with an [Artifact].
+ *
+ * @param[id] Unique ID for the resource
+ * @param[name] Name of the resource
+ * @param[description] Description of the artifact
+ * @param[contentType] Mime type of the resource saved in [resource]. This is used when sending the resource back to a user
+ * @param[resource] Actual resource being stored. This is just a binary blob and can be man different types, to differentiate [contentType] is used
+ * @param[artifact] Artifact the resource is associated with
+ * @param[tags] Tags associated with the artifact
+ */
 @Entity
 data class ArtifactResource(
     @Id
