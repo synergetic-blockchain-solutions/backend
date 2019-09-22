@@ -1,6 +1,7 @@
 package com.synergeticsolutions.familyartefacts
 
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -25,15 +26,27 @@ class UserServiceImplUnitTest {
     fun `it should encrypt the password before saving it in the user repository`() {
         val encodedPassword = "encodedSecret"
         val user = User(
-            name = "name",
-            email = "email",
-            password = "secret",
-            privateGroup = Group(2, "Group 2", members = mutableListOf(), description = "")
+                name = "name",
+                email = "email",
+                password = "secret",
+                privateGroup = Group(
+                        2,
+                        "Group 2",
+                        description = "description",
+                        members = mutableListOf(),
+                        admins = mutableListOf()
+                )
         )
         Mockito.`when`(userRepository.save(any<User>())).thenReturn(user.copy(id = 1))
         Mockito.`when`(userRepository.findByEmail(anyString())).then { user }
         // Mockito.`when`(userRepository.findByIdOrNull(anyLong())).then { user }
-        Mockito.`when`(groupRepository.save(any<Group>())).thenReturn(Group(1, "group", "description", mutableListOf()))
+        Mockito.`when`(groupRepository.save(any<Group>())).thenReturn(
+                Group(
+                        1,
+                        "group",
+                        description = "description",
+                        members = mutableListOf(),
+                        admins = mutableListOf()))
         Mockito.`when`(passwordEncoder.encode(anyString())).thenReturn(encodedPassword)
         val inOrder = Mockito.inOrder(passwordEncoder, userRepository)
 
@@ -43,23 +56,29 @@ class UserServiceImplUnitTest {
         inOrder.verify(passwordEncoder).encode("secret")
         // Ensure user is saved to the repository after the password has been encrypted
         inOrder.verify(userRepository)
-            .save(argThat { it.javaClass == User::class.java && it.password == encodedPassword })
+                .save(argThat { it.javaClass == User::class.java && it.password == encodedPassword })
     }
 
     @Test
     fun `it should not allow the creation of users with emails that already exist`() {
         val user = User(
-            name = "name",
-            email = "email",
-            password = "secret",
-            privateGroup = Group(2, "Group 2", members = mutableListOf(), description = "")
+                name = "name",
+                email = "email",
+                password = "secret",
+                privateGroup = Group(
+                        2,
+                        "Group 2",
+                        description = "description",
+                        members = mutableListOf(),
+                        admins = mutableListOf()
+                )
         )
         Mockito.`when`(userRepository.existsByEmail(user.email)).thenReturn(true)
         assertThrows(UserAlreadyExistsException::class.java) {
             userService.createUser(
-                user.name,
-                user.email,
-                user.password
+                    user.name,
+                    user.email,
+                    user.password
             )
         }
     }
@@ -93,12 +112,15 @@ class UserServiceImplIntegrationTest {
     }
 
     @Test
-    fun `it should create a group where the user is member`() {
+    fun `it should create a private group where the user is member and admin`() {
         val createdUser = userService.createUser("name", "example2@example.com", "password")
         val foundUser = userRepository.findByIdOrNull(createdUser.id)!!
-        assertEquals(1, createdUser.groups.size)
-        val foundGroup = groupRepository.findByIdOrNull(createdUser.groups.first().id)!!
-        assertEquals(1, foundUser.groups.size)
-        assertEquals(createdUser.id, foundGroup.members.first().id)
+        val foundGroup = groupRepository.findByIdOrNull(createdUser.privateGroup.id)!!
+        assertNotNull(createdUser.privateGroup)
+        assertNotNull(foundUser.privateGroup)
+        assertEquals(1, foundGroup.members.size)
+        assertEquals(1, foundGroup.admins.size)
+        // assertEquals(createdUser.id, foundGroup.members.first().id)
+        // assertEquals(createdUser.id, foundGroup.admins.first().id)
     }
 }
