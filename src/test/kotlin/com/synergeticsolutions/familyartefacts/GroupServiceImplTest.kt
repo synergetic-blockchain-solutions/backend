@@ -5,6 +5,7 @@ import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.containsInAnyOrder
 import org.hamcrest.Matchers.equalTo
 import org.hamcrest.Matchers.hasItem
+import org.hamcrest.Matchers.hasItems
 import org.hamcrest.Matchers.hasProperty
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Nested
@@ -224,6 +225,62 @@ class GroupServiceImplTest {
                     "admins",
                     hasItem<User>(hasProperty("email", equalTo("example@example.com"))))
             assertThat(argCapturer.value, matcher1)
+        }
+
+        @Test
+        fun `it should make the specified member IDs the members of the group`() {
+            Mockito.`when`(groupRepository.save(any<Group>())).then { it.arguments[0] as Group }
+
+            Mockito.`when`(userRepository.findByEmail(anyString()))
+                    .thenReturn(
+                            User(
+                                    1,
+                                    "User1",
+                                    "example@example.com",
+                                    "password",
+                                    privateGroup = Group(1, "Group 1", members = mutableListOf(), description = "")
+                            )
+                    )
+            Mockito.`when`(userRepository.existsById(anyLong())).thenReturn(true)
+            Mockito.`when`(userRepository.findByIdOrNull(anyLong())).then {
+                User(
+                        it.arguments[0] as Long,
+                        "User ${it.arguments[0]}",
+                        "example${it.arguments[0]}@email.com",
+                        "password",
+                        privateGroup = Group(2, "Group 2", members = mutableListOf(), description = "")
+                )
+            }
+            Mockito.`when`(userRepository.findAllById(any<Iterable<Long>>())).then {
+                (it.arguments[0] as Iterable<Long>).map { id ->
+                    User(
+                            id = id,
+                            name = "User $id",
+                            email = "example$id@example.com",
+                            password = "password",
+                            privateGroup = Group(
+                                    2, "Group2", members = mutableListOf(), description = ""
+                            )
+                    )
+                }
+            }
+            groupService.createGroup(
+                    "example@example.com",
+                    "Group 3",
+                    description = "Group description",
+                    memberIDs = listOf(2, 3)
+            )
+            val argCapturer = ArgumentCaptor.forClass(Group::class.java)
+            Mockito.verify(groupRepository).save(argCapturer.capture())
+            val matcher =
+                    hasProperty<Group>(
+                            "members",
+                            hasItems<User>(
+                                    hasProperty("id", equalTo(2L)),
+                                    hasProperty("id", equalTo(3L))
+                            )
+                    )
+            assertThat(argCapturer.value, matcher)
         }
     }
 
