@@ -6,11 +6,15 @@ jobs:
       docker_layer_caching: false
     steps:
       - checkout
-
       - run:
           name: Lint
-          command: docker run --rm -v $PWD:/opt/maven -w /opt/maven openjdk:8-jdk-slim ./mvnw antrun:run@ktlint
-
+          command: |
+            docker pull openjdk:8-jdk-slim | grep -e 'Pulling from' -e 'Digest' -e 'Status' -e 'Error'
+            docker run --rm -v $PWD:/opt/maven -w /opt/maven openjdk:8-jdk-slim \
+                ./mvnw -B antrun:run@ktlint | grep -E -v "Download(ing|ed)"
       - run:
           name: Test
-          command: docker-compose -f docker-compose.yml -f docker-compose.test.yml up --abort-on-container-exit --exit-code-from backend
+          command: |
+            docker-compose pull >/dev/null
+            docker-compose -f docker-compose.yml -f docker-compose.test.yml up \
+                --abort-on-container-exit --exit-code-from backend | grep -E -v "Download(ing|ed)"
