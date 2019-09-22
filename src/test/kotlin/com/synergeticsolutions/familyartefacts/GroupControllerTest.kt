@@ -86,7 +86,7 @@ class GroupControllerTest {
                     .expectStatus().isOk
                     .expectBody()
                     .jsonPath("$").isArray
-                    .jsonPath("$").value(hasSize<Group>(3))
+                    .jsonPath("$").value(hasSize<Group>(4))
         }
 
         @Test
@@ -105,7 +105,7 @@ class GroupControllerTest {
                     .expectStatus().isOk
                     .expectBody()
                     .jsonPath("$").isArray
-                    .jsonPath("$").value(hasSize<Group>(2))
+                    .jsonPath("$").value(hasSize<Group>(3))
         }
     }
 

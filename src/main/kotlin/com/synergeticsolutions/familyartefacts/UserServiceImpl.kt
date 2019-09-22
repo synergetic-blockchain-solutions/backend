@@ -59,8 +59,8 @@ class UserServiceImpl(
                         email = email,
                         password = encPassword,
                         privateGroup = group,
-                        groups = mutableListOf(),
-                        ownedGroups = mutableListOf()
+                        groups = mutableListOf(group),
+                        ownedGroups = mutableListOf(group)
                 )
         )
         group.members.add(user)
