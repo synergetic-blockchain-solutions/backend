@@ -43,7 +43,7 @@ class ArtifactServiceImpl(
         ownerIDs: List<Long>,
         groupIDs: List<Long>,
         sharedWith: List<Long>,
-        resourceIds: List<Long>
+        resourceIDs: List<Long>
     ): Artifact {
         val creator =
             userRepository.findByEmail(email) ?: throw UserNotFoundException("No user with email $email was found")
@@ -57,7 +57,7 @@ class ArtifactServiceImpl(
                 throw GroupNotFoundException("No group with ID $it was found")
             }
         }
-        resourceIds.forEach {
+        resourceIDs.forEach {
             if (!artifactResourceRepository.existsById(it)) {
                 throw ArtifactResourceNotFoundException("No artifact resource with ID $it was found")
             }
@@ -66,7 +66,7 @@ class ArtifactServiceImpl(
         val owners = userRepository.findAllById(ownerIDs).toMutableList()
         val groups = groupRepository.findAllById(groupIDs).toMutableList()
         val shares = userRepository.findAllById(sharedWith)
-        val resources = artifactResourceRepository.findAllById(resourceIds)
+        val resources = artifactResourceRepository.findAllById(resourceIDs)
 
         if (!owners.contains(creator)) {
             owners.add(creator)
