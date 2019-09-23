@@ -1,6 +1,13 @@
 version: '3.0'
 
-
 services:
   backend:
-    command: ./mvnw -B clean test
+    command: ./mvnw -B test
+    volumes:
+      - '$PWD/target:/app/target'
+      - '$PWD/src:/app/src:ro'
+      - '$PWD/mvnw:/app/mvnw:ro'
+      - '$PWD/pom.xml:/app/pom.xml:ro'
+      - '$PWD/.mvn:/app/.mvn:ro'
+      # Use the maven cache so they don't have to be downloaded every time
+      - '~/.m2:/root/.m2'

@@ -29,9 +29,11 @@ class ArtifactServiceImplTest {
     private val userRepository: UserRepository = Mockito.mock(UserRepository::class.java)
     private val groupRepository: GroupRepository = Mockito.mock(GroupRepository::class.java)
     private val artifactRepository: ArtifactRepository = Mockito.mock(ArtifactRepository::class.java)
+    private val artifactResourceRepository: ArtifactResourceRepository =
+        Mockito.mock(ArtifactResourceRepository::class.java)
 
     private val artifactService: ArtifactService =
-        ArtifactServiceImpl(artifactRepository, userRepository, groupRepository)
+        ArtifactServiceImpl(artifactRepository, userRepository, groupRepository, artifactResourceRepository)
 
     @Nested
     inner class CreateArtifact {
@@ -1233,6 +1235,7 @@ class ArtifactServiceImplTest {
                     Optional.empty()
                 }
             }
+            Mockito.`when`(userRepository.existsById(anyLong())).thenReturn(true)
             Mockito.`when`(userRepository.findByEmail(anyString())).then {
                 when (it.arguments[0]) {
                     owningUser.email -> owningUser
@@ -1386,8 +1389,8 @@ class ArtifactServiceImplIntegrationTest {
                 user.email,
                 "Artifact 1",
                 "Description of artifact",
-                groupIDs = listOf(),
                 ownerIDs = listOf(),
+                groupIDs = listOf(),
                 sharedWith = listOf()
             )
             assertTrue(artifactRepository.existsById(createdArtifact.id))
@@ -1400,8 +1403,8 @@ class ArtifactServiceImplIntegrationTest {
                 user.email,
                 "Artifact 1",
                 "Description of artifact",
-                groupIDs = listOf(),
                 ownerIDs = listOf(),
+                groupIDs = listOf(),
                 sharedWith = listOf()
             )
 
@@ -1424,8 +1427,8 @@ class ArtifactServiceImplIntegrationTest {
                 user.email,
                 "Artifact 1",
                 "Description of artifact",
-                groupIDs = listOf(),
                 ownerIDs = owningUsers.map(User::id),
+                groupIDs = listOf(),
                 sharedWith = listOf()
             )
 
@@ -1472,8 +1475,8 @@ class ArtifactServiceImplIntegrationTest {
                 user.email,
                 "Artifact 1",
                 "Description of artifact",
-                groupIDs = groups.map(Group::id),
                 ownerIDs = listOf(),
+                groupIDs = groups.map(Group::id),
                 sharedWith = listOf()
             )
             groupRepository.findAllById(groups.map(Group::id)).forEach {
