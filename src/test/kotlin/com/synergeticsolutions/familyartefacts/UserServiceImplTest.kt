@@ -120,7 +120,7 @@ class UserServiceImplIntegrationTest {
         assertNotNull(foundUser.privateGroup)
         assertEquals(1, foundGroup.members.size)
         assertEquals(1, foundGroup.admins.size)
-        // assertEquals(createdUser.id, foundGroup.members.first().id)
-        // assertEquals(createdUser.id, foundGroup.admins.first().id)
+        assertEquals(createdUser.id, foundGroup.members.first().id)
+        assertEquals(createdUser.id, foundGroup.admins.first().id)
     }
 }
