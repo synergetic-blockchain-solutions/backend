@@ -38,6 +38,8 @@ class ArtifactResourceControllerTest(
     @Autowired
     val userService: UserService,
     @Autowired
+    val groupService: GroupService,
+    @Autowired
     val artifactService: ArtifactService,
     @Autowired
     val artifactResourceService: ArtifactResourceService,
@@ -185,7 +187,33 @@ class ArtifactResourceControllerTest(
     @Nested
     inner class GetArtifactResource {
         @Test
-        fun `it should allow users with artifact access to access to the resources`() {
+        fun `it should allow users the artifact is shared with access to access to the resources`() {
+            val group = groupService.createGroup(user1.email, "Group 1", "Description", memberIDs = listOf(user2.id))
+            val artifact = artifactService.createArtifact(user1.email, "Artifact name", "Artifact description", groupIDs = listOf(group.id))
+            val resource = artifactResourceService.create(
+                user1.email,
+                artifactId = artifact.id,
+                metadata = ArtifactResourceMetadata(name = "Resource name", description = "Resource description"),
+                contentType = MediaType.IMAGE_PNG_VALUE,
+                resource = ClassPathResource("test-image.jpg").file.readBytes()
+            )
+
+            client.get()
+                .uri("/artifact/${artifact.id}/resource/${resource.id}/metadata")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer $user2Token")
+                .exchange()
+                .expectStatus().isOk
+                .expectBody()
+            client.get()
+                .uri("/artifact/${artifact.id}/resource/${resource.id}/resource")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer $user2Token")
+                .exchange()
+                .expectStatus().isOk
+                .expectBody()
+        }
+
+        @Test
+        fun `it should allow users who are part of a group associated with the artifact access to the resources`() {
             val artifact = artifactService.createArtifact(user1.email, "Artifact name", "Artifact description", sharedWith = listOf(user2.id))
             val resource = artifactResourceService.create(
                 user1.email,
@@ -204,6 +232,31 @@ class ArtifactResourceControllerTest(
             client.get()
                 .uri("/artifact/${artifact.id}/resource/${resource.id}/resource")
                 .header(HttpHeaders.AUTHORIZATION, "Bearer $user2Token")
+                .exchange()
+                .expectStatus().isOk
+                .expectBody()
+        }
+
+        @Test
+        fun `it should allow artifact owners access to the resources`() {
+            val artifact = artifactService.createArtifact(user1.email, "Artifact name", "Artifact description")
+            val resource = artifactResourceService.create(
+                user1.email,
+                artifactId = artifact.id,
+                metadata = ArtifactResourceMetadata(name = "Resource name", description = "Resource description"),
+                contentType = MediaType.IMAGE_PNG_VALUE,
+                resource = ClassPathResource("test-image.jpg").file.readBytes()
+            )
+
+            client.get()
+                .uri("/artifact/${artifact.id}/resource/${resource.id}/metadata")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer $user1Token")
+                .exchange()
+                .expectStatus().isOk
+                .expectBody()
+            client.get()
+                .uri("/artifact/${artifact.id}/resource/${resource.id}/resource")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer $user1Token")
                 .exchange()
                 .expectStatus().isOk
                 .expectBody()

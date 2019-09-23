@@ -93,6 +93,10 @@ class ArtifactServiceImpl(
         groups.forEach { it.artifacts.add(savedArtifact) }
         groupRepository.saveAll(groups)
 
+        logger.debug("Sharing $savedArtifact with $shares")
+        shares.forEach { it.sharedArtifacts.add(savedArtifact) }
+        userRepository.saveAll(shares)
+
         logger.debug("Adding $savedArtifact to $resources")
         artifactResourceRepository.saveAll(resources.map { it.copy(artifact = savedArtifact) })
 
