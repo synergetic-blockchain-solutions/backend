@@ -21,6 +21,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.core.io.ClassPathResource
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
@@ -40,6 +41,9 @@ class ArtifactControllerTest {
 
     @Autowired
     lateinit var artifactRepository: ArtifactRepository
+
+    @Autowired
+    lateinit var artifactResourceRepository: ArtifactResourceRepository
 
     @Autowired
     lateinit var userService: UserService
@@ -84,9 +88,9 @@ class ArtifactControllerTest {
                     email = email,
                     name = it,
                     description = "description",
+                    ownerIDs = listOf(),
                     groupIDs = listOf(),
-                    sharedWith = listOf(),
-                    ownerIDs = listOf()
+                    sharedWith = listOf()
                 )
             }
             client.get()
@@ -116,9 +120,9 @@ class ArtifactControllerTest {
                     email = email,
                     name = it.key,
                     description = "description",
+                    ownerIDs = listOf(),
                     groupIDs = listOf(it.value),
-                    sharedWith = listOf(),
-                    ownerIDs = listOf()
+                    sharedWith = listOf()
                 )
             }
             client.get()
@@ -150,18 +154,18 @@ class ArtifactControllerTest {
                     email = email,
                     name = it,
                     description = "description",
+                    ownerIDs = listOf(),
                     groupIDs = listOf(),
-                    sharedWith = listOf(),
-                    ownerIDs = listOf()
+                    sharedWith = listOf()
                 )
             }
             artifactService.createArtifact(
                 email = "example2@example.com",
                 name = "artifact3",
                 description = "desc",
+                ownerIDs = listOf(),
                 groupIDs = listOf(),
-                sharedWith = listOf(),
-                ownerIDs = listOf()
+                sharedWith = listOf()
             )
             client.get()
                 .uri("/artifact?owner=${usr.id}")
@@ -187,25 +191,25 @@ class ArtifactControllerTest {
                     email,
                     "artifact1",
                     "",
+                    ownerIDs = listOf(),
                     groupIDs = listOf(grp1.id),
-                    sharedWith = listOf(),
-                    ownerIDs = listOf()
+                    sharedWith = listOf()
                 ),
                 artifactService.createArtifact(
                     usr2.email,
                     "artifact2",
                     "",
+                    ownerIDs = listOf(),
                     groupIDs = listOf(grp1.id),
-                    sharedWith = listOf(),
-                    ownerIDs = listOf()
+                    sharedWith = listOf()
                 ),
                 artifactService.createArtifact(
                     email,
                     "artifact3",
                     "",
+                    ownerIDs = listOf(),
                     groupIDs = listOf(grp2.id),
-                    sharedWith = listOf(),
-                    ownerIDs = listOf()
+                    sharedWith = listOf()
                 )
             )
             client.get()
@@ -417,6 +421,63 @@ class ArtifactControllerTest {
                     .exchange()
                     .expectStatus().isForbidden
             }
+
+            @Test
+            fun `it should not allow the removal of associated resources`() {
+                val artifactRequest = ArtifactRequest(
+                    name = "Artifact 1",
+                    description = "Description",
+                    owners = listOf(),
+                    groups = listOf(),
+                    sharedWith = listOf()
+                )
+                val createArtifactResponse = client.post()
+                    .uri("/artifact")
+                    .accept(MediaType.APPLICATION_JSON_UTF8)
+                    .contentType(MediaType.APPLICATION_JSON_UTF8)
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer $token")
+                    .syncBody(artifactRequest)
+                    .exchange()
+                    .expectStatus().isCreated
+                    .expectBody()
+                    .returnResult()
+                    .responseBody!!
+                val returnedArtifact =
+                    ObjectMapper().registerKotlinModule().readValue<Map<String, Any>>(String(createArtifactResponse))
+
+                val artifact = artifactRepository.findByIdOrNull((returnedArtifact["id"] as Int).toLong())!!
+                val resource = artifactResourceRepository.save(
+                    ArtifactResource(
+                        name = "Resource name",
+                        description = "Resource description",
+                        resource = ClassPathResource("test-image.jpg").file.readBytes(),
+                        contentType = MediaType.IMAGE_PNG_VALUE,
+                        artifact = artifact
+                    )
+                )
+
+                artifactRepository.save(artifact.copy(resources = mutableListOf(resource)))
+
+                @Suppress("UNCHECKED_CAST")
+                val updateArtifactRequest = mapOf<String, Any>(
+                    "name" to returnedArtifact.getValue("id"),
+                    "description" to returnedArtifact.getValue("description"),
+                    "owners" to returnedArtifact.getValue("owners"),
+                    "sharedWith" to returnedArtifact.getValue("sharedWith"),
+                    "resources" to listOf<Long>()
+                )
+
+                client.put()
+                    .uri("/artifact/${returnedArtifact["id"]}")
+                    .accept(MediaType.APPLICATION_JSON_UTF8)
+                    .contentType(MediaType.APPLICATION_JSON_UTF8)
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer $token")
+                    .syncBody(updateArtifactRequest)
+                    .exchange()
+                    .expectStatus().isBadRequest
+                    .expectBody()
+                    .jsonPath("$.message").value(`is`("Cannot remove resources in artifact update"))
+            }
         }
 
         @Nested
@@ -490,6 +551,54 @@ class ArtifactControllerTest {
                     .header(HttpHeaders.AUTHORIZATION, "Bearer $altToken")
                     .exchange()
                     .expectStatus().isForbidden
+            }
+
+            @Test
+            fun `it should delete associated resources as well`() {
+                val artifactRequest = ArtifactRequest(
+                    name = "Artifact 1",
+                    description = "Description",
+                    owners = listOf(),
+                    groups = listOf(),
+                    sharedWith = listOf()
+                )
+                val createArtifactResponse = client.post()
+                    .uri("/artifact")
+                    .accept(MediaType.APPLICATION_JSON_UTF8)
+                    .contentType(MediaType.APPLICATION_JSON_UTF8)
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer $token")
+                    .syncBody(artifactRequest)
+                    .exchange()
+                    .expectStatus().isCreated
+                    .expectBody()
+                    .returnResult()
+                    .responseBody!!
+                val returnedArtifact =
+                    ObjectMapper().registerKotlinModule().readValue<Map<String, Any>>(String(createArtifactResponse))
+
+                val artifact = artifactRepository.findByIdOrNull((returnedArtifact["id"] as Int).toLong())!!
+                val resource = artifactResourceRepository.save(
+                    ArtifactResource(
+                        name = "Resource name",
+                        description = "Resource description",
+                        resource = ClassPathResource("test-image.jpg").file.readBytes(),
+                        contentType = MediaType.IMAGE_PNG_VALUE,
+                        artifact = artifact
+                    )
+                )
+
+                artifactRepository.save(artifact.copy(resources = mutableListOf(resource)))
+                client.delete()
+                    .uri("/artifact/${returnedArtifact["id"]}/resource/${resource.id}")
+                    .accept(MediaType.APPLICATION_JSON_UTF8)
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer $token")
+                    .exchange()
+                    .expectStatus().isOk
+                    .expectBody()
+                    .returnResult()
+                    .responseBody!!
+
+                assertFalse(artifactResourceRepository.existsById(resource.id))
             }
         }
     }

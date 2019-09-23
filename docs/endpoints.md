@@ -1,33 +1,37 @@
 # Endpoints
 
-This document documents all the API endpoints exposed by this application. Each endpoint includes an example
-request that can be run when the application is started with `./mvnw spring-boot:run` (or 
-`.\mvnw.cmd spring-boot:run` on Windows).
+This document documents all the API endpoints exposed by this application. Each
+endpoint includes an example request that can be run when the application is
+started with `./mvnw spring-boot:run` (or `.\mvnw.cmd spring-boot:run` on
+Windows).
 
 Endpoints that have ``{token}`` in their headers require the use of the token
 returned by the [login endpoint](#POST-/login).
 
 ## `POST /registration`
 
-Register a new user with the given name, email and password. If a user with the given email already
-exists, the registration will be rejected.
+Register a new user with the given name, email and password. If a user with the
+given email already exists, the registration will be rejected.
 
 ### Example request
 
-    POST http://localhost:8080/register
-    Accept: application/json
-    Content-Type: application/json
+``` http request
+POST http://localhost:8080/register
+Accept: application/json
+Content-Type: application/json
 
-    {
-        "name": "Example Name",
-        "email": "example@example/com",
-        "password": "password"
-    }
+{
+    "name": "Example Name",
+    "email": "example@example/com",
+    "password": "password"
+}
+```
 
 ### Response
 
-A successful response will be the created user object (without the password field). This will include
-an array of groups with the only element being the newly created private group for that user.
+A successful response will be the created user object (without the password
+field). This will include an array of groups with the only element being the
+newly created private group for that user.
 
 ## `POST /login`
 See [login docs](./login.md) for more information.
@@ -36,20 +40,25 @@ Exchange user credentials (email and password) for a JWT.
 
 ### Example request
 
-    POST http://localhost:8080/login
-    Accept: application/json
-    Content-Type: application/json
+``` http request
+POST http://localhost:8080/login
+Accept: application/json
+Content-Type: application/json
 
-    {
-        "email": "example@example.com",
-        "password": "password"
-    }
+{
+    "email": "example@example.com",
+    "password": "password"
+}
+```
 
 ### Response
 
-A successful response from this endpoint will be a JSON document with one field, "token". This
-is the JWT that can be used to authenticate on any other endpoints that require authentication.
-For more information about the JWT, see the [JWT section in the login docs](./login.md#JWT)
+A successful response from this endpoint will be a JSON document with one field,
+"token". This is the JWT that can be used to authenticate on any other endpoints
+that require authentication.
+
+For more information about the JWT, see the [JWT section in the login
+docs](./login.md#JWT)
 
 ## `POST /artifact`
 
@@ -59,18 +68,20 @@ of.
 
 ### Example Request
 
-    POST http://localhost:8080/artifact
-    Accept: application/json
-    Content-Type: application/json
-    Authorization: Bearer {token}
+``` http request
+POST http://localhost:8080/artifact
+Accept: application/json
+Content-Type: application/json
+Authorization: Bearer {token}
 
-    {
-        "name": "Artifact 1",
-        "description": "Artifact description",
-        "owners": [],
-        "groups": [],
-        "sharedWith": []
-    }
+{
+    "name": "Artifact 1",
+    "description": "Artifact description",
+    "owners": [],
+    "groups": [],
+    "sharedWith": []
+}
+```
 
 ### Response
 
@@ -99,10 +110,12 @@ further filter the returned artifacts.
 
 ### Example Request
 
-    GET http://localhost:8080/artifact
-    Accept: application/json
-    Content-Type: application/json
-    Authorization: Bearer {token}
+``` http request
+GET http://localhost:8080/artifact
+Accept: application/json
+Content-Type: application/json
+Authorization: Bearer {token}
+```
 
 ### Response
 
@@ -118,10 +131,12 @@ to this artifact.
 
 ### Example Request
 
-    GET http://localhost:8080/artifact/{id}
-    Accept: application/json
-    Content-Type: application/json
-    Authorization: Bearer {token}
+``` http request
+GET http://localhost:8080/artifact/{id}
+Accept: application/json
+Content-Type: application/json
+Authorization: Bearer {token}
+```
 
 ### Response
 
@@ -138,18 +153,20 @@ removed. Any other modifications are only allowed by the owning users.
 
 ### Example Request
 
-    PUT http://localhost:8080/artifact
-    Accept: application/json
-    Content-Type: application/json
-    Authorization: Bearer {token}
+``` http request
+PUT http://localhost:8080/artifact
+Accept: application/json
+Content-Type: application/json
+Authorization: Bearer {token}
 
-    {
-        "name": "Artifact 1",
-        "description": "Artifact description",
-        "owners": [],
-        "groups": [],
-        "sharedWith": []
-    }
+{
+    "name": "Artifact 1",
+    "description": "Artifact description",
+    "owners": [],
+    "groups": [],
+    "sharedWith": []
+}
+```
 
 ### Response
 
@@ -163,10 +180,12 @@ Delete the artifact with ID. This endpoint is only accessible by artifact owners
 
 ### Example Request
 
-    DELETE http://localhost:8080/artifact
-    Accept: application/json
-    Content-Type: application/json
-    Authorization: Bearer {token}
+``` http request
+DELETE http://localhost:8080/artifact
+Accept: application/json
+Content-Type: application/json
+Authorization: Bearer {token}
+```
 
 ### Response
 
@@ -283,3 +302,201 @@ Delete the group with ID. Only the admin of the group can perform this action
 A successful response will be a JSON representation of the deleted group.
 
 
+## `POST /artifact/{artifactId}/resource`
+
+Associate a resource with a resource.
+
+This request should be of type `multipart/form-data` and be made up of two named
+parts:
+
+- metadata: The metadata associated with the resource, this should be
+  `application/json`
+- resource: The actual resource, this should be the content type that best fits
+  the artifact.
+
+The metadata part **must** contain the following fields:
+
+- name: The name of the resource
+- description: Description of the resource
+
+It can also optionally contain
+
+- tags: A collection of tags to associate with the resource
+
+### Example request
+
+``` http request
+POST http://localhost:8080/artifact/{artifactId}/resource
+Accept: application/json
+Content-Type: multipart/form-data; boundary=-----------xxxxxxxxxxxxxxxxxx
+Authorization: Bearer {token}
+
+-----------xxxxxxxxxxxxxxxxxx
+Content-Disposition: application/json; name="metadata"
+
+{
+    "name": "Resource 1",
+    "description": "Description"
+    "tags": ["tag1", "tag2"]
+}
+
+-----------xxxxxxxxxxxxxxxxxx
+Content-Disposition: image/png; name="resource"
+
+{image}
+```
+
+### Response
+
+A successful response from this endpoint will be a JSON document representing
+the resource. It will have the following fields:
+
+- `id`: The resource's ID
+- `contentType`: The content type (or mime type) of the artifact, this is to
+  help with how to display the resource and the content type when returning it.
+- `artifact`: The ID of the artifact the resource is associated with.
+
+## `GET /artifact/{artifactId}/resource/{resourceId}/resource`
+
+Get the actual resource `{resourceId}`.
+
+### Example request
+
+``` http request
+GET http://localhost:8080/artifact/{artifactId}/resource/{resourceId}/resource
+Accept: application/json
+Content-Type: application/json
+Authorization: Bearer {token}
+```
+
+### Response
+
+A successful response from this endpoint will be the resource `resourceId`. The
+content type will depend on what the content type of the resource saved actually
+was.
+
+## `GET /artifact/{artifactId}/resource/{resourceId}/metadata`
+
+Get the metadata associated with the resource.
+
+### Example request
+
+``` http request
+GET http://localhost:8080/artifact/{artifactId}/resource/{resourceId}/metadata
+Accept: application/json
+Content-Type: application/json
+Authorization: Bearer {token}
+```
+
+### Response
+
+A successful response from this endpoint will be a JSON document of the metadata
+associated with the resource.
+
+- `name`: Name of the resource
+- `description`: Description of the resource
+- `tags`: Collection of tags associated with the resource
+
+## `PUT /artifact/{artifactId}/resource/{resourceId}`
+
+Resources can be updated in three possible was using this endpoint.
+
+1. Update both the metadata and resource
+2. Update metadata only
+3. Update resource only
+
+Usage varies between each and is described in their specific section.
+
+### Update both metadata and resource
+
+This endpoint updates both the metadata and the resource. It requires the
+`multipart/form-data` content type.
+
+#### Example request
+
+``` http request
+POST http://localhost:8080/artifact/{artifactId}/resource/{resourceId}
+Accept: application/json
+Content-Type: multipart/form-data; boundary=-----------xxxxxxxxxxxxxxxxxx
+Authorization: Bearer {token}
+
+-----------xxxxxxxxxxxxxxxxxx
+Content-Disposition: application/json; name="metadata"
+
+{
+    "name": "Resource 1",
+    "description": "Updated description"
+    "tags": ["tag1", "tag2"]
+}
+
+-----------xxxxxxxxxxxxxxxxxx
+Content-Disposition: image/png; name="resource"
+
+{image}
+```
+
+### Update metadata only
+
+This endpoint updates only the metadata. It requires the `application/json`
+content type.
+
+#### Example request
+
+``` http request
+PUT http://localhost:8080/artifact/{artifactId}/resource/{resourceId}
+Accept: application/json
+Content-Type: application/json
+Authorization: Bearer {token}
+
+{
+    "name": "Resource 1",
+    "description": "Updated description"
+    "tags": ["tag1", "tag2"]
+}
+```
+
+### Update resource only
+
+Any requests that are not `multipart/form-data` or `application/json` will go
+through to this endpoint. This updates only the resource. The content type
+associated with the resource will be the one in the `Content-Type` header.
+
+#### Example request
+
+``` http request
+POST http://localhost:8080/artifact/{artifactId}/resource/{resourceId}
+Accept: application/json
+Content-Type: image/png
+Authorization: Bearer {token}
+
+{image}
+```
+
+### Response
+
+A successful response from all three endpoints will be a JSON representation of
+the resource (same as the [resource creation
+endpoint](#`POST-/artifact/{artifactId}/resource`)).
+
+
+
+## `DELETE /artifact/{artifactId}/resource/{resourceId}`
+
+Delete a resource. This endpoint is only accessible by owners of the artifact
+with ID `artifactId`.
+
+### Example request
+
+
+``` http request
+DELETE http://localhost:8080/artifact/{artifactId}/resource/{resourceId}
+Accept: application/json
+Content-Type: application/json
+Authorization: Bearer {token}
+```
+
+### Response
+
+A successful response from this endpoint will be a JSON document representing
+the resource (same as the [resource creation
+endpoint](#`POST-/artifact/{artifactId}/resource`))

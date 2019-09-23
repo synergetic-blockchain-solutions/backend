@@ -79,7 +79,8 @@ class ArtifactController(
             description = newArtifact.description,
             ownerIDs = newArtifact.owners ?: listOf(),
             groupIDs = newArtifact.groups ?: listOf(),
-            sharedWith = newArtifact.sharedWith ?: listOf()
+            sharedWith = newArtifact.sharedWith ?: listOf(),
+            resourceIDs = newArtifact.resources ?: listOf()
         )
         logger.info("Created artifact $createdArtifact")
         return ResponseEntity.status(HttpStatus.CREATED).body(createdArtifact)
@@ -132,5 +133,6 @@ data class ArtifactRequest(
     val description: String,
     val owners: List<Long>?,
     val groups: List<Long>?,
-    val sharedWith: List<Long>?
+    val sharedWith: List<Long>?,
+    val resources: List<Long>? = listOf()
 )

@@ -17,7 +17,9 @@ class ArtifactServiceImpl(
     @Autowired
     val userRepository: UserRepository,
     @Autowired
-    val groupRepository: GroupRepository
+    val groupRepository: GroupRepository,
+    @Autowired
+    val artifactResourceRepository: ArtifactResourceRepository
 ) : ArtifactService {
     val logger: Logger = LoggerFactory.getLogger(this::class.java)
 
@@ -40,7 +42,8 @@ class ArtifactServiceImpl(
         description: String,
         ownerIDs: List<Long>,
         groupIDs: List<Long>,
-        sharedWith: List<Long>
+        sharedWith: List<Long>,
+        resourceIDs: List<Long>
     ): Artifact {
         val creator =
             userRepository.findByEmail(email) ?: throw UserNotFoundException("No user with email $email was found")
@@ -54,10 +57,16 @@ class ArtifactServiceImpl(
                 throw GroupNotFoundException("No group with ID $it was found")
             }
         }
+        resourceIDs.forEach {
+            if (!artifactResourceRepository.existsById(it)) {
+                throw ArtifactResourceNotFoundException("No artifact resource with ID $it was found")
+            }
+        }
 
         val owners = userRepository.findAllById(ownerIDs).toMutableList()
         val groups = groupRepository.findAllById(groupIDs).toMutableList()
         val shares = userRepository.findAllById(sharedWith)
+        val resources = artifactResourceRepository.findAllById(resourceIDs)
 
         if (!owners.contains(creator)) {
             owners.add(creator)
@@ -71,7 +80,8 @@ class ArtifactServiceImpl(
             description = description,
             owners = owners,
             groups = groups,
-            sharedWith = shares
+            sharedWith = shares,
+            resources = resources
         )
         val savedArtifact = artifactRepository.save(artifact)
 
@@ -82,6 +92,13 @@ class ArtifactServiceImpl(
         logger.debug("Adding $savedArtifact to $groups")
         groups.forEach { it.artifacts.add(savedArtifact) }
         groupRepository.saveAll(groups)
+
+        logger.debug("Sharing $savedArtifact with $shares")
+        shares.forEach { it.sharedArtifacts.add(savedArtifact) }
+        userRepository.saveAll(shares)
+
+        logger.debug("Adding $savedArtifact to $resources")
+        artifactResourceRepository.saveAll(resources.map { it.copy(artifact = savedArtifact) })
 
         logger.debug("Created artifact $savedArtifact")
         return savedArtifact
@@ -173,8 +190,30 @@ class ArtifactServiceImpl(
             artifactRepository.findByIdOrNull(id)
                 ?: throw ArtifactNotFoundException("Could not find artifact with ID $id")
 
+        if (!(update.resources ?: listOf()).containsAll(artifact.resources.map(ArtifactResource::id))) {
+            throw BadHttpRequestException("Cannot remove resources in artifact update")
+        }
+
         assertCanUpdate(user, artifact, update)
         // Past this point we can perform any actions and be comfortable the user is authorised to perform them
+
+        ((update.owners ?: listOf()) + (update.sharedWith ?: listOf())).forEach {
+            if (!userRepository.existsById(it)) {
+                throw UserNotFoundException("Could not find user with ID $id")
+            }
+        }
+
+        (update.groups ?: listOf()).forEach {
+            if (!groupRepository.existsById(it)) {
+                throw GroupNotFoundException("Could not find group with ID $id")
+            }
+        }
+
+        (update.resources ?: listOf()).forEach {
+            if (!artifactResourceRepository.existsById(it)) {
+                throw ArtifactResourceNotFoundException("Could not find artifact resource with ID $id")
+            }
+        }
 
         // Fix up new users and owners who are being removed
         val updatedOwners = userRepository.findAllById(update.owners ?: listOf())
@@ -221,6 +260,7 @@ class ArtifactServiceImpl(
             update.description != artifact.description -> throw ActionNotAllowedException("User ${user.id} is not an owner of artifact ${artifact.id}")
             update.owners != artifact.owners.map(User::id) -> throw ActionNotAllowedException("User ${user.id} is not an owner of artifact ${artifact.id}")
             update.sharedWith != artifact.sharedWith.map(User::id) -> throw ActionNotAllowedException("User ${user.id} is not an owner of artifact ${artifact.id}")
+            update.resources != artifact.resources.map(ArtifactResource::id) -> throw ActionNotAllowedException("User ${user.id} is not an owner of artifact ${artifact.id}")
             update.groups != artifact.groups.map(Group::id) -> {
                 // The set of groups a user removes must be a subset of the set groups in which they are an owner
                 val removedGroups = artifact.groups.map(Group::id).subtract(update.groups!!)

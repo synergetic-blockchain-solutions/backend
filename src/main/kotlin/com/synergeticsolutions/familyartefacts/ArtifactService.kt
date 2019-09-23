@@ -16,7 +16,8 @@ interface ArtifactService {
         description: String,
         ownerIDs: List<Long> = listOf(),
         groupIDs: List<Long> = listOf(),
-        sharedWith: List<Long> = listOf()
+        sharedWith: List<Long> = listOf(),
+        resourceIDs: List<Long> = listOf()
     ): Artifact
 
     fun updateArtifact(email: String, id: Long, update: ArtifactRequest): Artifact

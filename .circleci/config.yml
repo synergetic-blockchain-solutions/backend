@@ -18,3 +18,13 @@ jobs:
             docker-compose pull >/dev/null
             docker-compose -f docker-compose.yml -f docker-compose.test.yml up \
                 --abort-on-container-exit --exit-code-from backend | grep -E -v "Download(ing|ed)"
+      - run:
+          name: Save test results
+          command: |
+            mkdir -p ~/test-results/junit/
+            find . -type f -regex ".*/target/surefire-reports/.*xml" -exec cp {} ~/test-results/junit/ \;
+          when: always
+      - store_test_results:
+          path: ~/test-results
+      - store_artifacts:
+          path: ~/test-results/junit
