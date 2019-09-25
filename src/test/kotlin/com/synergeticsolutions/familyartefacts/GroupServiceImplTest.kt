@@ -162,12 +162,13 @@ class GroupServiceImplTest {
                         "example@example.com",
                         "Group Name",
                         "Group Description",
+                        listOf(1),
                         listOf(1))
             }
         }
 
         @Test
-        fun `it should not create the group if one of the members are not in the database`() {
+        fun `it should not create the group if one of the members or admins are not in the database`() {
             Mockito.`when`(userRepository.findByEmail(anyString()))
                     .thenReturn(
                             User(
@@ -187,7 +188,8 @@ class GroupServiceImplTest {
                         "example@example.com",
                         "Group Name",
                         description = "Group description",
-                        memberIDs = listOf(2))
+                        memberIDs = listOf(2),
+                        adminIDs = listOf(2))
             }
         }
 
@@ -213,7 +215,8 @@ class GroupServiceImplTest {
                     "example@example.com",
                     "Group Name",
                     description = "Group description",
-                    memberIDs = listOf(2))
+                    memberIDs = listOf(2),
+                    adminIDs = listOf(2))
 
             val argCapturer = ArgumentCaptor.forClass(Group::class.java)
             Mockito.verify(groupRepository).save(argCapturer.capture())
@@ -268,7 +271,8 @@ class GroupServiceImplTest {
                     "example@example.com",
                     "Group 3",
                     description = "Group description",
-                    memberIDs = listOf(2, 3)
+                    memberIDs = listOf(2, 3),
+                    adminIDs = listOf(2, 3)
             )
             val argCapturer = ArgumentCaptor.forClass(Group::class.java)
             Mockito.verify(groupRepository).save(argCapturer.capture())

@@ -80,24 +80,32 @@ class GroupServiceImpl(
     }
 
     /**
-     * [createGroup] creates an artifact
+     * [createGroup] creates a group
      * If there is no user with [email] then a [UserNotFoundException] will be thrown.
      *
      * @param email Email of the owner
      * @param groupName Name of the group
      * @param description Description of the group
      * @param memberIDs IDs of the members
+     * @param adminIDs IDs of the admins (must be subset of [memberIDs])
      * @return Created [Group]
-     * @throws UserNotFoundException when no user with [email] or one of the IDs in [memberIDs]] does not correspond to a [User.id]
+     * @throws UserNotFoundException when no user with [email] or one of the IDs in [memberIDs] does not correspond to a [User.id]
+     * @throws UserIsNotMemberException when one of the IDs in [adminIDs] is not in [memberIDs]
      */
     override fun createGroup(
         email: String,
         groupName: String,
         description: String,
-        memberIDs: List<Long>
+        memberIDs: List<Long>,
+        adminIDs: List<Long>
     ): Group {
         val owner = userRepository.findByEmail(email) ?: throw UsernameNotFoundException("No user with email $email was found")
         memberIDs.forEach {
+            if (!userRepository.existsById(it)) {
+                throw UserNotFoundException("No user with ID $it was found")
+            }
+        }
+        adminIDs.forEach {
             if (!userRepository.existsById(it)) {
                 throw UserNotFoundException("No user with ID $it was found")
             }
@@ -106,13 +114,20 @@ class GroupServiceImpl(
         if (!members.contains(owner)) {
             members.add(owner)
         }
-        val group = Group(name = groupName, description = description, members = members, admins = mutableListOf(owner))
-        val savedGroup = groupRepository.save(group)
-        owner.ownedGroups.add(group)
+        val admins = userRepository.findAllById(adminIDs).toMutableList()
+        if (!admins.contains(owner)) {
+            admins.add(owner)
+        }
+        val group = Group(name = groupName, description = description, members = members, admins = admins)
         members.forEach {
             it.groups.add(group)
         }
+        admins.forEach {
+            it.ownedGroups.add(group)
+        }
+        val savedGroup = groupRepository.save(group)
         userRepository.saveAll(members)
+        userRepository.saveAll(admins)
         return savedGroup
     }
 

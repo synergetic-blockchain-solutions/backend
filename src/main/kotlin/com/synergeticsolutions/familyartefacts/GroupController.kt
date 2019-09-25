@@ -74,7 +74,8 @@ class GroupController(
                         email = currentUser.principal as String,
                         groupName = groupRequest.name,
                         description = groupRequest.description,
-                        memberIDs = groupRequest.members ?: listOf()
+                        memberIDs = groupRequest.members ?: listOf(),
+                        adminIDs = groupRequest.admins ?: listOf()
                 )
         return ResponseEntity.status(HttpStatus.CREATED).body(newGroup)
     }

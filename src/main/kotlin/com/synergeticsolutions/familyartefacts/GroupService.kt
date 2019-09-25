@@ -5,7 +5,8 @@ interface GroupService {
         email: String,
         groupName: String,
         description: String,
-        memberIDs: List<Long>
+        memberIDs: List<Long>,
+        adminIDs: List<Long>
     ): Group
     fun removeAdmins(email: String, adminsToRemove: List<User>, group: Group): Group
     fun findGroups(email: String, adminID: Long?, memberID: Long?): List<Group>

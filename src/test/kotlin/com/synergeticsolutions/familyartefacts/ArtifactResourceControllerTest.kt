@@ -188,7 +188,7 @@ class ArtifactResourceControllerTest(
     inner class GetArtifactResource {
         @Test
         fun `it should allow users the artifact is shared with access to access to the resources`() {
-            val group = groupService.createGroup(user1.email, "Group 1", "Description", memberIDs = listOf(user2.id))
+            val group = groupService.createGroup(user1.email, "Group 1", "Description", memberIDs = listOf(user2.id), adminIDs = listOf())
             val artifact = artifactService.createArtifact(user1.email, "Artifact name", "Artifact description", groupIDs = listOf(group.id))
             val resource = artifactResourceService.create(
                 user1.email,
