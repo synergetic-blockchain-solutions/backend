@@ -99,7 +99,9 @@ class GroupServiceImpl(
         memberIDs: List<Long>,
         adminIDs: List<Long>
     ): Group {
-        val owner = userRepository.findByEmail(email) ?: throw UsernameNotFoundException("No user with email $email was found")
+        val owner = userRepository.findByEmail(email)
+                ?: throw UsernameNotFoundException("No user with email $email was found")
+        val group = Group(name = groupName, description = description, members = mutableListOf(), admins = mutableListOf())
         memberIDs.forEach {
             if (!userRepository.existsById(it)) {
                 throw UserNotFoundException("No user with ID $it was found")
@@ -110,6 +112,11 @@ class GroupServiceImpl(
                 throw UserNotFoundException("No user with ID $it was found")
             }
         }
+
+        if (!memberIDs.containsAll(adminIDs)) {
+            throw UserIsNotMemberException("AdminIDs is not a sublist of memberIDs")
+        }
+
         val members = userRepository.findAllById(memberIDs).toMutableList()
         if (!members.contains(owner)) {
             members.add(owner)
@@ -118,12 +125,13 @@ class GroupServiceImpl(
         if (!admins.contains(owner)) {
             admins.add(owner)
         }
-        val group = Group(name = groupName, description = description, members = members, admins = admins)
         members.forEach {
             it.groups.add(group)
+            group.members.add(it)
         }
         admins.forEach {
             it.ownedGroups.add(group)
+            group.admins.add(it)
         }
         val savedGroup = groupRepository.save(group)
         userRepository.saveAll(members)

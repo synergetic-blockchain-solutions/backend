@@ -194,6 +194,34 @@ class GroupServiceImplTest {
         }
 
         @Test
+        fun `it should not create the group if adminIDS is not a sublist of memberIDs`() {
+            Mockito.`when`(userRepository.findByEmail(anyString()))
+                    .thenReturn(
+                            User(
+                                    1,
+                                    "User1",
+                                    "example@example.com",
+                                    "password",
+                                    privateGroup = Group(
+                                            1,
+                                            "Group1",
+                                            description = "description",
+                                            members = mutableListOf(),
+                                            admins = mutableListOf())))
+            Mockito.`when`(userRepository.existsById(anyLong()))
+                    .thenReturn(true)
+            assertThrows<UserIsNotMemberException> {
+                groupService.createGroup(
+                        email = "example@example.com",
+                        groupName = "Group name",
+                        description = "Group description",
+                        memberIDs = listOf(2),
+                        adminIDs = listOf(2, 3)
+                )
+            }
+        }
+
+        @Test
         fun `it should include the current user as the member and admin of the created group`() {
             Mockito.`when`(userRepository.findByEmail(anyString()))
                     .thenReturn(
@@ -231,7 +259,7 @@ class GroupServiceImplTest {
         }
 
         @Test
-        fun `it should make the specified member IDs the members of the group`() {
+        fun `it should make the specified memberIDs and adminIDs the members and admins of the group`() {
             Mockito.`when`(groupRepository.save(any<Group>())).then { it.arguments[0] as Group }
 
             Mockito.`when`(userRepository.findByEmail(anyString()))
@@ -276,7 +304,7 @@ class GroupServiceImplTest {
             )
             val argCapturer = ArgumentCaptor.forClass(Group::class.java)
             Mockito.verify(groupRepository).save(argCapturer.capture())
-            val matcher =
+            val matcher0 =
                     hasProperty<Group>(
                             "members",
                             hasItems<User>(
@@ -284,7 +312,16 @@ class GroupServiceImplTest {
                                     hasProperty("id", equalTo(3L))
                             )
                     )
-            assertThat(argCapturer.value, matcher)
+            assertThat(argCapturer.value, matcher0)
+            val matcher1 =
+                    hasProperty<Group>(
+                            "admins",
+                            hasItems<User>(
+                                    hasProperty("id", equalTo(2L)),
+                                    hasProperty("id", equalTo(3L))
+                            )
+                    )
+            assertThat(argCapturer.value, matcher1)
         }
     }
 

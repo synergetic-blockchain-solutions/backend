@@ -9,8 +9,6 @@ import org.hamcrest.Matchers.hasItems
 import org.hamcrest.Matchers.hasProperty
 import org.hamcrest.Matchers.hasSize
 import org.hamcrest.Matchers.not
-import org.hamcrest.Matchers.containsInAnyOrder
-import org.hamcrest.Matchers.hasEntry
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -89,7 +87,7 @@ class GroupControllerTest {
                     .expectBody()
                     .jsonPath("$").isArray
                     .jsonPath("$").value(hasSize<Group>(4))
-                    //.jsonPath("$").value(containsInAnyOrder(groups.map { hasEntry("id", it.id.toInt()) }))
+                    // .jsonPath("$").value(containsInAnyOrder(groups.map { hasEntry("id", it.id.toInt()) }))
         }
 
         @Test
@@ -115,7 +113,7 @@ class GroupControllerTest {
     @Nested
     inner class CreateGroup {
         @Test
-        fun `it should create group`() {
+        fun `it should create the group`() {
             val groupRequest = GroupRequest(
                     name = "Group 1",
                     description = "Group description",
