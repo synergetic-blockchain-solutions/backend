@@ -36,7 +36,8 @@ class ArtifactController(
     fun getArtifacts(
         @RequestParam(name = "group", required = false) groupID: Long?,
         @RequestParam(name = "owner", required = false) ownerID: Long?,
-        @RequestParam(name = "shared", required = false) sharedID: Long?
+        @RequestParam(name = "shared", required = false) sharedID: Long?,
+        @RequestParam(name = "tag", required = false) tag: String?
     ): ResponseEntity<List<Artifact>> {
         val currentUser = SecurityContextHolder.getContext().authentication
         logger.debug("Filtering artifacts for ${currentUser.principal} by group=$groupID, owner=$ownerID, shared=$sharedID")
@@ -45,7 +46,8 @@ class ArtifactController(
                 email = currentUser.principal as String,
                 groupID = groupID,
                 ownerID = ownerID,
-                sharedID = sharedID
+                sharedID = sharedID,
+                tag = tag
             )
         logger.debug("Found ${artifacts.size} artifacts fitting the criteria")
 

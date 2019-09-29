@@ -118,7 +118,7 @@ class ArtifactServiceImpl(
      * @return Collection of artifacts the user has access to filtered by the given parameters
      * @throws UserNotFoundException when a user with [email] does not exist
      */
-    override fun findArtifactsByOwner(email: String, groupID: Long?, ownerID: Long?, sharedID: Long?): List<Artifact> {
+    override fun findArtifactsByOwner(email: String, groupID: Long?, ownerID: Long?, sharedID: Long?, tag: String?): List<Artifact> {
         val user =
             userRepository.findByEmail(email) ?: throw UserNotFoundException("No user with email $email was found")
 
@@ -138,6 +138,10 @@ class ArtifactServiceImpl(
 
         if (sharedID != null) {
             artifacts = artifacts.filter { it.sharedWith.map(User::id).contains(sharedID) }
+        }
+
+        if (tag != null) {
+            artifacts = artifacts.filter { it.tags.contains(tag) }
         }
 
         return artifacts

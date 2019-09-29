@@ -5,7 +5,8 @@ interface ArtifactService {
         email: String,
         groupID: Long? = null,
         ownerID: Long? = null,
-        sharedID: Long? = null
+        sharedID: Long? = null,
+        tag: String? = null
     ): List<Artifact>
 
     fun findArtifactById(email: String, id: Long): Artifact
