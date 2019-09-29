@@ -79,7 +79,8 @@ Authorization: Bearer {token}
     "description": "Artifact description",
     "owners": [],
     "groups": [],
-    "sharedWith": []
+    "sharedWith": [],
+    "tags": []
 }
 ```
 
@@ -101,9 +102,10 @@ following differences:
 Get all artifact a user has access to (owns, group they're part of, shared
 with). This endpoint also accepts the following query parameters:
 
-- `group (int)` - Only return artifacts that are associated with the group with ID
+- `group` (int) - Only return artifacts that are associated with the group with ID
 - `owner` (int) - Only return artifacts that are owned by the user with this ID
 - `shared` (int) - Only return artifacts shared with the user with this ID
+- `tag` (string) - Only return artifacts with this tag
 
 None of the query parameters are required and they can be used together to
 further filter the returned artifacts.
@@ -164,7 +166,8 @@ Authorization: Bearer {token}
     "description": "Artifact description",
     "owners": [],
     "groups": [],
-    "sharedWith": []
+    "sharedWith": [],
+    "tag": []
 }
 ```
 
