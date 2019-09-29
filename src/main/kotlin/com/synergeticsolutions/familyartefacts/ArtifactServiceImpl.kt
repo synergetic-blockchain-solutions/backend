@@ -21,6 +21,7 @@ class ArtifactServiceImpl(
     @Autowired
     val artifactResourceRepository: ArtifactResourceRepository
 ) : ArtifactService {
+
     val logger: Logger = LoggerFactory.getLogger(this::class.java)
 
     /**
@@ -264,8 +265,7 @@ class ArtifactServiceImpl(
             if (!user.ownedGroups.map(Group::id).containsAll(removedGroups.toList())) {
                 throw ActionNotAllowedException("User ${user.id} is not an admin of all the groups they attempted to remove")
             }
-        }
-        else {
+        } else {
             throw ActionNotAllowedException("User ${user.id} is not an owner of artifact ${artifact.id}")
         }
     }
