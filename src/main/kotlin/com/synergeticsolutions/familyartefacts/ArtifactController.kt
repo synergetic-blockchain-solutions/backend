@@ -80,7 +80,8 @@ class ArtifactController(
             ownerIDs = newArtifact.owners ?: listOf(),
             groupIDs = newArtifact.groups ?: listOf(),
             sharedWith = newArtifact.sharedWith ?: listOf(),
-            resourceIDs = newArtifact.resources ?: listOf()
+            resourceIDs = newArtifact.resources ?: listOf(),
+            tags = newArtifact.tags ?: listOf()
         )
         logger.info("Created artifact $createdArtifact")
         return ResponseEntity.status(HttpStatus.CREATED).body(createdArtifact)

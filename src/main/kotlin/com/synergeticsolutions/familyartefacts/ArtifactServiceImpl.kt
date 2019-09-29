@@ -43,7 +43,8 @@ class ArtifactServiceImpl(
         ownerIDs: List<Long>,
         groupIDs: List<Long>,
         sharedWith: List<Long>,
-        resourceIDs: List<Long>
+        resourceIDs: List<Long>,
+        tags: List<String>
     ): Artifact {
         val creator =
             userRepository.findByEmail(email) ?: throw UserNotFoundException("No user with email $email was found")
@@ -81,7 +82,8 @@ class ArtifactServiceImpl(
             owners = owners,
             groups = groups,
             sharedWith = shares,
-            resources = resources
+            resources = resources,
+            tags = tags.toMutableList()
         )
         val savedArtifact = artifactRepository.save(artifact)
 
@@ -241,7 +243,8 @@ class ArtifactServiceImpl(
             description = update.description,
             owners = updatedOwners,
             groups = updatedGroups,
-            sharedWith = updatedShares
+            sharedWith = updatedShares,
+            tags = update.tags?.toMutableList() ?: mutableListOf()
         )
         return artifactRepository.save(updatedArtifact)
     }
