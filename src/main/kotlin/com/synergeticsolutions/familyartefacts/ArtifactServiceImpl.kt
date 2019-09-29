@@ -255,20 +255,15 @@ class ArtifactServiceImpl(
         // Other than owners, the only users that can make any sort of modifications are group owners of groups the
         // artifact is in. In this case, they're limited to being able to remove an artifact from a group they're an
         // owner of.
-        when {
-            update.name != artifact.name -> throw ActionNotAllowedException("User ${user.id} is not an owner of artifact ${artifact.id}")
-            update.description != artifact.description -> throw ActionNotAllowedException("User ${user.id} is not an owner of artifact ${artifact.id}")
-            update.owners != artifact.owners.map(User::id) -> throw ActionNotAllowedException("User ${user.id} is not an owner of artifact ${artifact.id}")
-            update.sharedWith != artifact.sharedWith.map(User::id) -> throw ActionNotAllowedException("User ${user.id} is not an owner of artifact ${artifact.id}")
-            update.resources != artifact.resources.map(ArtifactResource::id) -> throw ActionNotAllowedException("User ${user.id} is not an owner of artifact ${artifact.id}")
-            update.groups != artifact.groups.map(Group::id) -> {
-                // The set of groups a user removes must be a subset of the set groups in which they are an owner
-                val removedGroups = artifact.groups.map(Group::id).subtract(update.groups!!)
-                if (!user.ownedGroups.map(Group::id).containsAll(removedGroups.toList())) {
-                    throw ActionNotAllowedException("User ${user.id} is not an admin of all the groups they attempted to remove")
-                }
+        if (update.groups != artifact.groups.map(Group::id)) {
+            // The set of groups a user removes must be a subset of the set groups in which they are an owner
+            val removedGroups = artifact.groups.map(Group::id).subtract(update.groups!!)
+            if (!user.ownedGroups.map(Group::id).containsAll(removedGroups.toList())) {
+                throw ActionNotAllowedException("User ${user.id} is not an admin of all the groups they attempted to remove")
             }
-            else -> throw ActionNotAllowedException("User ${user.id} is not an owner of artifact ${artifact.id}")
+        }
+        else {
+            throw ActionNotAllowedException("User ${user.id} is not an owner of artifact ${artifact.id}")
         }
     }
 
