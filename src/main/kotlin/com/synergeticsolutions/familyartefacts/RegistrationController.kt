@@ -1,5 +1,9 @@
 package com.synergeticsolutions.familyartefacts
 
+import java.net.URI
+import javax.servlet.http.HttpServletResponse
+import javax.validation.constraints.Email
+import javax.validation.constraints.NotBlank
 import org.hibernate.validator.constraints.Length
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -10,10 +14,6 @@ import org.springframework.stereotype.Controller
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder
-import java.net.URI
-import javax.servlet.http.HttpServletResponse
-import javax.validation.constraints.Email
-import javax.validation.constraints.NotBlank
 
 /**
  * RegistrationRequest represents a request sent to the registration endpoint.
