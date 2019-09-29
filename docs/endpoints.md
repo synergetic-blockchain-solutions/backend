@@ -8,7 +8,7 @@ Windows).
 Endpoints that have ``{token}`` in their headers require the use of the token
 returned by the [login endpoint](#POST-/login).
 
-## `POST /registration`
+## `POST /reigster`
 
 Redirects to [POST /user](#`Post-user`).
 
