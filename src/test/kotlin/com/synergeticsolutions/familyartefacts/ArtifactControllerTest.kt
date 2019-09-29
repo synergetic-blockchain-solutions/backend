@@ -201,7 +201,7 @@ class ArtifactControllerTest {
                 )
             }
             artifactService.createArtifact(
-                email = "example2@example.com",
+                email = email,
                 name = "artifact3",
                 description = "desc",
                 ownerIDs = listOf(),
