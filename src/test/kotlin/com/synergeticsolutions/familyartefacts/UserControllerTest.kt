@@ -19,7 +19,7 @@ import org.springframework.test.web.reactive.server.WebTestClient
 
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 @AutoConfigureWebTestClient
-class RegistrationControllerTest {
+class UserControllerTest {
 
     @Autowired
     lateinit var client: WebTestClient
@@ -41,7 +41,7 @@ class RegistrationControllerTest {
     @Test
     fun `it should not allow blank names`() {
         val registrationRequest = RegistrationRequest("", "example@example.com", "secret")
-        client.post().uri("/register")
+        client.post().uri("/user")
                 .contentType(MediaType.APPLICATION_JSON_UTF8)
                 .syncBody(registrationRequest)
                 .exchange()
@@ -54,7 +54,7 @@ class RegistrationControllerTest {
     @Test
     fun `it should not allow invalid emails`() {
         val registrationRequest = RegistrationRequest("name", "example", "secret")
-        client.post().uri("/register")
+        client.post().uri("/user")
                 .contentType(MediaType.APPLICATION_JSON_UTF8)
                 .syncBody(registrationRequest)
                 .exchange()
@@ -67,7 +67,7 @@ class RegistrationControllerTest {
     @Test
     fun `it should not allow short password `() {
         val registrationRequest = RegistrationRequest("name", "example@example.com", "")
-        client.post().uri("/register")
+        client.post().uri("/user")
                 .contentType(MediaType.APPLICATION_JSON_UTF8)
                 .syncBody(registrationRequest)
                 .exchange()
@@ -84,7 +84,7 @@ class RegistrationControllerTest {
     @Test
     fun `it should return all validation errors`() {
         val registrationRequest = RegistrationRequest("", "example", "short")
-        client.post().uri("/register")
+        client.post().uri("/user")
                 .contentType(MediaType.APPLICATION_JSON_UTF8)
                 .syncBody(registrationRequest)
                 .exchange()
@@ -104,7 +104,7 @@ class RegistrationControllerTest {
     @Test
     fun `it should return the created user without the password`() {
         val registrationRequest = RegistrationRequest("name", "example@example.com", "secret")
-        client.post().uri("/register")
+        client.post().uri("/user")
                 .syncBody(registrationRequest)
                 .header("Content-Type", MediaType.APPLICATION_JSON_UTF8_VALUE)
                 .exchange()
@@ -119,12 +119,12 @@ class RegistrationControllerTest {
     fun `it should not allow registering the same email twice`() {
         val email = "example@example.com"
         val registrationRequest = RegistrationRequest("name", email, "secret")
-        client.post().uri("/register")
+        client.post().uri("/user")
                 .contentType(MediaType.APPLICATION_JSON_UTF8)
                 .syncBody(registrationRequest)
                 .exchange()
                 .expectStatus().isCreated
-        client.post().uri("/register")
+        client.post().uri("/user")
                 .contentType(MediaType.APPLICATION_JSON_UTF8)
                 .syncBody(registrationRequest)
                 .exchange()
@@ -135,7 +135,7 @@ class RegistrationControllerTest {
     @Test
     fun `it should create a private group for the user`() {
         val registrationRequest = RegistrationRequest("name", "example@example.com", "secret")
-        val body = String(client.post().uri("/register")
+        val body = String(client.post().uri("/user")
                 .contentType(MediaType.APPLICATION_JSON_UTF8)
                 .syncBody(registrationRequest)
                 .exchange()
