@@ -6,4 +6,6 @@ package com.synergeticsolutions.familyartefacts
  */
 interface UserService {
     fun createUser(name: String, email: String, password: String): User
+    fun findById(email: String, id: Long): User
+    fun findUsers(email: String, filterEmail: String?, filterName: String?): List<User>
 }

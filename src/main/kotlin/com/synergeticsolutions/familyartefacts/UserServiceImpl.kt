@@ -1,12 +1,13 @@
 package com.synergeticsolutions.familyartefacts
 
-import javax.naming.AuthenticationException
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Lazy
+import org.springframework.data.repository.findByIdOrNull
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
+import javax.naming.AuthenticationException
 
 class UserAlreadyExistsException(msg: String) : AuthenticationException(msg)
 
@@ -72,5 +73,29 @@ class UserServiceImpl(
         logger.debug("Created user: $updatedUser")
         logger.debug("Personal group: $updatedGroup")
         return updatedUser
+    }
+
+    override fun findById(email: String, id: Long): User {
+        val user = userRepository.findByEmail(email) ?: throw UserNotFoundException("Could not find user with email $email")
+        logger.info("Retrieving user $id for user ${user.id}")
+        val foundUser = userRepository.findByIdOrNull(id) ?: throw UserNotFoundException("Could not find user with id $id")
+        logger.info("Found user $foundUser")
+        return foundUser
+    }
+
+    override fun findUsers(email: String, filterEmail: String?, filterName: String?): List<User> {
+        val user = userRepository.findByEmail(email) ?: throw UserNotFoundException("Could not find user with email $email")
+        logger.info("Finding users with email=$filterEmail and name=$filterName for user ${user.id}")
+        var users = userRepository.findAll()
+        if (filterEmail != null) {
+            users = users.filter { it.email == filterEmail }
+        }
+
+        if (filterName != null) {
+            users = users.filter { it.name == filterName }
+        }
+
+        logger.info("Found ${users.size} using filter email=$filterName and name=$filterName")
+        return users
     }
 }

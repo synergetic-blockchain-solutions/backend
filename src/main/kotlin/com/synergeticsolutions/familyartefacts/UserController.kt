@@ -9,10 +9,15 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
+import java.security.Principal
+import javax.validation.Valid
 
 @RestController
 @RequestMapping
@@ -37,6 +42,28 @@ class UserController(
         logger.debug("$user")
         return ResponseEntity.status(HttpStatus.CREATED).body(user)
     }
+
+    /**
+     * GET /user/{id}
+     *
+     * [getUser] gets the text information associated with a user. A successful response will be the [User] entity
+     * corresponding to [id] excluding the [User.password] field.
+     */
+    @GetMapping(path = ["/{id}"])
+    fun getUser(@PathVariable id: Long, principal: Principal): User = userService.findById(principal.name, id)
+
+    /**
+     * Get /user?email=[email]&name=[name]
+     *
+     * [getUserByEmailOrName] retrieves all users and filters them by [email] and [name] if specified.
+     */
+    @GetMapping
+    fun getUserByEmailOrName(
+        @RequestParam(name = "email", required = false) email: String?,
+        @RequestParam(name = "name", required = false) name: String?,
+        principal: Principal
+    ): List<User> = userService.findUsers(principal.name, filterEmail = email, filterName = name)
+
 }
 
 /**
