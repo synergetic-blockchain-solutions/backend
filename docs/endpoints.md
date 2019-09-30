@@ -8,30 +8,9 @@ Windows).
 Endpoints that have ``{token}`` in their headers require the use of the token
 returned by the [login endpoint](#POST-/login).
 
-## `POST /registration`
+## `POST /reigster`
 
-Register a new user with the given name, email and password. If a user with the
-given email already exists, the registration will be rejected.
-
-### Example request
-
-``` http request
-POST http://localhost:8080/register
-Accept: application/json
-Content-Type: application/json
-
-{
-    "name": "Example Name",
-    "email": "example@example/com",
-    "password": "password"
-}
-```
-
-### Response
-
-A successful response will be the created user object (without the password
-field). This will include an array of groups with the only element being the
-newly created private group for that user.
+Redirects to [POST /user](#`Post-user`).
 
 ## `POST /login`
 See [login docs](./login.md) for more information.
@@ -503,3 +482,28 @@ Authorization: Bearer {token}
 A successful response from this endpoint will be a JSON document representing
 the resource (same as the [resource creation
 endpoint](#`POST-/artifact/{artifactId}/resource`))
+
+## `POST /user`
+
+Create a user with the given name, email and password. If a user with the given
+email already exists, the registration will be rejected.
+
+### Example request
+
+``` http request
+POST http://localhost:8080/user
+Accept: application/json
+Content-Type: application/json
+
+{
+    "name": "Example Name",
+    "email": "example@example/com",
+    "password": "password"
+}
+```
+
+### Response
+
+A successful response will be the created user object (without the password
+field). This will include an array of groups with the only element being the
+newly created private group for that user.

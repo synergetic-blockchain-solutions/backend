@@ -1,6 +1,7 @@
 package com.synergeticsolutions.familyartefacts
 
-import javax.validation.Valid
+import java.net.URI
+import javax.servlet.http.HttpServletResponse
 import javax.validation.constraints.Email
 import javax.validation.constraints.NotBlank
 import org.hibernate.validator.constraints.Length
@@ -11,8 +12,8 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Controller
 import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder
 
 /**
  * RegistrationRequest represents a request sent to the registration endpoint.
@@ -42,18 +43,14 @@ class RegistrationController {
     lateinit var userService: UserService
 
     /**
-     * [registerUser] is the POST endpoint for '/register'. Requests to this endpoint should conform to
-     * [RegistrationRequest]. If the body is not valid a 4xx response will be returned with a message describing
-     * what is wrong with the request. If there is an issue creating the user a 5xx response will be returned
-     * describing what when wrong. Successful requests will return 201 Created status code. The body will be the
-     * created [User] object without the password field.
+     * Register a [User]
+     *
+     * @see [UserController.createUser]
      */
     @PostMapping
-    fun registerUser(@Valid @RequestBody registration: RegistrationRequest): ResponseEntity<User> {
-        logger.info("Registering new user '${registration.name}' with email '${registration.email}")
-        val user = userService.createUser(registration.name, registration.email, registration.password)
-        logger.info("User '${user.name}' was successfully created")
-        logger.debug("$user")
-        return ResponseEntity.status(HttpStatus.CREATED).body(user)
+    fun registerUser(response: HttpServletResponse): ResponseEntity<Void> {
+        logger.info("Redirecting user from /register to /user")
+        val uri = URI(MvcUriComponentsBuilder.fromMappingName("createUser").build())
+        return ResponseEntity.status(HttpStatus.MOVED_PERMANENTLY).location(uri).build<Void>()
     }
 }
