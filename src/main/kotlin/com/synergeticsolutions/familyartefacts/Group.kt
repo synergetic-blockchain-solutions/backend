@@ -33,21 +33,21 @@ data class Group(
     @ManyToMany(mappedBy = "groups")
     @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator::class, property = "id")
     @JsonIdentityReference(alwaysAsId = true)
-    var members: MutableList<User> = mutableListOf(),
+    val members: MutableList<User> = mutableListOf(),
     @LazyCollection(value = LazyCollectionOption.FALSE)
     @ManyToMany(mappedBy = "ownedGroups")
     @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator::class, property = "id")
     @JsonIdentityReference(alwaysAsId = true)
-    var admins: MutableList<User> = mutableListOf(),
+    val admins: MutableList<User> = mutableListOf(),
     @LazyCollection(value = LazyCollectionOption.FALSE)
     @ManyToMany
     @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator::class, property = "id")
     @JsonIdentityReference(alwaysAsId = true)
     val artifacts: MutableList<Artifact> = mutableListOf(),
-    var contentType: String = "",
+    val contentType: String = "",
     @JsonIgnore
     @Lob
-    var image: ByteArray = byteArrayOf()
+    val image: ByteArray = byteArrayOf()
 ) {
     override fun toString(): String {
         return listOf(
