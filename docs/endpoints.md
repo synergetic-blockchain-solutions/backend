@@ -8,30 +8,9 @@ Windows).
 Endpoints that have ``{token}`` in their headers require the use of the token
 returned by the [login endpoint](#POST-/login).
 
-## `POST /registration`
+## `POST /reigster`
 
-Register a new user with the given name, email and password. If a user with the
-given email already exists, the registration will be rejected.
-
-### Example request
-
-``` http request
-POST http://localhost:8080/register
-Accept: application/json
-Content-Type: application/json
-
-{
-    "name": "Example Name",
-    "email": "example@example/com",
-    "password": "password"
-}
-```
-
-### Response
-
-A successful response will be the created user object (without the password
-field). This will include an array of groups with the only element being the
-newly created private group for that user.
+Redirects to [POST /user](#`Post-user`).
 
 ## `POST /login`
 See [login docs](./login.md) for more information.
@@ -79,7 +58,8 @@ Authorization: Bearer {token}
     "description": "Artifact description",
     "owners": [],
     "groups": [],
-    "sharedWith": []
+    "sharedWith": [],
+    "tags": []
 }
 ```
 
@@ -101,9 +81,10 @@ following differences:
 Get all artifact a user has access to (owns, group they're part of, shared
 with). This endpoint also accepts the following query parameters:
 
-- `group (int)` - Only return artifacts that are associated with the group with ID
+- `group` (int) - Only return artifacts that are associated with the group with ID
 - `owner` (int) - Only return artifacts that are owned by the user with this ID
 - `shared` (int) - Only return artifacts shared with the user with this ID
+- `tag` (string) - Only return artifacts with this tag
 
 None of the query parameters are required and they can be used together to
 further filter the returned artifacts.
@@ -164,7 +145,8 @@ Authorization: Bearer {token}
     "description": "Artifact description",
     "owners": [],
     "groups": [],
-    "sharedWith": []
+    "sharedWith": [],
+    "tag": []
 }
 ```
 
@@ -500,3 +482,28 @@ Authorization: Bearer {token}
 A successful response from this endpoint will be a JSON document representing
 the resource (same as the [resource creation
 endpoint](#`POST-/artifact/{artifactId}/resource`))
+
+## `POST /user`
+
+Create a user with the given name, email and password. If a user with the given
+email already exists, the registration will be rejected.
+
+### Example request
+
+``` http request
+POST http://localhost:8080/user
+Accept: application/json
+Content-Type: application/json
+
+{
+    "name": "Example Name",
+    "email": "example@example/com",
+    "password": "password"
+}
+```
+
+### Response
+
+A successful response will be the created user object (without the password
+field). This will include an array of groups with the only element being the
+newly created private group for that user.

@@ -36,7 +36,8 @@ class ArtifactController(
     fun getArtifacts(
         @RequestParam(name = "group", required = false) groupID: Long?,
         @RequestParam(name = "owner", required = false) ownerID: Long?,
-        @RequestParam(name = "shared", required = false) sharedID: Long?
+        @RequestParam(name = "shared", required = false) sharedID: Long?,
+        @RequestParam(name = "tag", required = false) tag: String?
     ): ResponseEntity<List<Artifact>> {
         val currentUser = SecurityContextHolder.getContext().authentication
         logger.debug("Filtering artifacts for ${currentUser.principal} by group=$groupID, owner=$ownerID, shared=$sharedID")
@@ -45,7 +46,8 @@ class ArtifactController(
                 email = currentUser.principal as String,
                 groupID = groupID,
                 ownerID = ownerID,
-                sharedID = sharedID
+                sharedID = sharedID,
+                tag = tag
             )
         logger.debug("Found ${artifacts.size} artifacts fitting the criteria")
 
@@ -80,7 +82,8 @@ class ArtifactController(
             ownerIDs = newArtifact.owners ?: listOf(),
             groupIDs = newArtifact.groups ?: listOf(),
             sharedWith = newArtifact.sharedWith ?: listOf(),
-            resourceIDs = newArtifact.resources ?: listOf()
+            resourceIDs = newArtifact.resources ?: listOf(),
+            tags = newArtifact.tags ?: listOf()
         )
         logger.info("Created artifact $createdArtifact")
         return ResponseEntity.status(HttpStatus.CREATED).body(createdArtifact)
@@ -118,21 +121,3 @@ class ArtifactController(
         return ResponseEntity.ok(deletedArtifact)
     }
 }
-
-/**
- * [ArtifactRequest] represents a request to create an artifact.
- *
- * @param [name] Name of the artifact
- * @param [description] Description of the artifact
- * @param [owners] User IDs of the users to be made owners of the artifact
- * @param [groups] Group IDs of the groups to be associated with the artifact
- * @param [sharedWith] User IDs of the users to share the artifact with
- */
-data class ArtifactRequest(
-    val name: String,
-    val description: String,
-    val owners: List<Long>?,
-    val groups: List<Long>?,
-    val sharedWith: List<Long>?,
-    val resources: List<Long>? = listOf()
-)

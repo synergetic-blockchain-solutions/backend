@@ -5,7 +5,8 @@ interface ArtifactService {
         email: String,
         groupID: Long? = null,
         ownerID: Long? = null,
-        sharedID: Long? = null
+        sharedID: Long? = null,
+        tag: String? = null
     ): List<Artifact>
 
     fun findArtifactById(email: String, id: Long): Artifact
@@ -17,7 +18,8 @@ interface ArtifactService {
         ownerIDs: List<Long> = listOf(),
         groupIDs: List<Long> = listOf(),
         sharedWith: List<Long> = listOf(),
-        resourceIDs: List<Long> = listOf()
+        resourceIDs: List<Long> = listOf(),
+        tags: List<String> = listOf()
     ): Artifact
 
     fun updateArtifact(email: String, id: Long, update: ArtifactRequest): Artifact
