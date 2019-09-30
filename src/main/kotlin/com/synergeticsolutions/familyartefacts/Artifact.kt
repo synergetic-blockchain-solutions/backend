@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIdentityInfo
 import com.fasterxml.jackson.annotation.JsonIdentityReference
 import com.fasterxml.jackson.annotation.ObjectIdGenerators
 import javax.persistence.CascadeType
+import javax.persistence.ElementCollection
 import javax.persistence.Entity
 import javax.persistence.GeneratedValue
 import javax.persistence.GenerationType
@@ -41,7 +42,10 @@ data class Artifact(
     @OneToMany(cascade = [CascadeType.ALL])
     @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator::class, property = "id")
     @JsonIdentityReference(alwaysAsId = true)
-    val resources: MutableList<ArtifactResource> = mutableListOf()
+    val resources: MutableList<ArtifactResource> = mutableListOf(),
+    @LazyCollection(value = LazyCollectionOption.FALSE)
+    @ElementCollection
+    val tags: MutableList<String> = mutableListOf()
 ) {
     override fun toString(): String {
         return listOf(
@@ -50,7 +54,8 @@ data class Artifact(
             "description=$description",
             "owners=${owners.map(User::id)}",
             "groups=${groups.map(Group::id)}",
-            "sharedwith=${sharedWith.map(User::id)}"
+            "sharedwith=${sharedWith.map(User::id)}",
+            "tags=$tags"
         ).joinToString(separator = ", ", prefix = "Artifact(", postfix = ")")
     }
 }
