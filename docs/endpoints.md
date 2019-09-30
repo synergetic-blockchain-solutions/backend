@@ -177,7 +177,9 @@ endpoint](#POST/-artifact).
 
 ## `POST /group`
 
-Create a group. The created group will always have the creator as an admin and member of the group
+Create a group. The created group will always have the creator as an admin and member of the group.
+"members" and "admins" are passed in the request as IDs of users to be made members or admins
+"admins" is a sublist of "members".
 
 ### Example Request
 
@@ -267,6 +269,24 @@ Only the admins of the group can perform this action.
 ### Response
 
 A successful response will be a JSON representation of the updated group.
+
+## `PUT /group/{id}/image`
+
+Add group profile image to the group. Can only be done by group admins
+
+#### Example request
+
+    POST http://localhost:8080/group/{id}/image
+    Accept: application/json
+    Content-Type: image/png
+    Authorization: Bearer {token}
+    
+    {image}
+    
+### Response
+
+A successful response will be a JSON representation of the updated group.
+
 
 ## `DELETE /group/{id}`
 

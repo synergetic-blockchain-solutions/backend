@@ -225,7 +225,7 @@ class GroupControllerTest {
                     ObjectMapper().registerKotlinModule().readValue<Map<String, Any>>(String(createGroupResponse))
             @Suppress("UNCHECKED_CAST")
             val updateGroupResponse = client.put()
-                    .uri("/group/image/${returnedGroup["id"]}")
+                    .uri("/group/${returnedGroup["id"]}/image")
                     .header(HttpHeaders.AUTHORIZATION, "Bearer $token")
                     .contentType(MediaType.IMAGE_PNG)
                     .syncBody(ClassPathResource("test-image2.png"))

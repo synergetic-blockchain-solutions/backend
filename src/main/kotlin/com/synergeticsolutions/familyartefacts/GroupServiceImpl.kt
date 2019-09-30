@@ -285,6 +285,17 @@ class GroupServiceImpl(
         return groupRepository.save(group)
     }
 
+    /**
+     * [addImage] adds the profile image to the group
+     * @param email Email of the user performing the action
+     * @param contentType Type of the image to be added
+     * @param id ID of the group to be updated
+     * @param image The image represented in ByteArray
+     * @throws UsernameNotFoundException when there exists no user with [email]
+     * @throws GroupNotFoundException when there exists no group with [id]
+     * @throws ActionNotAllowedException when the user is not the admin of the group
+     * @throws UserNotFoundException when one of the memberIDs or adminIDs do not correspond with any User.id in the database
+     */
     override fun addImage(email: String, contentType: String, id: Long, image: ByteArray): Group {
         logger.debug("Retrieving user with email $email")
         val user = userRepository.findByEmail(email) ?: throw UsernameNotFoundException("User with email $email does not exist")

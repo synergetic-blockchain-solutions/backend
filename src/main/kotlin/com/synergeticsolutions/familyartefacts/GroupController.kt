@@ -56,12 +56,12 @@ class GroupController(
     @GetMapping(path = ["/{id}"])
     fun getGroupById(@PathVariable id: Long): ResponseEntity<Group> {
         val currentUser = SecurityContextHolder.getContext().authentication
-        val artifact = groupService.findGroupById(currentUser.principal as String, id)
-        return ResponseEntity.ok(artifact)
+        val group = groupService.findGroupById(currentUser.principal as String, id)
+        return ResponseEntity.ok(group)
     }
 
     /**
-     * POST /artifact
+     * POST /group
      *
      * @param groupRequest Details of the group to be created
      * @return [Group] representing the created group
@@ -83,7 +83,7 @@ class GroupController(
     }
 
     /**
-     * PUT /artifact/{id}
+     * PUT /group/{id}
      *
      * @param id ID of the group to be updated
      * @param groupRequest New details of the group that the user wants to update
@@ -91,13 +91,23 @@ class GroupController(
      * @return [Group] representing the updated group
      */
     @PutMapping(path = ["/{id}"])
-    fun updateArtifact(@PathVariable id: Long, @RequestBody groupRequest: GroupRequest): ResponseEntity<Group> {
+    fun updateGroup(@PathVariable id: Long, @RequestBody groupRequest: GroupRequest): ResponseEntity<Group> {
         val currentUser = SecurityContextHolder.getContext().authentication ?: throw NoAuthenticationException()
         val updatedGroup = groupService.updateGroup(currentUser.principal as String, id, groupRequest)
         return ResponseEntity.ok(updatedGroup)
     }
 
-    @PutMapping(path = ["/image/{id}"])
+    /**
+     * PUT /group/{id}/image
+     *
+     * @param id ID of the group to add an image to
+     * @param contentType Content-Type header to specify the type of the image
+     * @param image the actual ByteArray representation of the image
+     * Only the admin can add the group image
+     * @return [Group] representing the updated group
+     *
+     */
+    @PutMapping(path = ["/{id}/image"])
     fun addImage(
         @PathVariable id: Long,
         @RequestHeader(HttpHeaders.CONTENT_TYPE) contentType: String,
@@ -110,7 +120,7 @@ class GroupController(
     }
 
     /**
-     * DELETE /artifact/{id}
+     * DELETE /group/{id}
      *
      * @param id ID of the group that the user wants to delete.
      * The group can only be deleted if the user is the admin of the group
@@ -119,8 +129,8 @@ class GroupController(
     @DeleteMapping(path = ["/{id}"])
     fun deleteGroup(@PathVariable id: Long): ResponseEntity<Group> {
         val currentUser = SecurityContextHolder.getContext().authentication ?: throw NoAuthenticationException()
-        val deletedArtifact = groupService.deleteGroup(currentUser.principal as String, id)
-        return ResponseEntity.ok(deletedArtifact)
+        val deletedGroup = groupService.deleteGroup(currentUser.principal as String, id)
+        return ResponseEntity.ok(deletedGroup)
     }
 }
 
