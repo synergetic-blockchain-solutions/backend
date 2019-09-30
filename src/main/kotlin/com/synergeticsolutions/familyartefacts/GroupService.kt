@@ -16,4 +16,5 @@ interface GroupService {
     fun addAdmins(adminsToAdd: List<User>, group: Group): Group
     fun addMembers(membersToAdd: List<User>, group: Group): Group
     fun findGroupById(email: String, groupID: Long): Group
+    fun addImage(s: String, contentType: String, id: Long, image: ByteArray): Group
 }

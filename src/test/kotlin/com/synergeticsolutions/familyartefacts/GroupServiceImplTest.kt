@@ -509,6 +509,57 @@ class GroupServiceImplTest {
             Mockito.verify(groupRepository).save(group.copy(description = "updated description"))
         }
     }
+
+    @Nested
+    inner class AddImage {
+        @Test
+        fun `it should add the specified image to the group`() {
+            val email = "example@example.com"
+            var group = Group(
+                    id = 1,
+                    name = "Group 1",
+                    description = "",
+                    members = mutableListOf(),
+                    admins = mutableListOf())
+            var owningUser = User(
+                    id = 2,
+                    name = "User 2",
+                    email = "example@example2.com",
+                    password = "password",
+                    groups = mutableListOf(group),
+                    ownedGroups = mutableListOf(group),
+                    privateGroup = Group(
+                            2, "Group 2", members = mutableListOf(), description = ""))
+
+            group = group.copy(admins = mutableListOf(owningUser), members = mutableListOf(owningUser))
+            Mockito.`when`(userRepository.findByEmail(anyString())).then {
+                when (it.arguments[0]) {
+                    owningUser.email -> owningUser
+                    else -> throw RuntimeException("${it.arguments[0]} not handled")
+                }
+            }
+            Mockito.`when`(groupRepository.findByIdOrNull(anyLong())).then {
+                if (it.arguments[0] == group.id) {
+                    Optional.of(group)
+                } else {
+                    Optional.empty()
+                }
+            }
+
+            Mockito.`when`(groupRepository.save(any<Group>())).then { it.arguments[0] as Group }
+
+            val updatedGroup = groupService.addImage(
+                    owningUser.email,
+                    contentType = "text/plain",
+                    id = group.id,
+                    image = "image".toByteArray())
+            assertThat(
+                    updatedGroup, equalTo(group.copy(contentType = "text/plain", image = "image".toByteArray()))
+            )
+            Mockito.verify(groupRepository).save(group.copy(contentType = "text/plain", image = "image".toByteArray()))
+        }
+    }
+
     @Nested
     inner class DeleteGroup {
 

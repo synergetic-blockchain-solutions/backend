@@ -1,5 +1,7 @@
 package com.synergeticsolutions.familyartefacts
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpStatus
@@ -27,6 +29,7 @@ class GroupServiceImpl(
     val groupRepository: GroupRepository
 
 ) : GroupService {
+    val logger: Logger = LoggerFactory.getLogger(this::class.java)
 
     /**
      * [findGroups] finds all the [Group]s a [User] with [email] has access to. The collection can be filtered by
@@ -279,6 +282,22 @@ class GroupServiceImpl(
 
         group = group.copy(description = groupRequest.description)
         group = group.copy(name = groupRequest.name)
+        return groupRepository.save(group)
+    }
+
+    override fun addImage(email: String, contentType: String, id: Long, image: ByteArray): Group {
+        logger.debug("Retrieving user with email $email")
+        val user = userRepository.findByEmail(email) ?: throw UsernameNotFoundException("User with email $email does not exist")
+        logger.debug("Retrieving group with id $id")
+        var group =
+                groupRepository.findByIdOrNull(id)
+                        ?: throw GroupNotFoundException("Could not find group with ID $id")
+        logger.debug("Checking if user $email is an admin of Group $id")
+        if (!group.admins.contains(user)) {
+            throw ActionNotAllowedException("User with email $email is not allowed to update the group")
+        }
+        logger.debug("Updating image in Group $id")
+        group = group.copy(contentType = contentType, image = image)
         return groupRepository.save(group)
     }
 

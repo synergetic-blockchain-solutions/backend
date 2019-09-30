@@ -18,6 +18,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.core.io.ClassPathResource
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
@@ -138,6 +139,103 @@ class GroupControllerTest {
 
             val createdGroup = groupRepository.findByIdOrNull((returnedGroup["id"] as Int).toLong())!!
             assertEquals(mutableListOf(userRepository.findByEmail(email)!!.id), createdGroup.admins.map(User::id))
+        }
+    }
+
+    @Nested
+    inner class UpdateGroup {
+        @Test
+        fun `it should allow admins to update the group`() {
+            val groupRequest = GroupRequest(
+                    name = "Group 1",
+                    description = "Description",
+                    members = listOf(),
+                    admins = listOf()
+            )
+            val createGroupResponse = client.post()
+                    .uri("/group")
+                    .accept(MediaType.APPLICATION_JSON_UTF8)
+                    .contentType(MediaType.APPLICATION_JSON_UTF8)
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer $token")
+                    .syncBody(groupRequest)
+                    .exchange()
+                    .expectStatus().isCreated
+                    .expectBody()
+                    .returnResult()
+                    .responseBody!!
+            val returnedGroup =
+                    ObjectMapper().registerKotlinModule().readValue<Map<String, Any>>(String(createGroupResponse))
+            @Suppress("UNCHECKED_CAST")
+            val updateGroupRequest =
+                    GroupRequest(
+                            name = returnedGroup["name"] as String,
+                            description = returnedGroup["description"] as String,
+                            admins = (returnedGroup["admins"] as List<Int>).map(Int::toLong),
+                            members = (returnedGroup["members"] as List<Int>).map(Int::toLong)
+                    )
+            val updateGroupResponse = client.put()
+                    .uri("/group/${returnedGroup["id"]}")
+                    .accept(MediaType.APPLICATION_JSON_UTF8)
+                    .contentType(MediaType.APPLICATION_JSON_UTF8)
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer $token")
+                    .syncBody(updateGroupRequest)
+                    .exchange()
+                    .expectStatus().isOk
+                    .expectBody()
+                    .returnResult()
+                    .responseBody!!
+            val updatedGroupResponse =
+                    ObjectMapper().registerKotlinModule().readValue<Map<String, Any>>(updateGroupResponse)
+            assertEquals((updatedGroupResponse["id"] as Int).toLong(), (returnedGroup["id"] as Int).toLong())
+            assertEquals(updatedGroupResponse["name"] as String, groupRequest.name)
+            assertEquals(updatedGroupResponse["description"] as String, groupRequest.description)
+
+            val updatedGroup =
+                    groupRepository.findByIdOrNull((updatedGroupResponse["id"] as Int).toLong())!!
+            assertEquals(
+                    mutableListOf(userRepository.findByEmail(email)!!.id),
+                    updatedGroup.admins.map(User::id)
+            )
+            assertEquals(
+                    mutableListOf(userRepository.findByEmail(email)!!.id),
+                    updatedGroup.members.map(User::id)
+            )
+        }
+
+        @Test
+        fun `it should allow admins to add group image`() {
+            val groupRequest = GroupRequest(
+                    name = "Group 1",
+                    description = "Description",
+                    members = listOf(),
+                    admins = listOf()
+            )
+            val createGroupResponse = client.post()
+                    .uri("/group")
+                    .accept(MediaType.APPLICATION_JSON_UTF8)
+                    .contentType(MediaType.APPLICATION_JSON_UTF8)
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer $token")
+                    .syncBody(groupRequest)
+                    .exchange()
+                    .expectStatus().isCreated
+                    .expectBody()
+                    .returnResult()
+                    .responseBody!!
+            val returnedGroup =
+                    ObjectMapper().registerKotlinModule().readValue<Map<String, Any>>(String(createGroupResponse))
+            @Suppress("UNCHECKED_CAST")
+            val updateGroupResponse = client.put()
+                    .uri("/group/image/${returnedGroup["id"]}")
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer $token")
+                    .contentType(MediaType.IMAGE_PNG)
+                    .syncBody(ClassPathResource("test-image2.png"))
+                    .exchange()
+                    .expectStatus().isOk
+                    .expectBody()
+
+            val updatedGroup =
+                    groupRepository.findByIdOrNull((returnedGroup["id"] as Int).toLong())!!
+            assertTrue(ClassPathResource("test-image2.png").file.readBytes().contentEquals(updatedGroup.image))
         }
     }
 
