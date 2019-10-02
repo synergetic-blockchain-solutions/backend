@@ -2,11 +2,13 @@ package com.synergeticsolutions.familyartefacts
 
 import com.fasterxml.jackson.annotation.JsonIdentityInfo
 import com.fasterxml.jackson.annotation.JsonIdentityReference
+import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.ObjectIdGenerators
 import javax.persistence.Entity
 import javax.persistence.GeneratedValue
 import javax.persistence.GenerationType
 import javax.persistence.Id
+import javax.persistence.Lob
 import javax.persistence.ManyToMany
 import javax.persistence.Table
 import org.hibernate.annotations.LazyCollection
@@ -31,17 +33,21 @@ data class Group(
     @ManyToMany(mappedBy = "groups")
     @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator::class, property = "id")
     @JsonIdentityReference(alwaysAsId = true)
-    var members: MutableList<User> = mutableListOf(),
+    val members: MutableList<User> = mutableListOf(),
     @LazyCollection(value = LazyCollectionOption.FALSE)
     @ManyToMany(mappedBy = "ownedGroups")
     @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator::class, property = "id")
     @JsonIdentityReference(alwaysAsId = true)
-    var admins: MutableList<User> = mutableListOf(),
+    val admins: MutableList<User> = mutableListOf(),
     @LazyCollection(value = LazyCollectionOption.FALSE)
     @ManyToMany
     @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator::class, property = "id")
     @JsonIdentityReference(alwaysAsId = true)
-    val artifacts: MutableList<Artifact> = mutableListOf()
+    val artifacts: MutableList<Artifact> = mutableListOf(),
+    val contentType: String = "",
+    @JsonIgnore
+    @Lob
+    val image: ByteArray = byteArrayOf()
 ) {
     override fun toString(): String {
         return listOf(
@@ -50,7 +56,38 @@ data class Group(
             "description=$description",
             "members=${members.map(User::id)}",
             "admins=${admins.map(User::id)}",
-            "artifacts=${artifacts.map(Artifact::id)}"
+            "artifacts=${artifacts.map(Artifact::id)}",
+            "contentType=$contentType"
         ).joinToString(separator = ", ", prefix = "Group(", postfix = ")")
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as Group
+
+        if (id != other.id) return false
+        if (name != other.name) return false
+        if (description != other.description) return false
+        if (members != other.members) return false
+        if (admins != other.admins) return false
+        if (artifacts != other.artifacts) return false
+        if (contentType != other.contentType) return false
+        if (!image.contentEquals(other.image)) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = id.hashCode()
+        result = 31 * result + name.hashCode()
+        result = 31 * result + description.hashCode()
+        result = 31 * result + members.hashCode()
+        result = 31 * result + admins.hashCode()
+        result = 31 * result + artifacts.hashCode()
+        result = 31 * result + contentType.hashCode()
+        result = 31 * result + image.contentHashCode()
+        return result
     }
 }

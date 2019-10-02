@@ -3,6 +3,7 @@ package com.synergeticsolutions.familyartefacts
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.context.SecurityContextHolder
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
@@ -54,12 +56,12 @@ class GroupController(
     @GetMapping(path = ["/{id}"])
     fun getGroupById(@PathVariable id: Long): ResponseEntity<Group> {
         val currentUser = SecurityContextHolder.getContext().authentication
-        val artifact = groupService.findGroupById(currentUser.principal as String, id)
-        return ResponseEntity.ok(artifact)
+        val group = groupService.findGroupById(currentUser.principal as String, id)
+        return ResponseEntity.ok(group)
     }
 
     /**
-     * POST /artifact
+     * POST /group
      *
      * @param groupRequest Details of the group to be created
      * @return [Group] representing the created group
@@ -74,13 +76,14 @@ class GroupController(
                         email = currentUser.principal as String,
                         groupName = groupRequest.name,
                         description = groupRequest.description,
-                        memberIDs = groupRequest.members ?: listOf()
+                        memberIDs = groupRequest.members ?: listOf(),
+                        adminIDs = groupRequest.admins ?: listOf()
                 )
         return ResponseEntity.status(HttpStatus.CREATED).body(newGroup)
     }
 
     /**
-     * PUT /artifact/{id}
+     * PUT /group/{id}
      *
      * @param id ID of the group to be updated
      * @param groupRequest New details of the group that the user wants to update
@@ -88,14 +91,36 @@ class GroupController(
      * @return [Group] representing the updated group
      */
     @PutMapping(path = ["/{id}"])
-    fun updateArtifact(@PathVariable id: Long, @RequestBody groupRequest: GroupRequest): ResponseEntity<Group> {
+    fun updateGroup(@PathVariable id: Long, @RequestBody groupRequest: GroupRequest): ResponseEntity<Group> {
         val currentUser = SecurityContextHolder.getContext().authentication ?: throw NoAuthenticationException()
         val updatedGroup = groupService.updateGroup(currentUser.principal as String, id, groupRequest)
         return ResponseEntity.ok(updatedGroup)
     }
 
     /**
-     * DELETE /artifact/{id}
+     * PUT /group/{id}/image
+     *
+     * @param id ID of the group to add an image to
+     * @param contentType Content-Type header to specify the type of the image
+     * @param image the actual ByteArray representation of the image
+     * Only the admin can add the group image
+     * @return [Group] representing the updated group
+     *
+     */
+    @PutMapping(path = ["/{id}/image"])
+    fun addImage(
+        @PathVariable id: Long,
+        @RequestHeader(HttpHeaders.CONTENT_TYPE) contentType: String,
+        @RequestBody image: ByteArray
+    ): ResponseEntity<Group> {
+        logger.info("Adding image to group with id $id")
+        val currentUser = SecurityContextHolder.getContext().authentication ?: throw NoAuthenticationException()
+        val updatedGroup = groupService.addImage(currentUser.principal as String, contentType, id, image)
+        return ResponseEntity.ok(updatedGroup)
+    }
+
+    /**
+     * DELETE /group/{id}
      *
      * @param id ID of the group that the user wants to delete.
      * The group can only be deleted if the user is the admin of the group
@@ -104,8 +129,8 @@ class GroupController(
     @DeleteMapping(path = ["/{id}"])
     fun deleteGroup(@PathVariable id: Long): ResponseEntity<Group> {
         val currentUser = SecurityContextHolder.getContext().authentication ?: throw NoAuthenticationException()
-        val deletedArtifact = groupService.deleteGroup(currentUser.principal as String, id)
-        return ResponseEntity.ok(deletedArtifact)
+        val deletedGroup = groupService.deleteGroup(currentUser.principal as String, id)
+        return ResponseEntity.ok(deletedGroup)
     }
 }
 

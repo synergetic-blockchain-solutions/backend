@@ -1,5 +1,7 @@
 package com.synergeticsolutions.familyartefacts
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpStatus
@@ -27,6 +29,7 @@ class GroupServiceImpl(
     val groupRepository: GroupRepository
 
 ) : GroupService {
+    val logger: Logger = LoggerFactory.getLogger(this::class.java)
 
     /**
      * [findGroups] finds all the [Group]s a [User] with [email] has access to. The collection can be filtered by
@@ -80,39 +83,62 @@ class GroupServiceImpl(
     }
 
     /**
-     * [createGroup] creates an artifact
+     * [createGroup] creates a group
      * If there is no user with [email] then a [UserNotFoundException] will be thrown.
      *
      * @param email Email of the owner
      * @param groupName Name of the group
      * @param description Description of the group
      * @param memberIDs IDs of the members
+     * @param adminIDs IDs of the admins (must be subset of [memberIDs])
      * @return Created [Group]
-     * @throws UserNotFoundException when no user with [email] or one of the IDs in [memberIDs]] does not correspond to a [User.id]
+     * @throws UserNotFoundException when no user with [email] or one of the IDs in [memberIDs] does not correspond to a [User.id]
+     * @throws UserIsNotMemberException when one of the IDs in [adminIDs] is not in [memberIDs]
      */
     override fun createGroup(
         email: String,
         groupName: String,
         description: String,
-        memberIDs: List<Long>
+        memberIDs: List<Long>,
+        adminIDs: List<Long>
     ): Group {
-        val owner = userRepository.findByEmail(email) ?: throw UsernameNotFoundException("No user with email $email was found")
+        val owner = userRepository.findByEmail(email)
+                ?: throw UsernameNotFoundException("No user with email $email was found")
+        val group = Group(name = groupName, description = description, members = mutableListOf(), admins = mutableListOf())
         memberIDs.forEach {
             if (!userRepository.existsById(it)) {
                 throw UserNotFoundException("No user with ID $it was found")
             }
         }
+        adminIDs.forEach {
+            if (!userRepository.existsById(it)) {
+                throw UserNotFoundException("No user with ID $it was found")
+            }
+        }
+
+        if (!memberIDs.containsAll(adminIDs)) {
+            throw UserIsNotMemberException("AdminIDs is not a sublist of memberIDs")
+        }
+
         val members = userRepository.findAllById(memberIDs).toMutableList()
         if (!members.contains(owner)) {
             members.add(owner)
         }
-        val group = Group(name = groupName, description = description, members = members, admins = mutableListOf(owner))
-        val savedGroup = groupRepository.save(group)
-        owner.ownedGroups.add(group)
+        val admins = userRepository.findAllById(adminIDs).toMutableList()
+        if (!admins.contains(owner)) {
+            admins.add(owner)
+        }
         members.forEach {
             it.groups.add(group)
+            group.members.add(it)
         }
+        admins.forEach {
+            it.ownedGroups.add(group)
+            group.admins.add(it)
+        }
+        val savedGroup = groupRepository.save(group)
         userRepository.saveAll(members)
+        userRepository.saveAll(admins)
         return savedGroup
     }
 
@@ -256,6 +282,33 @@ class GroupServiceImpl(
 
         group = group.copy(description = groupRequest.description)
         group = group.copy(name = groupRequest.name)
+        return groupRepository.save(group)
+    }
+
+    /**
+     * [addImage] adds the profile image to the group
+     * @param email Email of the user performing the action
+     * @param contentType Type of the image to be added
+     * @param id ID of the group to be updated
+     * @param image The image represented in ByteArray
+     * @throws UsernameNotFoundException when there exists no user with [email]
+     * @throws GroupNotFoundException when there exists no group with [id]
+     * @throws ActionNotAllowedException when the user is not the admin of the group
+     * @throws UserNotFoundException when one of the memberIDs or adminIDs do not correspond with any User.id in the database
+     */
+    override fun addImage(email: String, contentType: String, id: Long, image: ByteArray): Group {
+        logger.debug("Retrieving user with email $email")
+        val user = userRepository.findByEmail(email) ?: throw UsernameNotFoundException("User with email $email does not exist")
+        logger.debug("Retrieving group with id $id")
+        var group =
+                groupRepository.findByIdOrNull(id)
+                        ?: throw GroupNotFoundException("Could not find group with ID $id")
+        logger.debug("Checking if user $email is an admin of Group $id")
+        if (!group.admins.contains(user)) {
+            throw ActionNotAllowedException("User with email $email is not allowed to update the group")
+        }
+        logger.debug("Updating image in Group $id")
+        group = group.copy(contentType = contentType, image = image)
         return groupRepository.save(group)
     }
 

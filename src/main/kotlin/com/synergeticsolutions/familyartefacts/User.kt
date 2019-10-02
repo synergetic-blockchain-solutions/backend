@@ -42,7 +42,7 @@ data class User(
     @LazyCollection(value = LazyCollectionOption.FALSE)
     @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator::class, property = "id")
     @JsonIdentityReference(alwaysAsId = true)
-    var groups: MutableList<Group> = mutableListOf(),
+    val groups: MutableList<Group> = mutableListOf(),
     @LazyCollection(value = LazyCollectionOption.FALSE)
     @ManyToMany
     @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator::class, property = "id")
@@ -57,21 +57,22 @@ data class User(
     @ManyToMany
     @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator::class, property = "id")
     @JsonIdentityReference(alwaysAsId = true)
-    var ownedGroups: MutableList<Group> = mutableListOf(),
+    val ownedGroups: MutableList<Group> = mutableListOf(),
     @OneToOne
     @LazyToOne(value = LazyToOneOption.FALSE)
     val privateGroup: Group
+
 ) {
     override fun toString(): String {
         return listOf(
-            "id=$id",
-            "name=$name",
-            "email=$email",
-            "password=[Secured]",
-            "groups=${groups.map(Group::id)}",
-            "sharedArtifacts=${sharedArtifacts.map(Artifact::id)}",
-            "ownedArtifacts=${ownedArtifacts.map(Artifact::id)}",
-            "privateGroup=${privateGroup.id}"
+                "id=$id",
+                "name=$name",
+                "email=$email",
+                "password=[Secured]",
+                "groups=${groups.map(Group::id)}",
+                "sharedArtifacts=${sharedArtifacts.map(Artifact::id)}",
+                "ownedArtifacts=${ownedArtifacts.map(Artifact::id)}",
+                "privateGroup=${privateGroup.id}"
         ).joinToString(separator = ", ", prefix = "User(", postfix = ")")
     }
 }
