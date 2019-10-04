@@ -98,4 +98,8 @@ class UserServiceImpl(
         logger.info("Found ${users.size} using filter email=$filterName and name=$filterName")
         return users
     }
+
+    override fun findByEmail(email: String): User {
+        return userRepository.findByEmail(email) ?: throw UserNotFoundException("Could not find user with email $email")
+    }
 }

@@ -44,6 +44,15 @@ class UserController(
     }
 
     /**
+     * GET /user/me
+     *
+     * [getMe] gets the current user. A successful response will be the [User] entity of the authenticated user excluding the [User.password]
+     * field.
+     */
+    @GetMapping(path = ["/me"])
+    fun getMe(principal: Principal): User = userService.findByEmail(principal.name)
+
+    /**
      * GET /user/{id}
      *
      * [getUser] gets the text information associated with a user. A successful response will be the [User] entity
