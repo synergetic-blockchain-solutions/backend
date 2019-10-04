@@ -8,6 +8,7 @@ import org.hamcrest.Matchers.contains
 import org.hamcrest.Matchers.containsInAnyOrder
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient
@@ -38,10 +39,12 @@ class UserControllerTest {
         testUtils.clearDatabase()
     }
 
-    @Test
-    fun `it should not allow blank names`() {
-        val registrationRequest = RegistrationRequest("", "example@example.com", "secret")
-        client.post().uri("/user")
+    @Nested
+    inner class CreateUser {
+        @Test
+        fun `it should not allow blank names`() {
+            val registrationRequest = RegistrationRequest("", "example@example.com", "secret")
+            client.post().uri("/user")
                 .contentType(MediaType.APPLICATION_JSON_UTF8)
                 .syncBody(registrationRequest)
                 .exchange()
@@ -49,12 +52,12 @@ class UserControllerTest {
                 .expectBody()
                 .jsonPath("$.message").value(`is`("Validation failed"))
                 .jsonPath("$.errors").value(containsInAnyOrder("'name' must not be blank"))
-    }
+        }
 
-    @Test
-    fun `it should not allow invalid emails`() {
-        val registrationRequest = RegistrationRequest("name", "example", "secret")
-        client.post().uri("/user")
+        @Test
+        fun `it should not allow invalid emails`() {
+            val registrationRequest = RegistrationRequest("name", "example", "secret")
+            client.post().uri("/user")
                 .contentType(MediaType.APPLICATION_JSON_UTF8)
                 .syncBody(registrationRequest)
                 .exchange()
@@ -62,12 +65,12 @@ class UserControllerTest {
                 .expectBody()
                 .jsonPath("$.message").value(`is`("Validation failed"))
                 .jsonPath("$.errors").value(containsInAnyOrder("'email' must be a well-formed email address"))
-    }
+        }
 
-    @Test
-    fun `it should not allow short password `() {
-        val registrationRequest = RegistrationRequest("name", "example@example.com", "")
-        client.post().uri("/user")
+        @Test
+        fun `it should not allow short password `() {
+            val registrationRequest = RegistrationRequest("name", "example@example.com", "")
+            client.post().uri("/user")
                 .contentType(MediaType.APPLICATION_JSON_UTF8)
                 .syncBody(registrationRequest)
                 .exchange()
@@ -75,16 +78,16 @@ class UserControllerTest {
                 .expectBody()
                 .jsonPath("$.message").value(`is`("Validation failed"))
                 .jsonPath("$.errors").value(
-                        contains(
-                                "'password' must have at least 6 characters"
-                        )
+                    contains(
+                        "'password' must have at least 6 characters"
+                    )
                 )
-    }
+        }
 
-    @Test
-    fun `it should return all validation errors`() {
-        val registrationRequest = RegistrationRequest("", "example", "short")
-        client.post().uri("/user")
+        @Test
+        fun `it should return all validation errors`() {
+            val registrationRequest = RegistrationRequest("", "example", "short")
+            client.post().uri("/user")
                 .contentType(MediaType.APPLICATION_JSON_UTF8)
                 .syncBody(registrationRequest)
                 .exchange()
@@ -93,18 +96,18 @@ class UserControllerTest {
                 .jsonPath("$.message").value(`is`("Validation failed"))
                 .jsonPath("$.errors")
                 .value(
-                        containsInAnyOrder(
-                                "'name' must not be blank",
-                                "'email' must be a well-formed email address",
-                                "'password' must have at least 6 characters"
-                        )
+                    containsInAnyOrder(
+                        "'name' must not be blank",
+                        "'email' must be a well-formed email address",
+                        "'password' must have at least 6 characters"
+                    )
                 )
-    }
+        }
 
-    @Test
-    fun `it should return the created user without the password`() {
-        val registrationRequest = RegistrationRequest("name", "example@example.com", "secret")
-        client.post().uri("/user")
+        @Test
+        fun `it should return the created user without the password`() {
+            val registrationRequest = RegistrationRequest("name", "example@example.com", "secret")
+            client.post().uri("/user")
                 .syncBody(registrationRequest)
                 .header("Content-Type", MediaType.APPLICATION_JSON_UTF8_VALUE)
                 .exchange()
@@ -113,45 +116,92 @@ class UserControllerTest {
                 .jsonPath("$.name").value(`is`(registrationRequest.name))
                 .jsonPath("$.email").value(`is`(registrationRequest.email))
                 .jsonPath("$.password").doesNotHaveJsonPath()
-    }
+        }
 
-    @Test
-    fun `it should not allow registering the same email twice`() {
-        val email = "example@example.com"
-        val registrationRequest = RegistrationRequest("name", email, "secret")
-        client.post().uri("/user")
+        @Test
+        fun `it should not allow registering the same email twice`() {
+            val email = "example@example.com"
+            val registrationRequest = RegistrationRequest("name", email, "secret")
+            client.post().uri("/user")
                 .contentType(MediaType.APPLICATION_JSON_UTF8)
                 .syncBody(registrationRequest)
                 .exchange()
                 .expectStatus().isCreated
-        client.post().uri("/user")
+            client.post().uri("/user")
                 .contentType(MediaType.APPLICATION_JSON_UTF8)
                 .syncBody(registrationRequest)
                 .exchange()
                 .expectStatus().is5xxServerError
                 .expectBody().jsonPath("$.message").isEqualTo("User already exists with email $email")
+        }
+
+        @Test
+        fun `it should create a private group for the user`() {
+            val registrationRequest = RegistrationRequest("name", "example@example.com", "secret")
+            val body = String(
+                client.post().uri("/user")
+                    .contentType(MediaType.APPLICATION_JSON_UTF8)
+                    .syncBody(registrationRequest)
+                    .exchange()
+                    .expectStatus().isCreated
+                    .expectBody().jsonPath("$").exists()
+                    .returnResult()
+                    .responseBody!!
+            )
+
+            val user = ObjectMapper().registerKotlinModule().readValue<Map<String, Any>>(body)
+
+            @Suppress("UNCHECKED_CAST")
+            val privateGroup = user["privateGroup"] as Map<String, Any>
+
+            val groupId = (privateGroup.getValue("id") as Int).toLong()
+            val group = groupRepository.findByIdOrNull(groupId)!!
+            assertEquals(1, group.members.size)
+            assertEquals(group.members.first().id, (user["id"] as Int).toLong())
+        }
     }
 
-    @Test
-    fun `it should create a private group for the user`() {
-        val registrationRequest = RegistrationRequest("name", "example@example.com", "secret")
-        val body = String(client.post().uri("/user")
-                .contentType(MediaType.APPLICATION_JSON_UTF8)
-                .syncBody(registrationRequest)
-                .exchange()
-                .expectStatus().isCreated
-                .expectBody().jsonPath("$").exists()
-                .returnResult()
-                .responseBody!!)
+    @Nested
+    inner class GetMe {
+        @Test
+        fun `it should return the currently authenticated user`() {
+            TODO()
+        }
+    }
 
-        val user = ObjectMapper().registerKotlinModule().readValue<Map<String, Any>>(body)
+    @Nested
+    inner class GetUserById {
+        @Test
+        fun `it should return the user with the given Id`() {
+            TODO()
+        }
 
-        @Suppress("UNCHECKED_CAST")
-        val privateGroup = user["privateGroup"] as Map<String, Any>
+        @Test
+        fun `it should return a 404 if no user with that Id exists`() {
+            TODO()
+        }
+    }
 
-        val groupId = (privateGroup.getValue("id") as Int).toLong()
-        val group = groupRepository.findByIdOrNull(groupId)!!
-        assertEquals(1, group.members.size)
-        assertEquals(group.members.first().id, (user["id"] as Int).toLong())
+    @Nested
+    inner class GetUserByNameOrEmail {
+        @Test
+        fun `it should get all the users if no parameters are specified`() {
+            TODO()
+        }
+
+        @Test
+        fun `it should get all the users with the given name`() {
+            TODO()
+        }
+
+        @Test
+        fun `it should get the user with the given email`() {
+            TODO()
+        }
+
+        @Test
+        fun `it should get the user with given name and given email`() {
+            TODO()
+        }
     }
 }
