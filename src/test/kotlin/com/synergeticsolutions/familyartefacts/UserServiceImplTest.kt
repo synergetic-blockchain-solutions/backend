@@ -4,9 +4,11 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.ArgumentMatchers.any
+import org.mockito.ArgumentMatchers.anyLong
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.ArgumentMatchers.argThat
 import org.mockito.Mockito
@@ -15,6 +17,7 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.test.context.junit.jupiter.SpringExtension
+import java.util.Optional
 
 class UserServiceImplUnitTest {
     private val userRepository: UserRepository = Mockito.mock(UserRepository::class.java)
@@ -80,6 +83,109 @@ class UserServiceImplUnitTest {
                     user.email,
                     user.password
             )
+        }
+    }
+
+    @Nested
+    inner class FindByEmail {
+        @Test
+        fun `it should find the user by the specified email`() {
+            val email = "example@example.com"
+            val user = User(
+                name = "name",
+                email = email,
+                password = "secret",
+                privateGroup = Group(
+                    2,
+                    "Group 2",
+                    description = "description",
+                    members = mutableListOf(),
+                    admins = mutableListOf()
+                )
+            )
+            Mockito.`when`(userRepository.findByEmail(anyString())).thenReturn(user)
+            assertEquals(user, userService.findByEmail(email))
+        }
+    }
+
+    @Nested
+    inner class FindById {
+
+        @Test
+        fun `it should find the user by the specified ID`() {
+            val email = "example@example.com"
+            val user = User(
+                id = 2,
+                name = "name",
+                email = "example2@example.com",
+                password = "secret",
+                privateGroup = Group(
+                    2,
+                    "Group 2",
+                    description = "description",
+                    members = mutableListOf(),
+                    admins = mutableListOf()
+                )
+            )
+            val user2 = User(
+                name = "name",
+                email = email,
+                password = "secret",
+                privateGroup = Group(
+                    2,
+                    "Group 2",
+                    description = "description",
+                    members = mutableListOf(),
+                    admins = mutableListOf()
+                )
+            )
+            Mockito.`when`(userRepository.findById(anyLong())).thenReturn(Optional.of(user))
+            Mockito.`when`(userRepository.findByEmail(anyString())).thenReturn(user2)
+            assertEquals(user, userService.findById(email, 2))
+        }
+    }
+
+    @Nested
+    inner class FindUsers {
+        val email = "example1@example.com"
+        private val user = User(7, "user", email, "password", privateGroup = Group(2, "Group 2", "description", mutableListOf(), mutableListOf()))
+        private val users = listOf(
+            User(1, "user1", "example1@example.com", "password",  privateGroup = Group(2, "Group 2", "description", mutableListOf(), mutableListOf())),
+            User(2, "user2", "example2@example.com", "password",  privateGroup = Group(2, "Group 2", "description", mutableListOf(), mutableListOf())),
+            User(3, "user2", "example3@example.com", "password",  privateGroup = Group(2, "Group 2", "description", mutableListOf(), mutableListOf())),
+            User(4, "user3", "example4@example.com", "password",  privateGroup = Group(2, "Group 2", "description", mutableListOf(), mutableListOf())),
+            User(5, "user4", "example5@example.com", "password",  privateGroup = Group(2, "Group 2", "description", mutableListOf(), mutableListOf())),
+            User(6, "user5", "example6@example.com", "password",  privateGroup = Group(2, "Group 2", "description", mutableListOf(), mutableListOf()))
+            )
+
+        @BeforeEach
+        fun setup() {
+            Mockito.`when`(userRepository.findAll()).thenReturn(users)
+            Mockito.`when`(userRepository.findByEmail(email)).thenReturn(user)
+        }
+
+        @Test
+        fun `it should get all users if no filters are specified`() {
+            val foundUsers = userService.findUsers(email)
+            assertEquals(users, foundUsers)
+        }
+
+        @Test
+        fun `it should filter users by the specified filter name`() {
+            val foundUsers = userService.findUsers(email, filterName = "user2")
+            assertEquals(users.filter { it.name == "user2" },  foundUsers)
+        }
+
+        @Test
+        fun `it should filter users by the specified filter email`() {
+            val foundUsers = userService.findUsers(email, filterEmail = email)
+            assertEquals(users.filter { it.email == email }, foundUsers)
+        }
+
+        @Test
+        fun `it should filter users by the specified filter name and filter email`() {
+            val foundUsers = userService.findUsers(email, filterName = "user2", filterEmail = "example2@example.com")
+            assertEquals(users.filter { it.name == "user2" && it.email == "example2@example.com" }, foundUsers)
         }
     }
 }
