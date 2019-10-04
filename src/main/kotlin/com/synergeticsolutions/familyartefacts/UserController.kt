@@ -16,8 +16,6 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
-import java.security.Principal
-import javax.validation.Valid
 
 @RestController
 @RequestMapping
@@ -72,7 +70,6 @@ class UserController(
         @RequestParam(name = "name", required = false) name: String?,
         principal: Principal
     ): List<User> = userService.findUsers(principal.name, filterEmail = email, filterName = name)
-
 }
 
 /**

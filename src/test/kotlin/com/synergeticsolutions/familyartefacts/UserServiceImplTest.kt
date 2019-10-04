@@ -1,5 +1,6 @@
 package com.synergeticsolutions.familyartefacts
 
+import java.util.Optional
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertThrows
@@ -17,7 +18,6 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.test.context.junit.jupiter.SpringExtension
-import java.util.Optional
 
 class UserServiceImplUnitTest {
     private val userRepository: UserRepository = Mockito.mock(UserRepository::class.java)
@@ -150,12 +150,12 @@ class UserServiceImplUnitTest {
         val email = "example1@example.com"
         private val user = User(7, "user", email, "password", privateGroup = Group(2, "Group 2", "description", mutableListOf(), mutableListOf()))
         private val users = listOf(
-            User(1, "user1", "example1@example.com", "password",  privateGroup = Group(2, "Group 2", "description", mutableListOf(), mutableListOf())),
-            User(2, "user2", "example2@example.com", "password",  privateGroup = Group(2, "Group 2", "description", mutableListOf(), mutableListOf())),
-            User(3, "user2", "example3@example.com", "password",  privateGroup = Group(2, "Group 2", "description", mutableListOf(), mutableListOf())),
-            User(4, "user3", "example4@example.com", "password",  privateGroup = Group(2, "Group 2", "description", mutableListOf(), mutableListOf())),
-            User(5, "user4", "example5@example.com", "password",  privateGroup = Group(2, "Group 2", "description", mutableListOf(), mutableListOf())),
-            User(6, "user5", "example6@example.com", "password",  privateGroup = Group(2, "Group 2", "description", mutableListOf(), mutableListOf()))
+            User(1, "user1", "example1@example.com", "password", privateGroup = Group(2, "Group 2", "description", mutableListOf(), mutableListOf())),
+            User(2, "user2", "example2@example.com", "password", privateGroup = Group(2, "Group 2", "description", mutableListOf(), mutableListOf())),
+            User(3, "user2", "example3@example.com", "password", privateGroup = Group(2, "Group 2", "description", mutableListOf(), mutableListOf())),
+            User(4, "user3", "example4@example.com", "password", privateGroup = Group(2, "Group 2", "description", mutableListOf(), mutableListOf())),
+            User(5, "user4", "example5@example.com", "password", privateGroup = Group(2, "Group 2", "description", mutableListOf(), mutableListOf())),
+            User(6, "user5", "example6@example.com", "password", privateGroup = Group(2, "Group 2", "description", mutableListOf(), mutableListOf()))
             )
 
         @BeforeEach
@@ -173,7 +173,7 @@ class UserServiceImplUnitTest {
         @Test
         fun `it should filter users by the specified filter name`() {
             val foundUsers = userService.findUsers(email, filterName = "user2")
-            assertEquals(users.filter { it.name == "user2" },  foundUsers)
+            assertEquals(users.filter { it.name == "user2" }, foundUsers)
         }
 
         @Test
