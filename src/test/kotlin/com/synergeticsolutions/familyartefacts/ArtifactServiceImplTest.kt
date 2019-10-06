@@ -142,7 +142,7 @@ class ArtifactServiceImplTest {
             )
             val argCapturer = ArgumentCaptor.forClass(Artifact::class.java)
             Mockito.verify(artifactRepository).save(argCapturer.capture())
-            val matcher = hasProperty<Artifact>("owners", contains(hasProperty("id", equalTo(1L))))
+            val matcher = hasProperty<Artifact>("owners", contains(hasProperty<User>("id", equalTo(1L))))
             assertThat(argCapturer.value, matcher)
         }
 
@@ -167,7 +167,7 @@ class ArtifactServiceImplTest {
             )
             val argumentCaptor = ArgumentCaptor.forClass(Artifact::class.java)
             Mockito.verify(artifactRepository).save(argumentCaptor.capture())
-            val matcher = hasProperty<Artifact>("groups", contains(hasProperty("id", equalTo(2L))))
+            val matcher = hasProperty<Artifact>("groups", contains(hasProperty<Group>("id", equalTo(2L))))
             assertThat(argumentCaptor.value, matcher)
         }
 
@@ -1411,7 +1411,7 @@ class ArtifactServiceImplIntegrationTest {
             val updatedUser = userRepository.findByIdOrNull(user.id)!!
             assertThat(
                 updatedUser,
-                hasProperty("ownedArtifacts", contains(hasProperty("id", equalTo(createdArtifact.id))))
+                hasProperty("ownedArtifacts", contains(hasProperty<Artifact>("id", equalTo(createdArtifact.id))))
             )
         }
 
@@ -1482,7 +1482,7 @@ class ArtifactServiceImplIntegrationTest {
             groupRepository.findAllById(groups.map(Group::id)).forEach {
                 assertThat(
                     it,
-                    hasProperty("artifacts", contains(hasProperty("id", equalTo(createdArtifact.id))))
+                    hasProperty("artifacts", contains(hasProperty<Artifact>("id", equalTo(createdArtifact.id))))
                 )
             }
         }

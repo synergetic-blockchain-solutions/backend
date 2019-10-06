@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonIdentityInfo
 import com.fasterxml.jackson.annotation.JsonIdentityReference
 import com.fasterxml.jackson.annotation.ObjectIdGenerators
 import javax.persistence.CascadeType
-import javax.persistence.ElementCollection
 import javax.persistence.Entity
 import javax.persistence.GeneratedValue
 import javax.persistence.GenerationType
@@ -17,7 +16,7 @@ import org.hibernate.annotations.LazyCollectionOption
 
 @Entity
 @Table(name = "artifacts")
-data class Artifact(
+data class Album(
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     val id: Long = 0,
@@ -32,7 +31,7 @@ data class Artifact(
     @ManyToMany(mappedBy = "artifacts")
     @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator::class, property = "id")
     @JsonIdentityReference(alwaysAsId = true)
-    val groups: MutableList<Group>,
+    val groups: MutableList<Group> = mutableListOf(),
     @LazyCollection(value = LazyCollectionOption.FALSE)
     @ManyToMany(mappedBy = "sharedArtifacts")
     @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator::class, property = "id")
@@ -42,25 +41,6 @@ data class Artifact(
     @OneToMany(cascade = [CascadeType.ALL])
     @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator::class, property = "id")
     @JsonIdentityReference(alwaysAsId = true)
-    val resources: MutableList<ArtifactResource> = mutableListOf(),
-    @LazyCollection(value = LazyCollectionOption.FALSE)
-    @OneToMany(cascade = [CascadeType.ALL])
-    @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator::class, property = "id")
-    @JsonIdentityReference(alwaysAsId = true)
-    val albums: MutableList<Album> = mutableListOf(),
-    @LazyCollection(value = LazyCollectionOption.FALSE)
-    @ElementCollection
-    val tags: MutableList<String> = mutableListOf()
-) {
-    override fun toString(): String {
-        return listOf(
-            "id=$id",
-            "name=$name",
-            "description=$description",
-            "owners=${owners.map(User::id)}",
-            "groups=${groups.map(Group::id)}",
-            "sharedwith=${sharedWith.map(User::id)}",
-            "tags=$tags"
-        ).joinToString(separator = ", ", prefix = "Artifact(", postfix = ")")
-    }
-}
+    val artifacts: MutableList<Artifact> = mutableListOf()
+
+)
