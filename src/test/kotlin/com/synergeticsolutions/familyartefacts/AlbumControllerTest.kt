@@ -8,21 +8,13 @@ import org.hamcrest.Matchers.`is`
 import org.hamcrest.Matchers.contains
 import org.hamcrest.Matchers.containsInAnyOrder
 import org.hamcrest.Matchers.greaterThan
-import org.hamcrest.Matchers.hasEntry
-import org.hamcrest.Matchers.hasItem
-import org.hamcrest.Matchers.hasItems
-import org.hamcrest.Matchers.hasProperty
-import org.hamcrest.Matchers.not
 import org.hamcrest.collection.IsCollectionWithSize.hasSize
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.core.io.ClassPathResource
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
@@ -111,7 +103,7 @@ class AlbumControllerTest {
                     .expectBody()
                     .jsonPath("$").isArray
                     .jsonPath("$").value(hasSize<Album>(3))
-                    //.jsonPath("$").value(containsInAnyOrder<Album>(albums.map { hasEntry("id", it.id.toInt()) }))
+                    // .jsonPath("$").value(containsInAnyOrder<Album>(albums.map { hasEntry("id", it.id.toInt()) }))
         }
 
         @Test
@@ -144,12 +136,12 @@ class AlbumControllerTest {
                     .expectBody()
                     .jsonPath("$").isArray
                     .jsonPath("$").value(hasSize<Album>(2))
-                    //.jsonPath("$").value(containsInAnyOrder(albums.filter { it.groups.first().id == grp1.id }.map {
+                    // .jsonPath("$").value(containsInAnyOrder(albums.filter { it.groups.first().id == grp1.id }.map {
                     //    hasEntry(
                     //            "id",
                     //            it.id.toInt()
                     //    )
-                    //}))
+                    // }))
         }
 
         @Test
@@ -188,7 +180,7 @@ class AlbumControllerTest {
                     .expectBody()
                     .jsonPath("$").isArray
                     .jsonPath("$").value(hasSize<Artifact>(2))
-                    //.jsonPath("$").value(containsInAnyOrder(albums.map { hasEntry("id", it.id.toInt()) }))
+                    // .jsonPath("$").value(containsInAnyOrder(albums.map { hasEntry("id", it.id.toInt()) }))
         }
 
         @Test
@@ -237,12 +229,12 @@ class AlbumControllerTest {
                     .jsonPath("$").isArray
                     .jsonPath("$").value(hasSize<Artifact>(1))
                     .jsonPath("$")
-                    //.value(containsInAnyOrder(albums.filter { it.groups.first().id == grp1.id && it.owners.first().id == usr1.id }.map {
+                    // .value(containsInAnyOrder(albums.filter { it.groups.first().id == grp1.id && it.owners.first().id == usr1.id }.map {
                     //    hasEntry(
                     //            "id",
                     //            it.id.toInt()
                     //    )
-                    //}))
+                    // }))
         }
 
         @Test
@@ -255,7 +247,7 @@ class AlbumControllerTest {
                     ownerIDs = listOf(),
                     groupIDs = listOf(),
                     sharedWithIDs = listOf(),
-                   artifactIDs = listOf()
+                    artifactIDs = listOf()
             )
             client.get()
                     .uri("/album/${album.id}")
@@ -312,7 +304,7 @@ class AlbumControllerTest {
 
             val createdAlbum = albumRepository.findByIdOrNull((returnedAlbum["id"] as Int).toLong())!!
             // Check owners
-            //assertEquals(createdAlbum.owners.first().id, user.id)
+            // assertEquals(createdAlbum.owners.first().id, user.id)
             assertThat(createdAlbum.owners.map(User::id), contains(`is`(user.id)))
 
             // Check groups

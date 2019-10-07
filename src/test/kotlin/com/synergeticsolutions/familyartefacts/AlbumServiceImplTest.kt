@@ -1,5 +1,6 @@
 package com.synergeticsolutions.familyartefacts
 
+import java.util.Optional
 import org.hamcrest.MatcherAssert
 import org.hamcrest.Matchers
 import org.hamcrest.beans.HasPropertyWithValue
@@ -11,7 +12,6 @@ import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers
 import org.mockito.Mockito
 import org.springframework.data.repository.findByIdOrNull
-import java.util.*
 
 class AlbumServiceImplTest {
     private val userRepository: UserRepository = Mockito.mock(UserRepository::class.java)
@@ -542,5 +542,4 @@ class AlbumServiceImplTest {
             MatcherAssert.assertThat(argCapturer.value, matcher)
         }
     }
-
 }

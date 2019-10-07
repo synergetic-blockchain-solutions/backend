@@ -6,7 +6,13 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.context.SecurityContextHolder
-import org.springframework.web.bind.annotation.*
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
+import org.springframework.web.bind.annotation.RestController
 
 @RestController
 @RequestMapping(path = ["/album"])
@@ -18,9 +24,9 @@ class AlbumController(
 
     @GetMapping
     fun getAlbums(
-            @RequestParam(name = "group", required = false) groupID: Long?,
-            @RequestParam(name = "owner", required = false) ownerID: Long?,
-            @RequestParam(name = "shared", required = false) sharedID: Long?
+        @RequestParam(name = "group", required = false) groupID: Long?,
+        @RequestParam(name = "owner", required = false) ownerID: Long?,
+        @RequestParam(name = "shared", required = false) sharedID: Long?
     ): ResponseEntity<List<Album>> {
         val currentUser = SecurityContextHolder.getContext().authentication
         logger.debug("Filtering albums for ${currentUser.principal} by group=$groupID, owner=$ownerID, shared=$sharedID")
