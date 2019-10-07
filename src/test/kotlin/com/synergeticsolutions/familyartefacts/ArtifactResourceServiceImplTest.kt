@@ -1,6 +1,5 @@
 package com.synergeticsolutions.familyartefacts
 
-import java.util.Optional
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.`is`
 import org.hamcrest.Matchers.allOf
@@ -17,6 +16,7 @@ import org.mockito.ArgumentMatchers.anyLong
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mockito
 import org.springframework.data.repository.findByIdOrNull
+import java.util.Optional
 
 class ArtifactResourceServiceImplTest {
 
@@ -38,7 +38,7 @@ class ArtifactResourceServiceImplTest {
                 artifactResourceService.create(
                     "example@example.com",
                     1,
-                    ArtifactResourceMetadata("name", "description"),
+                    ArtifactResourceMetadata(id = 0, name = "Resource name", description = "Resource description", artifactId = 0),
                     resource = "resource".toByteArray(),
                     contentType = "text/plain"
                 )
@@ -61,7 +61,7 @@ class ArtifactResourceServiceImplTest {
                 artifactResourceService.create(
                     "example@example.com",
                     1,
-                    ArtifactResourceMetadata("name", "description"),
+                    ArtifactResourceMetadata(id = 0, name = "Resource name", description = "Resource description", artifactId = 0),
                     resource = "resource".toByteArray(),
                     contentType = "text/plain"
                 )
@@ -102,7 +102,7 @@ class ArtifactResourceServiceImplTest {
             artifactResourceService.create(
                 "example@example.com",
                 artifact.id,
-                ArtifactResourceMetadata(resource.name, resource.description),
+                ArtifactResourceMetadata(id = 0, name = "Resource name", description = "Resource description", artifactId = 0),
                 resource = resource.resource,
                 contentType = "text/plain"
             )
@@ -153,9 +153,7 @@ class ArtifactResourceServiceImplTest {
                 email = "example@example.com",
                 artifactId = artifact.id,
                 resourceId = 1,
-                metadata = ArtifactResourceMetadata(
-                    "Updated name", "Updated description"
-                ),
+                metadata = ArtifactResourceMetadata(id = 0, name = "Resource name", description = "Resource description", artifactId = 0),
                 resource = resource.resource,
                 contentType = "text/plain"
             )
@@ -217,12 +215,9 @@ class ArtifactResourceServiceImplTest {
                     email = user.email,
                     artifactId = artifact.id,
                     resourceId = 1,
-                    metadata = ArtifactResourceMetadata(
-                        "Updated name", "Updated description"
-                    ),
+                    metadata = ArtifactResourceMetadata(id = 0, name = "Resource name", description = "Resource description", artifactId = 0),
                     resource = resource.resource,
                     contentType = "text/plain"
-
                 )
             }
         }
