@@ -75,9 +75,11 @@ class ArtifactResourceServiceImpl(
             "Could not find artifact resource $resourceId"
         )
         return ArtifactResourceMetadata(
+            id = resource.id,
             name = resource.name,
             description = resource.description,
-            tags = resource.tags
+            tags = resource.tags,
+            artifactId = resource.artifact.id
         )
     }
 
@@ -129,9 +131,11 @@ class ArtifactResourceServiceImpl(
         artifactResourceRepository.delete(resource)
         artifactRepository.save(resource.artifact.copy(resources = resource.artifact.resources.filter { it.id != resource.id }.toMutableList()))
         return ArtifactResourceMetadata(
+            id = resource.id,
             name = resource.name,
             description = resource.description,
-            tags = resource.tags
+            tags = resource.tags,
+            artifactId = resource.artifact.id
         )
     }
 
