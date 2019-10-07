@@ -4,7 +4,7 @@ import com.fasterxml.jackson.core.JsonGenerator
 import com.fasterxml.jackson.databind.SerializerProvider
 import com.fasterxml.jackson.databind.ser.std.StdSerializer
 
-class ArtifactReferenceCollectionSerializer(type: Class<List<Artifact>>?) : StdSerializer<List<Artifact>>(type) {
+class ArtifactReferenceCollectionSerializer(type: Class<List<Artifact>>? = null) : StdSerializer<List<Artifact>>(type) {
     override fun serialize(value: List<Artifact>?, maybeGen: JsonGenerator?, provider: SerializerProvider?) {
         val artifacts = checkNotNull(value, { "value parameter should not be null" })
         val gen = checkNotNull(maybeGen, { "generator parameter should not be null" })
