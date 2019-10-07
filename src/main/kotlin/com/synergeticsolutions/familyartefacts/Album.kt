@@ -23,24 +23,36 @@ data class Album(
     val name: String,
     val description: String,
     @LazyCollection(value = LazyCollectionOption.FALSE)
-    @ManyToMany(mappedBy = "ownedArtifacts")
+    @ManyToMany(mappedBy = "ownedAlbums")
     @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator::class, property = "id")
     @JsonIdentityReference(alwaysAsId = true)
     val owners: MutableList<User>,
     @LazyCollection(value = LazyCollectionOption.FALSE)
-    @ManyToMany(mappedBy = "artifacts")
+    @ManyToMany(mappedBy = "albums")
     @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator::class, property = "id")
     @JsonIdentityReference(alwaysAsId = true)
     val groups: MutableList<Group> = mutableListOf(),
     @LazyCollection(value = LazyCollectionOption.FALSE)
-    @ManyToMany(mappedBy = "sharedArtifacts")
+    @ManyToMany(mappedBy = "sharedAlbums")
     @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator::class, property = "id")
     @JsonIdentityReference(alwaysAsId = true)
     val sharedWith: MutableList<User> = mutableListOf(),
     @LazyCollection(value = LazyCollectionOption.FALSE)
-    @OneToMany(cascade = [CascadeType.ALL])
+    @ManyToMany(mappedBy = "albums")
     @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator::class, property = "id")
     @JsonIdentityReference(alwaysAsId = true)
     val artifacts: MutableList<Artifact> = mutableListOf()
 
-)
+) {
+    override fun toString(): String {
+        return listOf(
+                "id=$id",
+                "name=$name",
+                "description=$description",
+                "owners=${owners.map(User::id)}",
+                "groups=${groups.map(Group::id)}",
+                "sharedWith=${sharedWith.map(User::id)}",
+                "artifacts=${artifacts.map(Artifact::id)}"
+        ).joinToString(separator = ", ", prefix = "Album(", postfix = ")")
+    }
+}

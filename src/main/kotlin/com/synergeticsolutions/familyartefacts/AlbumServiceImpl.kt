@@ -3,8 +3,14 @@ package com.synergeticsolutions.familyartefacts
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.data.repository.findByIdOrNull
+import org.springframework.http.HttpStatus
 import org.springframework.security.core.userdetails.UsernameNotFoundException
 import org.springframework.stereotype.Service
+import org.springframework.web.bind.annotation.ResponseStatus
+
+@ResponseStatus(HttpStatus.BAD_REQUEST)
+class AlbumNotFoundException(msg: String) : RuntimeException(msg)
 
 @Service
 class AlbumServiceImpl(
@@ -17,7 +23,50 @@ class AlbumServiceImpl(
     @Autowired
     val albumRepository: AlbumRepository
 ) : AlbumService {
+
     val logger: Logger = LoggerFactory.getLogger(this::class.java)
+
+    override fun findAlbumsByOwner(email: String, groupID: Long?, ownerID: Long?, sharedID: Long?): List<Album> {
+        val user =
+                userRepository.findByEmail(email) ?: throw UserNotFoundException("No user with email $email was found")
+
+        val ownedAlbums = albumRepository.findByOwners_Email(email)
+        val groupsAlbums = user.groups.map(Group::id).flatMap(albumRepository::findByGroups_Id)
+        val sharedAlbums = albumRepository.findBySharedWith_Email(email)
+
+        var albums = ownedAlbums.union(groupsAlbums).union(sharedAlbums).toList()
+
+        if (groupID != null) {
+            albums = albums.filter { it.groups.map(Group::id).contains(groupID) }
+        }
+
+        if (ownerID != null) {
+            albums = albums.filter { it.owners.map(User::id).contains(ownerID) }
+        }
+
+        if (sharedID != null) {
+            albums = albums.filter { it.sharedWith.map(User::id).contains(sharedID) }
+        }
+
+        return albums.toSet().toList()
+    }
+
+    override fun findAlbumById(email: String, id: Long): Album {
+        val user =
+                userRepository.findByEmail(email) ?: throw UserNotFoundException("No user with email $email was found")
+        val accessibleAlbums =
+                user.ownedAlbums.map(Album::id) + user.sharedAlbums.map(Album::id) + user.groups.flatMap {
+                    it.albums.map(Album::id)
+                }
+        if (!accessibleAlbums.contains(id)) {
+            if (!albumRepository.existsById(id)) {
+                logger.info("Album $id does not exist")
+            }
+            throw ActionNotAllowedException("User ${user.id} does not have access to album $id")
+        }
+        return albumRepository.findByIdOrNull(id)
+                ?: throw AlbumNotFoundException("No album with ID $id was found")
+    }
 
     override fun createAlbum(
         email: String,
@@ -66,25 +115,28 @@ class AlbumServiceImpl(
                 sharedWith = shares,
                 artifacts = artifacts
         )
+
         val savedAlbum = albumRepository.save(album)
 
-        logger.debug("Making $owners the owners of $savedAlbum")
-        owners.forEach { it.ownedAlbums.add(savedAlbum) }
+        logger.debug("Making $owners the owners of $album")
+        owners.forEach { it.ownedAlbums.add(album) }
         userRepository.saveAll(owners)
 
-        logger.debug("Adding $savedAlbum to $groups")
-        groups.forEach { it.albums.add(savedAlbum) }
+        logger.debug("Adding $album to $groups")
+        groups.forEach { it.albums.add(album) }
         groupRepository.saveAll(groups)
 
-        logger.debug("Sharing $savedAlbum with $shares")
-        shares.forEach { it.sharedAlbums.add(savedAlbum) }
+        logger.debug("Sharing $album with $shares")
+        shares.forEach { it.sharedAlbums.add(album) }
         userRepository.saveAll(shares)
 
-        logger.debug("Adding $artifacts to $savedAlbum")
-        artifacts.forEach { it.albums.add(savedAlbum) }
+        logger.debug("Adding $artifacts to $album")
+        artifacts.forEach { it.albums.add(album) }
         artifactRepository.saveAll(artifacts)
 
-        logger.debug("Created album $savedAlbum")
+        logger.debug("Created album $album")
+
         return savedAlbum
+        //return albumRepository.findById(savedAlbum.id)
     }
 }

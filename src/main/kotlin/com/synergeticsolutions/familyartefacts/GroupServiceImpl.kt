@@ -104,7 +104,7 @@ class GroupServiceImpl(
     ): Group {
         val owner = userRepository.findByEmail(email)
                 ?: throw UsernameNotFoundException("No user with email $email was found")
-        val group = Group(name = groupName, description = description, members = mutableListOf(), admins = mutableListOf())
+        val group = Group(name = groupName, description = description, members = mutableListOf(), admins = mutableListOf(), albums = mutableListOf())
         memberIDs.forEach {
             if (!userRepository.existsById(it)) {
                 throw UserNotFoundException("No user with ID $it was found")
