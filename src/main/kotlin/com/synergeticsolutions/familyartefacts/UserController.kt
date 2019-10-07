@@ -1,6 +1,6 @@
 package com.synergeticsolutions.familyartefacts
 
-import javax.validation.Valid
+import org.hibernate.validator.constraints.Length
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -10,6 +10,9 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
+import javax.validation.Valid
+import javax.validation.constraints.Email
+import javax.validation.constraints.NotBlank
 
 @RestController
 @RequestMapping(path = ["/user"])
@@ -26,7 +29,7 @@ class UserController(
      * describing what when wrong. Successful requests will return 201 Created status code. The body will be the
      * created [User] object without the password field.
      */
-    @PostMapping(name = "createUser")
+    @PostMapping(path = ["/user", "/register"], name = "createUser")
     fun createUser(@Valid @RequestBody registration: RegistrationRequest): ResponseEntity<User> {
         logger.info("Registering new user '${registration.name}' with email '${registration.email}")
         val user = userService.createUser(registration.name, registration.email, registration.password)
@@ -35,3 +38,20 @@ class UserController(
         return ResponseEntity.status(HttpStatus.CREATED).body(user)
     }
 }
+
+/**
+ * RegistrationRequest represents a request sent to the registration endpoint.
+ *
+ * @param [name] Name of the user being registered. This should not be blank.
+ * @param [email] Email of the user being registered. This will be used to uniquely identify them.
+ * @param [password] Password the user will user in combination with their email to authenticate themselves. Has a
+ *          minimum length of 6.
+ */
+data class RegistrationRequest(
+    @field:NotBlank(message = "'name' must not be blank")
+    val name: String,
+    @field:Email(message = "'email' must be a well-formed email address")
+    val email: String,
+    @field:Length(min = 6, message = "'password' must have at least 6 characters")
+    val password: String
+)
