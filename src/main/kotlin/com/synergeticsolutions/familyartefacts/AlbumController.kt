@@ -31,7 +31,7 @@ class AlbumController(
                 sharedWithIDs = newAlbum.sharedWith ?: listOf(),
                 artifactIDs = newAlbum.artifacts ?: listOf()
         )
-        logger.info("Created artifact $createdAlbum")
+        logger.info("Created album $createdAlbum")
         return ResponseEntity.status(HttpStatus.CREATED).body(createdAlbum)
     }
 }
