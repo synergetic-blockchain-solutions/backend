@@ -8,7 +8,11 @@ import org.hamcrest.Matchers.`is`
 import org.hamcrest.Matchers.contains
 import org.hamcrest.Matchers.containsInAnyOrder
 import org.hamcrest.Matchers.greaterThan
+import org.hamcrest.Matchers.hasItems
+import org.hamcrest.Matchers.hasProperty
+import org.hamcrest.Matchers.not
 import org.hamcrest.collection.IsCollectionWithSize.hasSize
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -179,7 +183,7 @@ class AlbumControllerTest {
                     .expectStatus().isOk
                     .expectBody()
                     .jsonPath("$").isArray
-                    .jsonPath("$").value(hasSize<Artifact>(2))
+                    .jsonPath("$").value(hasSize<Album>(2))
                     // .jsonPath("$").value(containsInAnyOrder(albums.map { hasEntry("id", it.id.toInt()) }))
         }
 
@@ -227,7 +231,7 @@ class AlbumControllerTest {
                     .expectStatus().isOk
                     .expectBody()
                     .jsonPath("$").isArray
-                    .jsonPath("$").value(hasSize<Artifact>(1))
+                    .jsonPath("$").value(hasSize<Album>(1))
                     .jsonPath("$")
                     // .value(containsInAnyOrder(albums.filter { it.groups.first().id == grp1.id && it.owners.first().id == usr1.id }.map {
                     //    hasEntry(
@@ -312,6 +316,82 @@ class AlbumControllerTest {
 
             // Check shared with
             assertThat(createdAlbum.sharedWith.map(User::id), contains(user2.id))
+        }
+    }
+
+    @Nested
+    inner class DeleteAlbum {
+        @Test
+        fun `it should allow owners to delete the album`() {
+            val albumRequest = AlbumRequest(
+                    name = "Album 1",
+                    description = "Description",
+                    owners = listOf(),
+                    groups = listOf(),
+                    sharedWith = listOf(),
+                    artifacts = listOf()
+            )
+            val createAlbumResponse = client.post()
+                    .uri("/album")
+                    .accept(MediaType.APPLICATION_JSON_UTF8)
+                    .contentType(MediaType.APPLICATION_JSON_UTF8)
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer $token")
+                    .syncBody(albumRequest)
+                    .exchange()
+                    .expectStatus().isCreated
+                    .expectBody()
+                    .returnResult()
+                    .responseBody!!
+            val returnedAlbum =
+                    ObjectMapper().registerKotlinModule().readValue<Map<String, Any>>(String(createAlbumResponse))
+            client.delete()
+                    .uri("/album/${returnedAlbum["id"]}")
+                    .accept(MediaType.APPLICATION_JSON_UTF8)
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer $token")
+                    .exchange()
+                    .expectStatus().isOk
+                    .expectBody()
+                    .returnResult()
+                    .responseBody!!
+            assertFalse(albumRepository.existsById((returnedAlbum["id"] as Int).toLong()))
+            val user = userRepository.findByEmail(email)!!
+            val albumId = (returnedAlbum["id"] as Int).toLong()
+            assertThat(user.ownedAlbums, not(hasItems(hasProperty("id", `is`(albumId)))))
+        }
+
+        @Test
+        fun `it should not allow normal users to delete the album`() {
+            val albumRequest = AlbumRequest(
+                    name = "Album 1",
+                    description = "Description",
+                    owners = listOf(),
+                    groups = listOf(),
+                    sharedWith = listOf(),
+                    artifacts = listOf()
+            )
+
+            val createAlbumResponse = client.post()
+                    .uri("/album")
+                    .accept(MediaType.APPLICATION_JSON_UTF8)
+                    .contentType(MediaType.APPLICATION_JSON_UTF8)
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer $token")
+                    .syncBody(albumRequest)
+                    .exchange()
+                    .expectStatus().isCreated
+                    .expectBody()
+                    .returnResult()
+                    .responseBody!!
+            val returnedAlbum =
+                    ObjectMapper().registerKotlinModule().readValue<Map<String, Any>>(String(createAlbumResponse))
+
+            userService.createUser("user 2", "exampl2@example.com", "password")
+            val altToken = getToken("exampl2@example.com", "password")
+            client.delete()
+                    .uri("/album/${returnedAlbum["id"]}")
+                    .accept(MediaType.APPLICATION_JSON_UTF8)
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer $altToken")
+                    .exchange()
+                    .expectStatus().isForbidden
         }
     }
 }

@@ -2,12 +2,14 @@ package com.synergeticsolutions.familyartefacts
 
 import java.util.Optional
 import org.hamcrest.MatcherAssert
-import org.hamcrest.Matchers
+import org.hamcrest.Matchers.contains
+import org.hamcrest.Matchers.equalTo
 import org.hamcrest.beans.HasPropertyWithValue
 import org.hamcrest.core.IsCollectionContaining
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers
 import org.mockito.Mockito
@@ -53,7 +55,7 @@ class AlbumServiceImplTest {
             val foundAlbums = albumService.findAlbumsByOwner(email, groupID = null, sharedID = null, ownerID = null)
             val allAlbums = ownedAlbums + groupAlbums + sharedAlbums
             Assertions.assertEquals(allAlbums.size, foundAlbums.size)
-            MatcherAssert.assertThat(foundAlbums, Matchers.containsInAnyOrder(*allAlbums.toTypedArray()))
+            MatcherAssert.assertThat(foundAlbums, containsInAnyOrder(*allAlbums.toTypedArray()))
         }
 
         @Test
@@ -88,7 +90,7 @@ class AlbumServiceImplTest {
             val expectedAlbums =
                     (groupAlbums + ownedAlbums + sharedAlbums).filter { it.groups.firstOrNull()?.id == (1).toLong() }
             Assertions.assertEquals(expectedAlbums.size, foundAlbums.size)
-            MatcherAssert.assertThat(foundAlbums, Matchers.containsInAnyOrder(*expectedAlbums.toTypedArray()))
+            MatcherAssert.assertThat(foundAlbums, containsInAnyOrder(*expectedAlbums.toTypedArray()))
         }
 
         @Test
@@ -120,7 +122,7 @@ class AlbumServiceImplTest {
             val expectedAlbums =
                     (groupAlbums + ownedAlbums + sharedAlbums).filter { it.owners.firstOrNull()?.id == user.id }
             Assertions.assertEquals(expectedAlbums.size, foundAlbums.size)
-            MatcherAssert.assertThat(foundAlbums, Matchers.containsInAnyOrder(*expectedAlbums.toTypedArray()))
+            MatcherAssert.assertThat(foundAlbums, containsInAnyOrder(*expectedAlbums.toTypedArray()))
         }
 
         @Test
@@ -152,7 +154,7 @@ class AlbumServiceImplTest {
             val expectedAlbums =
                     (groupAlbums + ownedAlbums + sharedAlbums).filter { it.sharedWith.firstOrNull()?.id == user.id }
             Assertions.assertEquals(expectedAlbums.size, foundAlbums.size)
-            MatcherAssert.assertThat(foundAlbums, Matchers.containsInAnyOrder(*expectedAlbums.toTypedArray()))
+            MatcherAssert.assertThat(foundAlbums, containsInAnyOrder(*expectedAlbums.toTypedArray()))
         }
 
         @Test
@@ -183,7 +185,7 @@ class AlbumServiceImplTest {
             val foundAlbums = albumService.findAlbumsByOwner(email, groupID = null, sharedID = null, ownerID = null)
             val expectedAlbums = (groupAlbums + ownedAlbums + sharedAlbums).toSet().toList()
             Assertions.assertEquals(expectedAlbums.size, foundAlbums.size)
-            MatcherAssert.assertThat(foundAlbums, Matchers.containsInAnyOrder(*expectedAlbums.toTypedArray()))
+            MatcherAssert.assertThat(foundAlbums, containsInAnyOrder(*expectedAlbums.toTypedArray()))
         }
     }
 
@@ -222,7 +224,7 @@ class AlbumServiceImplTest {
         )
         val argCapturer = ArgumentCaptor.forClass(Album::class.java)
         Mockito.verify(albumRepository).save(argCapturer.capture())
-        val matcher = HasPropertyWithValue.hasProperty<Album>("owners", Matchers.contains(HasPropertyWithValue.hasProperty<User>("id", Matchers.equalTo(1L))))
+        val matcher = HasPropertyWithValue.hasProperty<Album>("owners", contains(HasPropertyWithValue.hasProperty<User>("id", equalTo(1L))))
         MatcherAssert.assertThat(argCapturer.value, matcher)
     }
 
@@ -251,7 +253,7 @@ class AlbumServiceImplTest {
             )
             val argumentCaptor = ArgumentCaptor.forClass(Album::class.java)
             Mockito.verify(albumRepository).save(argumentCaptor.capture())
-            val matcher = HasPropertyWithValue.hasProperty<Album>("groups", Matchers.contains(HasPropertyWithValue.hasProperty<Group>("id", Matchers.equalTo(2L))))
+            val matcher = HasPropertyWithValue.hasProperty<Album>("groups", contains(HasPropertyWithValue.hasProperty<Group>("id", equalTo(2L))))
             MatcherAssert.assertThat(argumentCaptor.value, matcher)
         }
 
@@ -307,8 +309,8 @@ class AlbumServiceImplTest {
                     HasPropertyWithValue.hasProperty<Album>(
                             "owners",
                             IsCollectionContaining.hasItems<User>(
-                                    HasPropertyWithValue.hasProperty("id", Matchers.equalTo(2L)),
-                                    HasPropertyWithValue.hasProperty("id", Matchers.equalTo(3L))
+                                    HasPropertyWithValue.hasProperty("id", equalTo(2L)),
+                                    HasPropertyWithValue.hasProperty("id", equalTo(3L))
                             )
                     )
             MatcherAssert.assertThat(argCapturer.value, matcher)
@@ -361,8 +363,8 @@ class AlbumServiceImplTest {
                     HasPropertyWithValue.hasProperty<Album>(
                             "groups",
                             IsCollectionContaining.hasItems<Group>(
-                                    HasPropertyWithValue.hasProperty("id", Matchers.equalTo(2L)),
-                                    HasPropertyWithValue.hasProperty("id", Matchers.equalTo(3L))
+                                    HasPropertyWithValue.hasProperty("id", equalTo(2L)),
+                                    HasPropertyWithValue.hasProperty("id", equalTo(3L))
                             )
                     )
             MatcherAssert.assertThat(argCapturer.value, matcher)
@@ -395,7 +397,7 @@ class AlbumServiceImplTest {
                 (it.arguments[0] as Iterable<Long>).map { id ->
                     User(
                             id = id,
-                            name = "Artifact $id",
+                            name = "User $id",
                             email = "example$id@example.com",
                             password = "password",
                             privateGroup = Group(
@@ -419,8 +421,8 @@ class AlbumServiceImplTest {
                     HasPropertyWithValue.hasProperty<Album>(
                             "sharedWith",
                             IsCollectionContaining.hasItems<User>(
-                                    HasPropertyWithValue.hasProperty("id", Matchers.equalTo(2L)),
-                                    HasPropertyWithValue.hasProperty("id", Matchers.equalTo(3L))
+                                    HasPropertyWithValue.hasProperty("id", equalTo(2L)),
+                                    HasPropertyWithValue.hasProperty("id", equalTo(3L))
                             )
                     )
             MatcherAssert.assertThat(argCapturer.value, matcher)
@@ -476,10 +478,10 @@ class AlbumServiceImplTest {
             val matcher =
                     HasPropertyWithValue.hasProperty<Album>(
                             "owners",
-                            Matchers.containsInAnyOrder<User>(
-                                    HasPropertyWithValue.hasProperty("id", Matchers.equalTo(1L)),
-                                    HasPropertyWithValue.hasProperty("id", Matchers.equalTo(2L)),
-                                    HasPropertyWithValue.hasProperty("id", Matchers.equalTo(3L))
+                            containsInAnyOrder<User>(
+                                    HasPropertyWithValue.hasProperty("id", equalTo(1L)),
+                                    HasPropertyWithValue.hasProperty("id", equalTo(2L)),
+                                    HasPropertyWithValue.hasProperty("id", equalTo(3L))
                             )
                     )
             MatcherAssert.assertThat(argCapturer.value, matcher)
@@ -533,13 +535,99 @@ class AlbumServiceImplTest {
             val matcher =
                     HasPropertyWithValue.hasProperty<Album>(
                             "groups",
-                            Matchers.containsInAnyOrder<Group>(
-                                    HasPropertyWithValue.hasProperty("id", Matchers.equalTo(1L)),
-                                    HasPropertyWithValue.hasProperty("id", Matchers.equalTo(2L)),
-                                    HasPropertyWithValue.hasProperty("id", Matchers.equalTo(3L))
+                            containsInAnyOrder<Group>(
+                                    HasPropertyWithValue.hasProperty("id", equalTo(1L)),
+                                    HasPropertyWithValue.hasProperty("id", equalTo(2L)),
+                                    HasPropertyWithValue.hasProperty("id", equalTo(3L))
                             )
                     )
             MatcherAssert.assertThat(argCapturer.value, matcher)
+        }
+    }
+
+    @Nested
+    inner class DeleteAlbum {
+        @Test
+        fun `it should not allow user's who are not the album's owners to delete it`() {
+            val email = "example@example.com"
+            var owningUser = User(
+                    id = 2, name = "User 2", email = "example@example2.com", password = "password", groups = mutableListOf(
+                    Group(id = 1, name = "Group 1", members = mutableListOf(), description = "")
+            ), privateGroup = Group(2, "Group 2", members = mutableListOf(), description = "")
+            )
+            val album = Album(
+                    1,
+                    "Album 1",
+                    "Description",
+                    owners = mutableListOf(owningUser),
+                    groups = mutableListOf(),
+                    sharedWith = mutableListOf(),
+                    artifacts = mutableListOf()
+            )
+            owningUser = owningUser.copy(ownedAlbums = mutableListOf(album))
+            val user = User(
+                    id = 1, name = "User 1", email = email, password = "password", groups = mutableListOf(
+                    Group(id = 1, name = "Group 1", members = mutableListOf(), description = "")
+            ), privateGroup = Group(2, "Group 2", members = mutableListOf(), description = "")
+            )
+            Mockito.`when`(albumRepository.findByIdOrNull(ArgumentMatchers.anyLong())).then {
+                if (it.arguments[0] == album.id) {
+                    Optional.of(album)
+                } else {
+                    Optional.empty()
+                }
+            }
+            Mockito.`when`(userRepository.findByEmail(ArgumentMatchers.anyString())).then {
+                when (it.arguments[0]) {
+                    user.email -> user
+                    owningUser.email -> owningUser
+                    else -> throw RuntimeException("${it.arguments[0]} not handled")
+                }
+            }
+            assertThrows<ActionNotAllowedException> { albumService.deleteAlbum(user.email, album.id) }
+        }
+
+        @Test
+        fun `it should allow the album's owners to delete it`() {
+            var owningUser = User(
+                    id = 2, name = "User 2", email = "example@example2.com", password = "password", groups = mutableListOf(
+                    Group(id = 1, name = "Group 1", members = mutableListOf(), description = "")
+            ), privateGroup = Group(2, "Group 2", members = mutableListOf(), description = "")
+            )
+            var album = Album(
+                    1,
+                    "Album 1",
+                    "Description",
+                    mutableListOf(owningUser),
+                    mutableListOf()
+            )
+            owningUser = owningUser.copy(ownedAlbums = mutableListOf(album))
+            album = album.copy(owners = mutableListOf(owningUser))
+            Mockito.`when`(albumRepository.findByIdOrNull(ArgumentMatchers.anyLong())).then {
+                if (it.arguments[0] == album.id) {
+                    Optional.of(album)
+                } else {
+                    Optional.empty()
+                }
+            }
+            Mockito.`when`(userRepository.findByEmail(ArgumentMatchers.anyString())).then {
+                when (it.arguments[0]) {
+                    owningUser.email -> owningUser
+                    else -> throw RuntimeException("${it.arguments[0]} not handled")
+                }
+            }
+            Mockito.`when`(albumRepository.save(ArgumentMatchers.any<Album>())).then { it.arguments[0] as Album }
+            Mockito.`when`(userRepository.findAllById(ArgumentMatchers.any<Iterable<Long>>())).then {
+                val args = it.arguments[0] as Iterable<Long>
+                if (args.toList() == album.owners.map(User::id)) {
+                    album.owners
+                } else {
+                    listOf<User>()
+                }
+            }
+            val deletedAlbum = albumService.deleteAlbum(owningUser.email, album.id)
+            MatcherAssert.assertThat(deletedAlbum, equalTo(album))
+            Mockito.verify(albumRepository).delete(album)
         }
     }
 }

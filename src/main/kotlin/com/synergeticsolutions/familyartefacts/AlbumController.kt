@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.context.SecurityContextHolder
+import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
@@ -65,6 +66,14 @@ class AlbumController(
         )
         logger.info("Created album $createdAlbum")
         return ResponseEntity.status(HttpStatus.CREATED).body(createdAlbum)
+    }
+
+    @DeleteMapping(path = ["/{id}"])
+    fun deleteAlbum(@PathVariable id: Long): ResponseEntity<Album> {
+        val currentUser = SecurityContextHolder.getContext().authentication ?: throw NoAuthenticationException()
+        val deletedAlbum = albumService.deleteAlbum(currentUser.principal as String, id)
+        logger.info("Deleted album $deletedAlbum")
+        return ResponseEntity.ok(deletedAlbum)
     }
 }
 

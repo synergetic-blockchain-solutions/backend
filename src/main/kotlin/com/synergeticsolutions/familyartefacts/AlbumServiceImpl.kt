@@ -137,6 +137,26 @@ class AlbumServiceImpl(
         logger.debug("Created album $album")
 
         return savedAlbum
-        // return albumRepository.findById(savedAlbum.id)
+    }
+
+    override fun deleteAlbum(email: String, id: Long): Album {
+        val user =
+                userRepository.findByEmail(email) ?: throw UserNotFoundException("User with email $email does not exist")
+        val album =
+                albumRepository.findByIdOrNull(id)
+                        ?: throw AlbumNotFoundException("Could not find album with ID $id")
+        if (!album.owners.contains(user)) {
+            throw ActionNotAllowedException("User ${user.id} is not an owner of album $id")
+        }
+        album.owners.forEach { it.ownedAlbums.remove(album) }
+        userRepository.saveAll(album.owners)
+        album.groups.forEach { it.albums.remove(album) }
+        groupRepository.saveAll(album.groups)
+        album.sharedWith.forEach { it.sharedAlbums.remove(album) }
+        userRepository.saveAll(album.sharedWith)
+        album.artifacts.forEach { it.albums.remove(album) }
+        artifactRepository.saveAll(album.artifacts)
+        albumRepository.delete(album)
+        return album
     }
 }
