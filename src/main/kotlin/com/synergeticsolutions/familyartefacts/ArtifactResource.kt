@@ -1,9 +1,7 @@
 package com.synergeticsolutions.familyartefacts
 
-import com.fasterxml.jackson.annotation.JsonIdentityInfo
-import com.fasterxml.jackson.annotation.JsonIdentityReference
 import com.fasterxml.jackson.annotation.JsonIgnore
-import com.fasterxml.jackson.annotation.ObjectIdGenerators
+import com.fasterxml.jackson.databind.annotation.JsonSerialize
 import javax.persistence.ElementCollection
 import javax.persistence.Entity
 import javax.persistence.GeneratedValue
@@ -38,8 +36,7 @@ data class ArtifactResource(
     val resource: ByteArray,
     @LazyCollection(value = LazyCollectionOption.FALSE)
     @ManyToOne
-    @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator::class, property = "id")
-    @JsonIdentityReference(alwaysAsId = true)
+    @JsonSerialize(using = ArtifactReferenceSerializer::class)
     val artifact: Artifact,
     @LazyCollection(value = LazyCollectionOption.FALSE)
     @ElementCollection
