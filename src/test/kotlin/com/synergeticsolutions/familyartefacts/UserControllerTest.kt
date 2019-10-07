@@ -15,6 +15,7 @@ import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWeb
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment
 import org.springframework.data.repository.findByIdOrNull
+import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
 
@@ -33,6 +34,9 @@ class UserControllerTest {
 
     @Autowired
     private lateinit var testUtils: TestUtilsService
+
+    @Autowired
+    lateinit var userService: UserService
 
     @BeforeEach
     fun beforeEach() {
@@ -162,46 +166,80 @@ class UserControllerTest {
     }
 
     @Nested
-    inner class GetMe {
-        @Test
-        fun `it should return the currently authenticated user`() {
-            TODO()
-        }
-    }
+    inner class ExistingUser {
+        lateinit var token: String
+        lateinit var user: User
 
-    @Nested
-    inner class GetUserById {
-        @Test
-        fun `it should return the user with the given Id`() {
-            TODO()
-        }
 
-        @Test
-        fun `it should return a 404 if no user with that Id exists`() {
-            TODO()
-        }
-    }
-
-    @Nested
-    inner class GetUserByNameOrEmail {
-        @Test
-        fun `it should get all the users if no parameters are specified`() {
-            TODO()
+        @BeforeEach
+        fun beforeEach() {
+            user = userService.createUser("user1", "example@example.com", "password")
+            val resp = client.post()
+                .uri("/login")
+                .syncBody(LoginRequest(email = user.email, password = "password"))
+                .exchange()
+                .expectStatus().isOk
+                .expectBody()
+                .jsonPath("$.token").exists()
+                .returnResult()
+                .responseBody!!
+            token = ObjectMapper().registerKotlinModule().readValue<LoginResponse>(resp).token
         }
 
-        @Test
-        fun `it should get all the users with the given name`() {
-            TODO()
+
+        @Nested
+        inner class GetMe {
+            @Test
+            fun `it should return the currently authenticated user`() {
+                userService.createUser("user2", "example2@example.com", "password")
+                userService.createUser("user3", "example3@example.com", "password")
+                userService.createUser("user4", "example4@example.com", "password")
+                val body = client.get().uri("/user/me")
+                    .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_UTF8_VALUE)
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer $token")
+                    .exchange()
+                    .expectStatus().isOk
+                    .expectBody()
+                    .jsonPath("$.id").value(`is`(user.id.toInt()))
+                    .jsonPath("$.name").value(`is`(user.name))
+                    .jsonPath("$.email").value(`is`(user.email))
+            }
         }
 
-        @Test
-        fun `it should get the user with the given email`() {
-            TODO()
+        @Nested
+        inner class GetUserById {
+            @Test
+            fun `it should return the user with the given Id`() {
+                TODO()
+            }
+
+            @Test
+            fun `it should return a 404 if no user with that Id exists`() {
+                TODO()
+            }
         }
 
-        @Test
-        fun `it should get the user with given name and given email`() {
-            TODO()
+        @Nested
+        inner class GetUserByNameOrEmail {
+            @Test
+            fun `it should get all the users if no parameters are specified`() {
+                TODO()
+            }
+
+            @Test
+            fun `it should get all the users with the given name`() {
+                TODO()
+            }
+
+            @Test
+            fun `it should get the user with the given email`() {
+                TODO()
+            }
+
+            @Test
+            fun `it should get the user with given name and given email`() {
+                TODO()
+            }
         }
     }
 }
