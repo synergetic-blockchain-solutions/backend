@@ -15,7 +15,7 @@ import javax.validation.constraints.Email
 import javax.validation.constraints.NotBlank
 
 @RestController
-@RequestMapping(path = ["/user"])
+@RequestMapping
 class UserController(
     @Autowired
     val userService: UserService
