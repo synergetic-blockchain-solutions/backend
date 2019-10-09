@@ -12,6 +12,7 @@ import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
+import org.springframework.util.Base64Utils
 import org.springframework.util.LinkedMultiValueMap
 import org.springframework.util.MultiValueMap
 import org.springframework.web.bind.annotation.DeleteMapping
@@ -152,9 +153,10 @@ class ArtifactResourceController(
         principal: Principal
     ): ResponseEntity<ByteArrayResource> {
         val resource = artifactResourceService.findResourceById(principal.name, artifactId, resourceId)
+        val base64Resource = Base64Utils.encode(resource.resource)
         return ResponseEntity.ok()
             .contentType(MediaType.parseMediaType(resource.contentType))
-            .body(ByteArrayResource(resource.resource))
+            .body(ByteArrayResource(base64Resource))
     }
 
     /**
