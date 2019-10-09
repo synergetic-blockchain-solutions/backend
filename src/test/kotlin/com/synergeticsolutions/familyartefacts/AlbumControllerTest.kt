@@ -8,10 +8,12 @@ import org.hamcrest.Matchers.`is`
 import org.hamcrest.Matchers.contains
 import org.hamcrest.Matchers.containsInAnyOrder
 import org.hamcrest.Matchers.greaterThan
+import org.hamcrest.Matchers.hasItem
 import org.hamcrest.Matchers.hasItems
 import org.hamcrest.Matchers.hasProperty
 import org.hamcrest.Matchers.not
 import org.hamcrest.collection.IsCollectionWithSize.hasSize
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
@@ -316,6 +318,278 @@ class AlbumControllerTest {
 
             // Check shared with
             assertThat(createdAlbum.sharedWith.map(User::id), contains(user2.id))
+        }
+    }
+
+    @Nested
+    inner class UpdateAlbum {
+        @Test
+        fun `it should allow owners to update the album`() {
+            val albumRequest = AlbumRequest(
+                    name = "Album 1",
+                    description = "Description",
+                    owners = listOf(),
+                    groups = listOf(),
+                    sharedWith = listOf(),
+                    artifacts = listOf()
+            )
+            val createAlbumResponse = client.post()
+                    .uri("/album")
+                    .accept(MediaType.APPLICATION_JSON_UTF8)
+                    .contentType(MediaType.APPLICATION_JSON_UTF8)
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer $token")
+                    .syncBody(albumRequest)
+                    .exchange()
+                    .expectStatus().isCreated
+                    .expectBody()
+                    .returnResult()
+                    .responseBody!!
+            val returnedAlbum =
+                    ObjectMapper().registerKotlinModule().readValue<Map<String, Any>>(String(createAlbumResponse))
+            @Suppress("UNCHECKED_CAST")
+            val updateAlbumRequest =
+                    AlbumRequest(
+                            name = returnedAlbum["name"] as String,
+                            description = returnedAlbum["description"] as String,
+                            owners = (returnedAlbum["owners"] as List<Int>).map(Int::toLong),
+                            groups = (returnedAlbum["groups"] as List<Int>).map(Int::toLong),
+                            sharedWith = (returnedAlbum["sharedWith"] as List<Int>).map(Int::toLong),
+                            artifacts = (returnedAlbum["artifacts"] as List<Int>).map(Int::toLong)
+                    )
+            val updateAlbumResponse = client.put()
+                    .uri("/album/${returnedAlbum["id"]}")
+                    .accept(MediaType.APPLICATION_JSON_UTF8)
+                    .contentType(MediaType.APPLICATION_JSON_UTF8)
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer $token")
+                    .syncBody(updateAlbumRequest)
+                    .exchange()
+                    .expectStatus().isOk
+                    .expectBody()
+                    .returnResult()
+                    .responseBody!!
+            val updatedAlbumResponse =
+                    ObjectMapper().registerKotlinModule().readValue<Map<String, Any>>(updateAlbumResponse)
+            assertEquals((updatedAlbumResponse["id"] as Int).toLong(), (returnedAlbum["id"] as Int).toLong())
+            assertEquals(updatedAlbumResponse["name"] as String, albumRequest.name)
+            assertEquals(updatedAlbumResponse["description"] as String, albumRequest.description)
+
+            val updatedAlbum =
+                    albumRepository.findByIdOrNull((updatedAlbumResponse["id"] as Int).toLong())!!
+            assertEquals(
+                    mutableListOf(userRepository.findByEmail(email)!!.id),
+                    updatedAlbum.owners.map(User::id)
+            )
+        }
+
+        @Test
+        fun `it should allow group owners to remove the album from the group`() {
+            var user = userRepository.findByEmail(email)!!
+            var ownedGroup = groupRepository.save(
+                    Group(
+                            name = "Group 1",
+                            description = "description",
+                            artifacts = mutableListOf(),
+                            admins = mutableListOf(user),
+                            members = mutableListOf(user),
+                            albums = mutableListOf()
+                    )
+            )
+            userRepository.save(user.copy(ownedGroups = mutableListOf(ownedGroup)))
+            val album = albumRepository.save(
+                    Album(
+                            name = "Album 1",
+                            description = "Description",
+                            owners = mutableListOf(),
+                            groups = mutableListOf(ownedGroup),
+                            sharedWith = mutableListOf()
+                    )
+            )
+            ownedGroup = groupRepository.save(ownedGroup.copy(albums = mutableListOf(album)))
+            val updateAlbumRequest =
+                    AlbumRequest(
+                            name = album.name,
+                            description = album.description,
+                            owners = album.owners.map(User::id),
+                            groups = album.groups.map(Group::id).filter { it != ownedGroup.id },
+                            sharedWith = album.sharedWith.map(User::id),
+                            artifacts = album.artifacts.map(Artifact::id)
+                    )
+            val updateAlbumResponse = client.put()
+                    .uri("/album/${album.id}")
+                    .accept(MediaType.APPLICATION_JSON_UTF8)
+                    .contentType(MediaType.APPLICATION_JSON_UTF8)
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer $token")
+                    .syncBody(updateAlbumRequest)
+                    .exchange()
+                    .expectStatus().isOk
+                    .expectBody()
+                    .returnResult()
+                    .responseBody!!
+            val updatedAlbumResponse =
+                    ObjectMapper().registerKotlinModule().readValue<Map<String, Any>>(updateAlbumResponse)
+            assertEquals((updatedAlbumResponse["id"] as Int).toLong(), album.id)
+            assertEquals(updatedAlbumResponse["name"] as String, album.name)
+            assertEquals(updatedAlbumResponse["description"] as String, album.description)
+
+            val updatedAlbum =
+                    albumRepository.findByIdOrNull((updatedAlbumResponse["id"] as Int).toLong())!!
+            assertThat(updatedAlbum, hasProperty("groups", not(hasItem(hasProperty("id", `is`(ownedGroup.id))))))
+        }
+
+        @Test
+        fun `it should not allow normal users to update the album`() {
+            val albumRequest = AlbumRequest(
+                    name = "Album 1",
+                    description = "Description",
+                    owners = listOf(),
+                    groups = listOf(),
+                    sharedWith = listOf(),
+                    artifacts = listOf()
+            )
+
+            val createAlbumResponse = client.post()
+                    .uri("/album")
+                    .accept(MediaType.APPLICATION_JSON_UTF8)
+                    .contentType(MediaType.APPLICATION_JSON_UTF8)
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer $token")
+                    .syncBody(albumRequest)
+                    .exchange()
+                    .expectStatus().isCreated
+                    .expectBody()
+                    .returnResult()
+                    .responseBody!!
+            val returnedAlbum =
+                    ObjectMapper().registerKotlinModule().readValue<Map<String, Any>>(String(createAlbumResponse))
+
+            @Suppress("UNCHECKED_CAST")
+            val updateAlbumRequest =
+                    AlbumRequest(
+                            name = returnedAlbum["name"] as String,
+                            description = returnedAlbum["description"] as String,
+                            owners = (returnedAlbum["owners"] as List<Int>).map(Int::toLong),
+                            groups = (returnedAlbum["groups"] as List<Int>).map(Int::toLong),
+                            sharedWith = (returnedAlbum["owners"] as List<Int>).map(Int::toLong),
+                            artifacts = (returnedAlbum["artifacts"] as List<Int>).map(Int::toLong)
+                    )
+            val altUser = userService.createUser("user 2", "exampl2@example.com", "password")
+            val altToken = getToken(altUser.email, "password")
+            client.put()
+                    .uri("/album/${returnedAlbum["id"]}")
+                    .accept(MediaType.APPLICATION_JSON_UTF8)
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer $altToken")
+                    .syncBody(updateAlbumRequest)
+                    .exchange()
+                    .expectStatus().isForbidden
+        }
+
+        @Test
+        fun `it should add the specified users as owners`() {
+            val album = albumService.createAlbum(email, "album", "description", mutableListOf(), mutableListOf(), mutableListOf(), mutableListOf())
+            val user = userRepository.findByEmail(email)!!
+            val user2 = userService.createUser("user2", "example2@example.com", "password")
+            val updateAlbumRequest = AlbumRequest(
+                    name = album.name,
+                    description = album.description,
+                    owners = album.owners.map(User::id) + listOf(user2.id),
+                    groups = listOf(),
+                    sharedWith = listOf(),
+                    artifacts = listOf()
+            )
+            val updateAlbumResponse = client.put()
+                    .uri("/album/${album.id}")
+                    .accept(MediaType.APPLICATION_JSON_UTF8)
+                    .contentType(MediaType.APPLICATION_JSON_UTF8)
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer $token")
+                    .syncBody(updateAlbumRequest)
+                    .exchange()
+                    .expectStatus().isOk
+                    .expectBody()
+                    .jsonPath("$.id").value(`is`(album.id.toInt()))
+                    .jsonPath("$.name").value(`is`(updateAlbumRequest.name))
+                    .jsonPath("$.description").value(`is`(updateAlbumRequest.description))
+                    .jsonPath("$.owners").value(`is`(updateAlbumRequest.owners!!.map(Long::toInt)))
+                    .jsonPath("$.groups").value(`is`(updateAlbumRequest.groups!!.map(Long::toInt)))
+                    .jsonPath("$.sharedWith").value(`is`(updateAlbumRequest.sharedWith!!.map(Long::toInt)))
+                    .jsonPath("$.artifacts").value(`is`(updateAlbumRequest.artifacts!!.map(Long::toInt)))
+                    .returnResult()
+                    .responseBody!!
+            val response = ObjectMapper().registerKotlinModule().readValue<Map<String, Any>>(updateAlbumResponse)
+            val updatedAlbum = albumRepository.findByIdOrNull((response.getValue("id") as Int).toLong())!!
+            val updatedUser = userRepository.findByIdOrNull(user.id)!!
+            val updatedUser2 = userRepository.findByIdOrNull(user2.id)!!
+            assertThat(updatedAlbum.owners.map(User::id), containsInAnyOrder(user.id, user2.id))
+        }
+
+        @Test
+        fun `it should add the album to the specified groups`() {
+            val album = albumService.createAlbum(email, "album", "description", mutableListOf(), mutableListOf(), mutableListOf(), mutableListOf())
+            val user = userRepository.findByEmail(email)
+            val group = groupService.createGroup(email, "group 1", "description", memberIDs = listOf(), adminIDs = listOf())
+            val updateAlbumRequest = AlbumRequest(
+                    name = album.name,
+                    description = album.description,
+                    owners = listOf(),
+                    groups = listOf(group.id),
+                    sharedWith = listOf(),
+                    artifacts = listOf()
+            )
+            val updateAlbumResponse = client.put()
+                    .uri("/album/${album.id}")
+                    .accept(MediaType.APPLICATION_JSON_UTF8)
+                    .contentType(MediaType.APPLICATION_JSON_UTF8)
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer $token")
+                    .syncBody(updateAlbumRequest)
+                    .exchange()
+                    .expectStatus().isOk
+                    .expectBody()
+                    .jsonPath("$.id").value(`is`(album.id.toInt()))
+                    .jsonPath("$.name").value(`is`(updateAlbumRequest.name))
+                    .jsonPath("$.description").value(`is`(updateAlbumRequest.description))
+                    .jsonPath("$.owners").value(`is`(updateAlbumRequest.owners!!.map(Long::toInt)))
+                    .jsonPath("$.groups").value(`is`(updateAlbumRequest.groups!!.map(Long::toInt)))
+                    .jsonPath("$.sharedWith").value(`is`(updateAlbumRequest.sharedWith!!.map(Long::toInt)))
+                    .jsonPath("$.artifacts").value(`is`(updateAlbumRequest.artifacts!!.map(Long::toInt)))
+                    .returnResult()
+                    .responseBody!!
+            val response = ObjectMapper().registerKotlinModule().readValue<Map<String, Any>>(updateAlbumResponse)
+            val updatedAlbum = albumRepository.findByIdOrNull((response.getValue("id") as Int).toLong())!!
+            assertThat(updatedAlbum.groups.map(Group::id), containsInAnyOrder(group.id))
+        }
+
+        @Test
+        fun `it should share the album with the specified users`() {
+            val album = albumService.createAlbum(email, "album", "description", mutableListOf(), mutableListOf(), mutableListOf(), mutableListOf())
+            val user = userRepository.findByEmail(email)
+            val user2 = userService.createUser("user2", "example2@example.com", "password")
+            val updateAlbumRequest = AlbumRequest(
+                    name = album.name,
+                    description = album.description,
+                    owners = listOf(),
+                    groups = listOf(),
+                    sharedWith = listOf(user2.id),
+                    artifacts = listOf()
+            )
+            val updateAlbumResponse = client.put()
+                    .uri("/album/${album.id}")
+                    .accept(MediaType.APPLICATION_JSON_UTF8)
+                    .contentType(MediaType.APPLICATION_JSON_UTF8)
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer $token")
+                    .syncBody(updateAlbumRequest)
+                    .exchange()
+                    .expectStatus().isOk
+                    .expectBody()
+                    .jsonPath("$.id").value(`is`(album.id.toInt()))
+                    .jsonPath("$.name").value(`is`(updateAlbumRequest.name))
+                    .jsonPath("$.description").value(`is`(updateAlbumRequest.description))
+                    .jsonPath("$.owners").value(`is`(updateAlbumRequest.owners!!.map(Long::toInt)))
+                    .jsonPath("$.groups").value(`is`(updateAlbumRequest.groups!!.map(Long::toInt)))
+                    .jsonPath("$.sharedWith").value(`is`(updateAlbumRequest.sharedWith!!.map(Long::toInt)))
+                    .jsonPath("$.artifacts").value(`is`(updateAlbumRequest.artifacts!!.map(Long::toInt)))
+                    .returnResult()
+                    .responseBody!!
+            val response = ObjectMapper().registerKotlinModule().readValue<Map<String, Any>>(updateAlbumResponse)
+            val updatedAlbum = albumRepository.findByIdOrNull((response.getValue("id") as Int).toLong())!!
+            assertThat(updatedAlbum.sharedWith.map(User::id), containsInAnyOrder(user2.id))
         }
     }
 

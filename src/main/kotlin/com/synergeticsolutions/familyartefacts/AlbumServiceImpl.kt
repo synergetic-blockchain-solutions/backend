@@ -77,17 +77,12 @@ class AlbumServiceImpl(
         sharedWithIDs: List<Long>,
         artifactIDs: List<Long>
     ): Album {
-        val creator =
-                userRepository.findByEmail(email)
-                        ?: throw UsernameNotFoundException("User with email $email does not exist")
+        val creator = userRepository.findByEmail(email) ?: throw UsernameNotFoundException("User with email $email does not exist")
         (ownerIDs + sharedWithIDs).forEach {
-            if (!userRepository.existsById(it)) {
-                throw UserNotFoundException("No user with ID $it was found")
-            }
+            if (!userRepository.existsById(it)) { throw UserNotFoundException("No user with ID $it was found") }
         }
         groupIDs.forEach {
-            if (!groupRepository.existsById(it)) {
-                throw GroupNotFoundException("No group with ID $it was found")
+            if (!groupRepository.existsById(it)) { throw GroupNotFoundException("No group with ID $it was found")
             }
         }
         artifactIDs.forEach {
@@ -95,10 +90,11 @@ class AlbumServiceImpl(
                 throw ArtifactNotFoundException("No artifact with ID $it was found")
             }
         }
+
+        val artifacts = artifactRepository.findAllById(artifactIDs)
         val owners = userRepository.findAllById(ownerIDs).toMutableList()
         val groups = groupRepository.findAllById(groupIDs).toMutableList()
         val shares = userRepository.findAllById(sharedWithIDs)
-        val artifacts = artifactRepository.findAllById(artifactIDs)
 
         if (!owners.contains(creator)) {
             owners.add(creator)
@@ -107,6 +103,7 @@ class AlbumServiceImpl(
         if (!groups.contains(creator.privateGroup)) {
             groups.add(creator.privateGroup)
         }
+
         val album = Album(
                 name = name,
                 description = description,
@@ -137,6 +134,98 @@ class AlbumServiceImpl(
         logger.debug("Created album $album")
 
         return savedAlbum
+    }
+
+    override fun updateAlbum(email: String, id: Long, update: AlbumRequest): Album {
+        val user =
+                userRepository.findByEmail(email) ?: throw UserNotFoundException("User with email $email does not exist")
+        val album =
+                albumRepository.findByIdOrNull(id)
+                        ?: throw AlbumNotFoundException("Could not find album with ID $id")
+
+        assertCanUpdate(user, album, update)
+        // Past this point we can perform any actions and be comfortable the user is authorised to perform them
+
+        ((update.owners ?: listOf()) + (update.sharedWith ?: listOf())).forEach {
+            if (!userRepository.existsById(it)) {
+                throw UserNotFoundException("Could not find user with ID $id")
+            }
+        }
+
+        (update.groups ?: listOf()).forEach {
+            if (!groupRepository.existsById(it)) {
+                throw GroupNotFoundException("Could not find group with ID $id")
+            }
+        }
+
+        (update.artifacts ?: listOf()).forEach {
+            if (!artifactRepository.existsById(it)) {
+                throw ArtifactNotFoundException("Could not find artifact with ID $id")
+            }
+        }
+
+        // User can only add/remove artifacts that they own to/from the album
+        val updatedArtifacts = artifactRepository.findAllById(update.artifacts ?: listOf())
+        updatedArtifacts.forEach {
+            if (!it.owners.contains(user)) {
+                throw ActionNotAllowedException("User is not owner of artifact ${it.id}")
+            }
+        }
+        album.artifacts.subtract(updatedArtifacts).forEach { it.albums.remove(album) }
+        updatedArtifacts.subtract(album.artifacts).forEach { it.albums.add(album) }
+        artifactRepository.saveAll(album.artifacts)
+        artifactRepository.saveAll(updatedArtifacts)
+
+        // Fix up new users and owners who are being removed
+        val updatedOwners = userRepository.findAllById(update.owners ?: listOf())
+        album.owners.subtract(updatedOwners).forEach { it.ownedAlbums.remove(album) }
+        updatedOwners.subtract(album.owners).forEach { it.ownedAlbums.add(album) }
+        userRepository.saveAll(album.owners)
+        userRepository.saveAll(updatedOwners)
+
+        // Fix up new groups and groups that are being removed
+        val updatedGroups = groupRepository.findAllById(update.groups ?: listOf())
+        album.groups.subtract(updatedGroups).forEach { it.albums.remove(album) }
+        updatedGroups.subtract(album.groups).forEach { it.albums.add(album) }
+        groupRepository.saveAll(album.groups)
+        groupRepository.saveAll(updatedGroups)
+
+        // Fix up new sharees and sharees who are being removed
+        val updatedShares = userRepository.findAllById(update.sharedWith ?: listOf())
+        album.sharedWith.subtract(updatedShares).forEach { it.sharedAlbums.remove(album) }
+        updatedShares.subtract(album.sharedWith).forEach { it.sharedAlbums.add(album) }
+        userRepository.saveAll(album.sharedWith)
+        userRepository.saveAll(updatedShares)
+
+        val updatedAlbum = album.copy(
+                name = update.name,
+                description = update.description,
+                owners = updatedOwners,
+                groups = updatedGroups,
+                sharedWith = updatedShares,
+                artifacts = updatedArtifacts
+        )
+        return albumRepository.save(updatedAlbum)
+    }
+
+    private fun assertCanUpdate(user: User, album: Album, update: AlbumRequest) {
+        // Owners of an album can make any changes they want
+        if (album.owners.contains(user)) {
+            return
+        }
+
+        // Other than owners, the only users that can make any sort of modifications are group owners of groups the
+        // album is in. In this case, they're limited to being able to remove an album from a group they're an
+        // owner of.
+        if (update.groups != album.groups.map(Group::id)) {
+            // The set of groups a user removes must be a subset of the set groups in which they are an owner
+            val removedGroups = album.groups.map(Group::id).subtract(update.groups!!)
+            if (!user.ownedGroups.map(Group::id).containsAll(removedGroups.toList())) {
+                throw ActionNotAllowedException("User ${user.id} is not an admin of all the groups they attempted to remove")
+            }
+        } else {
+            throw ActionNotAllowedException("User ${user.id} is not an owner of album ${album.id}")
+        }
     }
 
     override fun deleteAlbum(email: String, id: Long): Album {

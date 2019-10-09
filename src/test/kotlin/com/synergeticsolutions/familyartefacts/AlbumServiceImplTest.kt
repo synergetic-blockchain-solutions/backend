@@ -547,6 +547,181 @@ class AlbumServiceImplTest {
     }
 
     @Nested
+    inner class UpdateAlbum {
+        @Test
+        fun `it should not allow users without permission to modify the album`() {
+            val email = "example@example.com"
+            var owningUser = User(
+                    id = 2, name = "User 2", email = "example@example2.com", password = "password", groups = mutableListOf(
+                    Group(id = 1, name = "Group 1", members = mutableListOf(), description = "")
+            ), privateGroup = Group(2, "Group 2", members = mutableListOf(), description = "")
+            )
+            val album = Album(
+                    1,
+                    "Album 1",
+                    "Description",
+                    owners = mutableListOf(owningUser),
+                    groups = mutableListOf(),
+                    sharedWith = mutableListOf(),
+                    artifacts = mutableListOf()
+            )
+            owningUser = owningUser.copy(ownedAlbums = mutableListOf(album))
+            val user = User(
+                    id = 1, name = "User 1", email = email, password = "password", groups = mutableListOf(
+                    Group(id = 1, name = "Group 1", members = mutableListOf(), description = "")
+            ), privateGroup = Group(2, "Group 2", members = mutableListOf(), description = "")
+            )
+            Mockito.`when`(albumRepository.findByIdOrNull(ArgumentMatchers.anyLong())).then {
+                if (it.arguments[0] == album.id) {
+                    Optional.of(album)
+                } else {
+                    Optional.empty()
+                }
+            }
+            Mockito.`when`(userRepository.findByEmail(ArgumentMatchers.anyString())).then {
+                when (it.arguments[0]) {
+                    user.email -> user
+                    owningUser.email -> owningUser
+                    else -> throw RuntimeException("${it.arguments[0]} not handled")
+                }
+            }
+            assertThrows<ActionNotAllowedException> {
+                albumService.updateAlbum(
+                        user.email, album.id, AlbumRequest(
+                            album.name,
+                            "updated description",
+                            album.owners.map(User::id),
+                            album.groups.map(Group::id),
+                            album.sharedWith.map(User::id),
+                            album.artifacts.map(Artifact::id)
+                        )
+                )
+            }
+        }
+
+        @Test
+        fun `it should allow group owners to remove their group from the album`() {
+            val email = "example@example.com"
+            var group = Group(id = 1, name = "Group 1", members = mutableListOf(), description = "")
+            val groupOwner = User(
+                    id = 2,
+                    name = "User 2",
+                    email = "example@example2.com",
+                    password = "password",
+                    groups = mutableListOf(
+                            group
+                    ),
+                    privateGroup = Group(2, "Group 2", members = mutableListOf(), description = ""),
+                    ownedGroups = mutableListOf(group)
+            )
+            val album = Album(
+                    1,
+                    "Album 1",
+                    "Description",
+                    owners = mutableListOf(),
+                    groups = mutableListOf(group),
+                    sharedWith = mutableListOf(),
+                    artifacts = mutableListOf()
+            )
+            group = group.copy(albums = mutableListOf(album))
+            val user = User(
+                    id = 1, name = "User 1", email = email, password = "password", groups = mutableListOf(
+                    Group(id = 1, name = "Group 1", members = mutableListOf(), description = "")
+            ), privateGroup = Group(2, "Group 2", members = mutableListOf(), description = "")
+            )
+            Mockito.`when`(albumRepository.findByIdOrNull(ArgumentMatchers.anyLong())).then {
+                if (it.arguments[0] == album.id) {
+                    Optional.of(album)
+                } else {
+                    Optional.empty()
+                }
+            }
+            Mockito.`when`(userRepository.findByEmail(ArgumentMatchers.anyString())).then {
+                when (it.arguments[0]) {
+                    user.email -> user
+                    groupOwner.email -> groupOwner
+                    else -> throw RuntimeException("${it.arguments[0]} not handled")
+                }
+            }
+            Mockito.`when`(groupRepository.findByIdOrNull(ArgumentMatchers.anyLong())).then { Optional.of(group) }
+            Mockito.`when`(albumRepository.save(ArgumentMatchers.any<Album>())).then { it.arguments[0] as Album }
+
+            val updatedAlbum =
+                    albumService.updateAlbum(
+                            groupOwner.email, album.id, AlbumRequest(
+                                name = album.name,
+                                description = album.description,
+                                owners = album.owners.map(User::id),
+                                groups = emptyList(),
+                                sharedWith = album.sharedWith.map(User::id),
+                                artifacts = album.artifacts.map(Artifact::id)
+                        )
+                    )
+            MatcherAssert.assertThat(
+                    updatedAlbum, equalTo(album.copy(groups = mutableListOf()))
+            )
+            Mockito.verify(albumRepository).save(album.copy(groups = mutableListOf()))
+        }
+
+        @Test
+        fun `it should allow album owners to make changes to the album`() {
+            var owningUser = User(
+                    id = 2, name = "User 2", email = "example@example2.com", password = "password", groups = mutableListOf(
+                    Group(id = 1, name = "Group 1", members = mutableListOf(), description = "")
+            ), privateGroup = Group(2, "Group 2", members = mutableListOf(), description = "")
+            )
+            var album = Album(
+                    1,
+                    "Album 1",
+                    "Description",
+                    owners = mutableListOf(owningUser),
+                    groups = mutableListOf(),
+                    sharedWith = mutableListOf(),
+                    artifacts = mutableListOf()
+            )
+            owningUser = owningUser.copy(ownedAlbums = mutableListOf(album))
+            album = album.copy(owners = mutableListOf(owningUser))
+            Mockito.`when`(albumRepository.findByIdOrNull(ArgumentMatchers.anyLong())).then {
+                if (it.arguments[0] == album.id) {
+                    Optional.of(album)
+                } else {
+                    Optional.empty()
+                }
+            }
+            Mockito.`when`(userRepository.existsById(ArgumentMatchers.anyLong())).thenReturn(true)
+            Mockito.`when`(userRepository.findByEmail(ArgumentMatchers.anyString())).then {
+                when (it.arguments[0]) {
+                    owningUser.email -> owningUser
+                    else -> throw RuntimeException("${it.arguments[0]} not handled")
+                }
+            }
+            Mockito.`when`(albumRepository.save(ArgumentMatchers.any<Album>())).then { it.arguments[0] as Album }
+            Mockito.`when`(userRepository.findAllById(ArgumentMatchers.any<Iterable<Long>>())).then {
+                val args = it.arguments[0] as Iterable<Long>
+                if (args.toList() == album.owners.map(User::id)) {
+                    album.owners
+                } else {
+                    listOf<User>()
+                }
+            }
+            val updatedAlbum = albumService.updateAlbum(
+                    owningUser.email, album.id, AlbumRequest(
+                    album.name,
+                    "updated description",
+                    album.owners.map(User::id),
+                    album.groups.map(Group::id),
+                    album.sharedWith.map(User::id),
+                    album.artifacts.map(Artifact::id)
+                )
+            )
+            MatcherAssert.assertThat(
+                    updatedAlbum, equalTo(album.copy(description = "updated description"))
+            )
+            Mockito.verify(albumRepository).save(album.copy(description = "updated description"))
+        }
+    }
+
+    @Nested
     inner class DeleteAlbum {
         @Test
         fun `it should not allow user's who are not the album's owners to delete it`() {

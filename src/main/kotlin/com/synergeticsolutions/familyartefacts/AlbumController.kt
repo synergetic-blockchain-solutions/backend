@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
@@ -66,6 +67,14 @@ class AlbumController(
         )
         logger.info("Created album $createdAlbum")
         return ResponseEntity.status(HttpStatus.CREATED).body(createdAlbum)
+    }
+
+    @PutMapping(path = ["/{id}"])
+    fun updateAlbum(@PathVariable id: Long, @RequestBody album: AlbumRequest): ResponseEntity<Album> {
+        val currentUser = SecurityContextHolder.getContext().authentication ?: throw NoAuthenticationException()
+        val updatedAlbum = albumService.updateAlbum(currentUser.principal as String, id, album)
+        logger.info("Updated album $updatedAlbum")
+        return ResponseEntity.ok(updatedAlbum)
     }
 
     @DeleteMapping(path = ["/{id}"])
