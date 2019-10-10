@@ -3,6 +3,10 @@ package com.synergeticsolutions.familyartefacts
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
+import java.io.ByteArrayOutputStream
+import java.io.InputStream
+import java.security.Principal
+import javax.servlet.http.HttpServletRequest
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -23,10 +27,6 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.multipart.support.StandardMultipartHttpServletRequest
-import java.io.ByteArrayOutputStream
-import java.io.InputStream
-import java.security.Principal
-import javax.servlet.http.HttpServletRequest
 
 @RestController
 @RequestMapping(path = ["/artifact/{artifactId}/resource"])
