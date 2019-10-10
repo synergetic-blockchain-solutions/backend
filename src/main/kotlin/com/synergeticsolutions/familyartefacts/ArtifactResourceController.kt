@@ -3,22 +3,15 @@ package com.synergeticsolutions.familyartefacts
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
-import java.io.ByteArrayOutputStream
-import java.io.InputStream
-import java.security.Principal
-import javax.servlet.http.HttpServletRequest
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.core.io.ByteArrayResource
-import org.springframework.http.HttpEntity
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.util.Base64Utils
-import org.springframework.util.LinkedMultiValueMap
-import org.springframework.util.MultiValueMap
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -30,6 +23,10 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.multipart.support.StandardMultipartHttpServletRequest
+import java.io.ByteArrayOutputStream
+import java.io.InputStream
+import java.security.Principal
+import javax.servlet.http.HttpServletRequest
 
 @RestController
 @RequestMapping(path = ["/artifact/{artifactId}/resource"])
@@ -96,35 +93,6 @@ class ArtifactResourceController(
             contentType = resource.contentType,
             resource = resource.resource
         )
-    }
-
-    /**
-     * GET /artifact/{artifactId}/resource/{resourceId}
-     *
-     * Get the metadata and resource for a resource [resourceId] associated with [artifactId].
-     *
-     * This is a multipart/form-data response with the parts `metadata` and `resource`. The metadata part contains
-     * a JSON document of the resource metadata, as returned by [getResourceMetadataById], and the resource part
-     * contains the resource, as returned by [getResourceById].
-     */
-    @GetMapping(path = ["/{resourceId}"], produces = [MediaType.MULTIPART_FORM_DATA_VALUE])
-    fun getById(@PathVariable artifactId: Long, @PathVariable resourceId: Long, principal: Principal): MultiValueMap<String, Any> {
-        val metadata = artifactResourceService.findMetadataById(principal.name, artifactId, resourceId)
-        val resource = artifactResourceService.findResourceById(principal.name, artifactId, resourceId)
-
-        val metadataPartHeaders = HttpHeaders()
-        metadataPartHeaders[HttpHeaders.CONTENT_TYPE] = MediaType.APPLICATION_JSON_UTF8_VALUE
-        val metadataPart = HttpEntity(metadata, metadataPartHeaders)
-
-        val resourcePartHeaders = HttpHeaders()
-        resourcePartHeaders[HttpHeaders.CONTENT_TYPE] = resource.contentType
-        val resourcePart = HttpEntity(ByteArrayResource(resource.resource), resourcePartHeaders)
-
-        val multipartResponse = LinkedMultiValueMap<String, Any>()
-        multipartResponse.add("metadata", metadataPart)
-        multipartResponse.add("resource", resourcePart)
-
-        return multipartResponse
     }
 
     /**
