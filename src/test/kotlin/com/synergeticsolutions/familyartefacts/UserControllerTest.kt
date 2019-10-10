@@ -6,6 +6,7 @@ import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import org.hamcrest.Matchers.`is`
 import org.hamcrest.Matchers.contains
 import org.hamcrest.Matchers.containsInAnyOrder
+import org.hamcrest.Matchers.hasEntry
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
@@ -170,7 +171,6 @@ class UserControllerTest {
         lateinit var token: String
         lateinit var user: User
 
-
         @BeforeEach
         fun beforeEach() {
             user = userService.createUser("user1", "example@example.com", "password")
@@ -185,7 +185,6 @@ class UserControllerTest {
                 .responseBody!!
             token = ObjectMapper().registerKotlinModule().readValue<LoginResponse>(resp).token
         }
-
 
         @Nested
         inner class GetMe {
@@ -210,35 +209,101 @@ class UserControllerTest {
         inner class GetUserById {
             @Test
             fun `it should return the user with the given Id`() {
-                TODO()
+                val otherUser = userService.createUser("user4", "example4@example.com", "password")
+                val body = client.get().uri("/user/${otherUser.id}")
+                    .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_UTF8_VALUE)
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer $token")
+                    .exchange()
+                    .expectStatus().isOk
+                    .expectBody()
+                    .jsonPath("$.id").value(`is`(otherUser.id.toInt()))
+                    .jsonPath("$.name").value(`is`(otherUser.name))
+                    .jsonPath("$.email").value(`is`(otherUser.email))
             }
 
             @Test
             fun `it should return a 404 if no user with that Id exists`() {
-                TODO()
+                val body = client.get().uri("/user/100")
+                    .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_UTF8_VALUE)
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer $token")
+                    .exchange()
+                    .expectStatus().isNotFound
             }
         }
 
         @Nested
         inner class GetUserByNameOrEmail {
+            lateinit var user2: User
+            lateinit var user3: User
+            lateinit var user4: User
+            lateinit var user5: User
+
+            @BeforeEach
+            fun beforeEach() {
+                user2 = userService.createUser("user2", "example2@example.com", "password")
+                user3 = userService.createUser("user3", "example3@example.com", "password")
+                user4 = userService.createUser("user4", "example4@example.com", "password")
+                user5 = userService.createUser("user4", "example5@example.com", "password")
+            }
+
             @Test
             fun `it should get all the users if no parameters are specified`() {
-                TODO()
+                client.get().uri("/user")
+                    .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_UTF8_VALUE)
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer $token")
+                    .exchange()
+                    .expectStatus().isOk
+                    .expectBody()
+                    .jsonPath("$").isArray
+                    .jsonPath("$").value(
+                        containsInAnyOrder(
+                            hasEntry("id", user.id.toInt()),
+                            hasEntry("id", user2.id.toInt()),
+                            hasEntry("id", user3.id.toInt()),
+                            hasEntry("id", user4.id.toInt()),
+                            hasEntry("id", user5.id.toInt())
+                    ))
             }
 
             @Test
             fun `it should get all the users with the given name`() {
-                TODO()
+                client.get().uri("/user?name=user4")
+                    .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_UTF8_VALUE)
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer $token")
+                    .exchange()
+                    .expectStatus().isOk
+                    .expectBody()
+                    .jsonPath("$").isArray
+                    .jsonPath("$").value(
+                        containsInAnyOrder(
+                            hasEntry("id", user4.id.toInt()),
+                            hasEntry("id", user5.id.toInt())
+                        )
+                    )
             }
 
             @Test
             fun `it should get the user with the given email`() {
-                TODO()
+                client.get().uri("/user?email=${user4.email}")
+                    .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_UTF8_VALUE)
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer $token")
+                    .exchange()
+                    .expectStatus().isOk
+                    .expectBody()
+                    .jsonPath("$").isArray
+                    .jsonPath("$").value(contains(hasEntry("id", user4.id.toInt())))
             }
 
             @Test
             fun `it should get the user with given name and given email`() {
-                TODO()
+                client.get().uri("/user?email=${user4.email}&name=user4")
+                    .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_UTF8_VALUE)
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer $token")
+                    .exchange()
+                    .expectStatus().isOk
+                    .expectBody()
+                    .jsonPath("$").isArray
+                    .jsonPath("$").value(contains(hasEntry("id", user4.id.toInt())))
             }
         }
     }
