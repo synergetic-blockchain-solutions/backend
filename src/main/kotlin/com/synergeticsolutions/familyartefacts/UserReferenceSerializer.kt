@@ -37,9 +37,3 @@ data class UserReferenceDto(
         }
     }
 }
-
-private fun JsonGenerator.writeArrayField(fieldName: String, array: List<Long>) {
-    this.writeArrayFieldStart(fieldName)
-    this.writeArray(array.toLongArray(), 0, array.size)
-    this.writeEndArray()
-}
