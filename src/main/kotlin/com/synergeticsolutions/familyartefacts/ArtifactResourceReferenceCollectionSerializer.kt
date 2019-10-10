@@ -27,8 +27,7 @@ data class ArtifactResourceReferenceDto(
                 name = resource.name,
                 description = resource.description,
                 contentType = resource.contentType,
-                artifact = resource.artifact.id,
-                tags = resource.tags
+                artifact = resource.artifact.id
             )
         }
     }

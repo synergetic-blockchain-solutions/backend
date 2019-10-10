@@ -78,7 +78,6 @@ class ArtifactResourceServiceImpl(
             id = resource.id,
             name = resource.name,
             description = resource.description,
-            tags = resource.tags,
             artifactId = resource.artifact.id
         )
     }
@@ -110,8 +109,7 @@ class ArtifactResourceServiceImpl(
         metadata?.let {
             resourceEntity = resourceEntity.copy(
                 name = it.name,
-                description = it.description,
-                tags = (it.tags ?: listOf()).toMutableList()
+                description = it.description
             )
         }
 
@@ -134,7 +132,6 @@ class ArtifactResourceServiceImpl(
             id = resource.id,
             name = resource.name,
             description = resource.description,
-            tags = resource.tags,
             artifactId = resource.artifact.id
         )
     }
