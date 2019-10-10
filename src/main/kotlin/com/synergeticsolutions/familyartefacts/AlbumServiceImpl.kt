@@ -95,9 +95,9 @@ class AlbumServiceImpl(
                 creator.ownedArtifacts.map(Artifact::id) + creator.sharedArtifacts.map(Artifact::id) + creator.groups.flatMap {
                     it.artifacts.map(Artifact::id)
                 } + creator.ownedAlbums.flatMap {
-                    creator.artifacts.map(Artifact::id)
+                    it.artifacts.map(Artifact::id)
                 } + user.sharedAlbums.flatMap {
-                    creator.artifacts.map(Artifact::id)
+                    it.artifacts.map(Artifact::id)
                 }
 
         artifactIDs.forEach {
