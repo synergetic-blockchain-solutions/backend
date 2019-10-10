@@ -94,10 +94,10 @@ class AlbumServiceImpl(
         val accessibleArtifacts =
                 creator.ownedArtifacts.map(Artifact::id) + creator.sharedArtifacts.map(Artifact::id) + creator.groups.flatMap {
                     it.artifacts.map(Artifact::id)
-                } + user.ownedAlbums.flatMap {
-                    it.artifacts.map(Artifact::id)
+                } + creator.ownedAlbums.flatMap {
+                    creator.artifacts.map(Artifact::id)
                 } + user.sharedAlbums.flatMap {
-                    it.artifacts.map(Artifact::id)
+                    creator.artifacts.map(Artifact::id)
                 }
 
         artifactIDs.forEach {
@@ -157,7 +157,7 @@ class AlbumServiceImpl(
                         ?: throw AlbumNotFoundException("Could not find album with ID $id")
 
         val accessibleArtifacts =
-                creator.ownedArtifacts.map(Artifact::id) + creator.sharedArtifacts.map(Artifact::id) + creator.groups.flatMap {
+                user.ownedArtifacts.map(Artifact::id) + user.sharedArtifacts.map(Artifact::id) + user.groups.flatMap {
                     it.artifacts.map(Artifact::id)
                 } + user.ownedAlbums.flatMap {
                     it.artifacts.map(Artifact::id)
