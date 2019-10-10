@@ -294,8 +294,8 @@ class ArtifactControllerTest {
                     .jsonPath("$.id").value(`is`(artifact.id.toInt()))
                     .jsonPath("$.name").value(`is`(artifact.name))
                     .jsonPath("$.description").value(`is`(artifact.description))
-                    .jsonPath("$.owners").value(`is`(artifact.owners.map { it.id.toInt() }))
-                    .jsonPath("$.groups").value(`is`(artifact.groups.map { it.id.toInt() }))
+                    .jsonPath("$.owners").value(hasItems(*(artifact.owners.map { hasEntry("id", it.id.toInt()) }.toTypedArray())))
+                    .jsonPath("$.groups").value(hasItems(*(artifact.groups.map { hasEntry("id", it.id.toInt()) }).toTypedArray()))
                     .jsonPath("$.sharedWith").value(`is`(artifact.sharedWith.map { it.id.toInt() }))
                     .jsonPath("$.tags").value(`is`(artifact.tags))
         }
@@ -328,9 +328,9 @@ class ArtifactControllerTest {
                     .jsonPath("$.id").value(greaterThan(0))
                     .jsonPath("$.name").value(`is`(artifactRequest.name))
                     .jsonPath("$.description").value(`is`(artifactRequest.description))
-                    .jsonPath("$.owners").value(`is`(listOf(user.id.toInt())))
-                    .jsonPath("$.groups").value(containsInAnyOrder(user.privateGroup.id.toInt(), group.id.toInt()))
-                    .jsonPath("$.sharedWith").value(`is`(listOf(user2.id.toInt())))
+                    .jsonPath("$.owners").value(contains(hasEntry("id", user.id.toInt())))
+                    .jsonPath("$.groups").value(containsInAnyOrder(hasEntry("id", user.privateGroup.id.toInt()), hasEntry("id", group.id.toInt())))
+                    .jsonPath("$.sharedWith").value(contains(hasEntry("id", user2.id.toInt())))
                     .jsonPath("$.tags").value(`is`(artifactRequest.tags))
                     .returnResult()
                     .responseBody!!
@@ -380,9 +380,9 @@ class ArtifactControllerTest {
                     ArtifactRequest(
                             name = returnedArtifact["name"] as String,
                             description = returnedArtifact["description"] as String,
-                            owners = (returnedArtifact["owners"] as List<Int>).map(Int::toLong),
-                            groups = (returnedArtifact["groups"] as List<Int>).map(Int::toLong),
-                            sharedWith = (returnedArtifact["owners"] as List<Int>).map(Int::toLong)
+                            owners = (returnedArtifact["owners"] as List<Map<String, Any>>).map { (it["id"] as Int).toLong() },
+                            groups = (returnedArtifact["groups"] as List<Map<String, Any>>).map { (it["id"] as Int).toLong() },
+                            sharedWith = (returnedArtifact["owners"] as List<Map<String, Any>>).map { (it["id"] as Int).toLong() }
                     )
             val updateArtifactResponse = client.put()
                     .uri("/artifact/${returnedArtifact["id"]}")
@@ -495,9 +495,9 @@ class ArtifactControllerTest {
                     ArtifactRequest(
                             name = returnedArtifact["name"] as String,
                             description = returnedArtifact["description"] as String,
-                            owners = (returnedArtifact["owners"] as List<Int>).map(Int::toLong),
-                            groups = (returnedArtifact["groups"] as List<Int>).map(Int::toLong),
-                            sharedWith = (returnedArtifact["owners"] as List<Int>).map(Int::toLong)
+                            owners = (returnedArtifact["owners"] as List<Map<String, Any>>).map { (it["id"] as Int).toLong() },
+                            groups = (returnedArtifact["groups"] as List<Map<String, Any>>).map { (it["id"] as Int).toLong() },
+                            sharedWith = (returnedArtifact["owners"] as List<Map<String, Any>>).map { (it["id"] as Int).toLong() }
                     )
             val altUser = userService.createUser("user 2", "exampl2@example.com", "password")
             val altToken = getToken(altUser.email, "password")
@@ -547,12 +547,13 @@ class ArtifactControllerTest {
             artifactRepository.save(artifact.copy(resources = mutableListOf(resource)))
 
             @Suppress("UNCHECKED_CAST")
-            val updateArtifactRequest = mapOf<String, Any>(
-                    "name" to returnedArtifact.getValue("id"),
-                    "description" to returnedArtifact.getValue("description"),
-                    "owners" to returnedArtifact.getValue("owners"),
-                    "sharedWith" to returnedArtifact.getValue("sharedWith"),
-                    "resources" to listOf<Long>()
+            val updateArtifactRequest = ArtifactRequest(
+                name = returnedArtifact.getValue("name") as String,
+                description = returnedArtifact.getValue("description") as String,
+                owners = (returnedArtifact.getValue("owners") as List<Map<String, Any>>).map { (it.getValue("id") as Int).toLong() },
+                sharedWith = (returnedArtifact.getValue("sharedWith") as List<Map<String, Any>>).map { (it.getValue("id") as Int).toLong() },
+                resources = listOf(),
+                groups = (returnedArtifact.getValue("groups") as List<Map<String, Any>>).map { (it.getValue("id") as Int).toLong() }
             )
 
             client.put()
@@ -592,9 +593,9 @@ class ArtifactControllerTest {
                     .jsonPath("$.id").value(`is`(artifact.id.toInt()))
                     .jsonPath("$.name").value(`is`(updateArtifactRequest.name))
                     .jsonPath("$.description").value(`is`(updateArtifactRequest.description))
-                    .jsonPath("$.owners").value(`is`(updateArtifactRequest.owners!!.map(Long::toInt)))
-                    .jsonPath("$.groups").value(`is`(updateArtifactRequest.groups!!.map(Long::toInt)))
-                    .jsonPath("$.sharedWith").value(`is`(updateArtifactRequest.sharedWith!!.map(Long::toInt)))
+                    .jsonPath("$.owners").value(containsInAnyOrder(*(updateArtifactRequest.owners!!.map{ hasEntry("id", it.toInt()) }.toTypedArray())))
+                    .jsonPath("$.groups").value(containsInAnyOrder(*(updateArtifactRequest.groups!!.map{ hasEntry("id", it.toInt()) }.toTypedArray())))
+                    .jsonPath("$.sharedWith").value(containsInAnyOrder(*(updateArtifactRequest.sharedWith!!.map{ hasEntry("id", it.toInt()) }.toTypedArray())))
                     .jsonPath("$.tags").value(`is`(updateArtifactRequest.tags))
                     .returnResult()
                     .responseBody!!
@@ -630,9 +631,9 @@ class ArtifactControllerTest {
                     .jsonPath("$.id").value(`is`(artifact.id.toInt()))
                     .jsonPath("$.name").value(`is`(updateArtifactRequest.name))
                     .jsonPath("$.description").value(`is`(updateArtifactRequest.description))
-                    .jsonPath("$.owners").value(`is`(updateArtifactRequest.owners!!.map(Long::toInt)))
-                    .jsonPath("$.groups").value(`is`(updateArtifactRequest.groups!!.map(Long::toInt)))
-                    .jsonPath("$.sharedWith").value(`is`(updateArtifactRequest.sharedWith!!.map(Long::toInt)))
+                    .jsonPath("$.owners").value(containsInAnyOrder(*(updateArtifactRequest.owners!!.map { hasEntry("id", it.toInt())}.toTypedArray())))
+                    .jsonPath("$.groups").value(containsInAnyOrder(*(updateArtifactRequest.groups!!.map { hasEntry("id", it.toInt()) }.toTypedArray())))
+                    .jsonPath("$.sharedWith").value(containsInAnyOrder(*(updateArtifactRequest.sharedWith!!.map{ hasEntry("id", it.toInt()) }.toTypedArray())))
                     .jsonPath("$.tags").value(`is`(updateArtifactRequest.tags))
                     .returnResult()
                     .responseBody!!
@@ -668,7 +669,7 @@ class ArtifactControllerTest {
                     .jsonPath("$.description").value(`is`(updateArtifactRequest.description))
                     .jsonPath("$.owners").value(`is`(updateArtifactRequest.owners!!.map(Long::toInt)))
                     .jsonPath("$.groups").value(`is`(updateArtifactRequest.groups!!.map(Long::toInt)))
-                    .jsonPath("$.sharedWith").value(`is`(updateArtifactRequest.sharedWith!!.map(Long::toInt)))
+                    .jsonPath("$.sharedWith").value(containsInAnyOrder(*(updateArtifactRequest.sharedWith!!.map{ hasEntry("id", it.toInt()) }.toTypedArray())))
                     .jsonPath("$.tags").value(`is`(updateArtifactRequest.tags))
                     .returnResult()
                     .responseBody!!

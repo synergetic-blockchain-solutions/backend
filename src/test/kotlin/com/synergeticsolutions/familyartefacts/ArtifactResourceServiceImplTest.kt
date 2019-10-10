@@ -102,7 +102,7 @@ class ArtifactResourceServiceImplTest {
             artifactResourceService.create(
                 "example@example.com",
                 artifact.id,
-                ArtifactResourceMetadata(id = 0, name = "Resource name", description = "Resource description", artifactId = 0),
+                ArtifactResourceMetadata(id = 0, name = resource.name, description = resource.description, artifactId = 0),
                 resource = resource.resource,
                 contentType = "text/plain"
             )
@@ -153,7 +153,7 @@ class ArtifactResourceServiceImplTest {
                 email = "example@example.com",
                 artifactId = artifact.id,
                 resourceId = 1,
-                metadata = ArtifactResourceMetadata(id = 0, name = "Resource name", description = "Resource description", artifactId = 0),
+                metadata = ArtifactResourceMetadata(id = 0, name = "Updated name", description = "Updated description", artifactId = 0),
                 resource = resource.resource,
                 contentType = "text/plain"
             )

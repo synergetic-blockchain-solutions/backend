@@ -297,7 +297,7 @@ class ArtifactResourceControllerTest(
                 resourceCreatorToken = user1Token
             )
             val resourceId = (returnedResource["id"] as Int).toLong()
-            val artifactId = (returnedResource["artifact"] as Int).toLong()
+            val artifactId = ((returnedResource["artifact"] as Map<String, Any>)["id"] as Int).toLong()
 
             val metadata =
                 ArtifactResourceMetadata(id = 0, name = "Resource name", description = "Resource description", artifactId = artifactId)
@@ -332,7 +332,7 @@ class ArtifactResourceControllerTest(
                 resourceCreatorToken = user1Token
             )
             val resourceId = (returnedResource["id"] as Int).toLong()
-            val artifactId = (returnedResource["artifact"] as Int).toLong()
+            val artifactId = ((returnedResource["artifact"] as Map<String, Any>)["id"] as Int).toLong()
 
             val metadata =
                 ArtifactResourceMetadata(id = 0, name = "Resource name", description = "Resource description", artifactId = artifactId)
@@ -360,7 +360,7 @@ class ArtifactResourceControllerTest(
                 resourceCreatorToken = user1Token
             )
             val resourceId = (returnedResource["id"] as Int).toLong()
-            val artifactId = (returnedResource["artifact"] as Int).toLong()
+            val artifactId = ((returnedResource["artifact"] as Map<String, Any>)["id"] as Int).toLong()
 
             val metadata =
                 ArtifactResourceMetadata(id = 0, name = "Resource name", description = "Resource description", artifactId = artifactId)
@@ -388,7 +388,7 @@ class ArtifactResourceControllerTest(
                 resourceCreatorToken = user1Token
             )
             val resourceId = (returnedResource["id"] as Int).toLong()
-            val artifactId = (returnedResource["artifact"] as Int).toLong()
+            val artifactId = ((returnedResource["artifact"] as Map<String, Any>)["id"] as Int).toLong()
 
             client.put()
                 .uri("/artifact/$artifactId/resource/$resourceId")
