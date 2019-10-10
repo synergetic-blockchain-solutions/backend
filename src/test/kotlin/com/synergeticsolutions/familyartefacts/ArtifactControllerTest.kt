@@ -593,9 +593,9 @@ class ArtifactControllerTest {
                     .jsonPath("$.id").value(`is`(artifact.id.toInt()))
                     .jsonPath("$.name").value(`is`(updateArtifactRequest.name))
                     .jsonPath("$.description").value(`is`(updateArtifactRequest.description))
-                    .jsonPath("$.owners").value(containsInAnyOrder(*(updateArtifactRequest.owners!!.map{ hasEntry("id", it.toInt()) }.toTypedArray())))
-                    .jsonPath("$.groups").value(containsInAnyOrder(*(updateArtifactRequest.groups!!.map{ hasEntry("id", it.toInt()) }.toTypedArray())))
-                    .jsonPath("$.sharedWith").value(containsInAnyOrder(*(updateArtifactRequest.sharedWith!!.map{ hasEntry("id", it.toInt()) }.toTypedArray())))
+                    .jsonPath("$.owners").value(containsInAnyOrder(*(updateArtifactRequest.owners!!.map { hasEntry("id", it.toInt()) }.toTypedArray())))
+                    .jsonPath("$.groups").value(containsInAnyOrder(*(updateArtifactRequest.groups!!.map { hasEntry("id", it.toInt()) }.toTypedArray())))
+                    .jsonPath("$.sharedWith").value(containsInAnyOrder(*(updateArtifactRequest.sharedWith!!.map { hasEntry("id", it.toInt()) }.toTypedArray())))
                     .jsonPath("$.tags").value(`is`(updateArtifactRequest.tags))
                     .returnResult()
                     .responseBody!!
@@ -631,9 +631,9 @@ class ArtifactControllerTest {
                     .jsonPath("$.id").value(`is`(artifact.id.toInt()))
                     .jsonPath("$.name").value(`is`(updateArtifactRequest.name))
                     .jsonPath("$.description").value(`is`(updateArtifactRequest.description))
-                    .jsonPath("$.owners").value(containsInAnyOrder(*(updateArtifactRequest.owners!!.map { hasEntry("id", it.toInt())}.toTypedArray())))
+                    .jsonPath("$.owners").value(containsInAnyOrder(*(updateArtifactRequest.owners!!.map { hasEntry("id", it.toInt()) }.toTypedArray())))
                     .jsonPath("$.groups").value(containsInAnyOrder(*(updateArtifactRequest.groups!!.map { hasEntry("id", it.toInt()) }.toTypedArray())))
-                    .jsonPath("$.sharedWith").value(containsInAnyOrder(*(updateArtifactRequest.sharedWith!!.map{ hasEntry("id", it.toInt()) }.toTypedArray())))
+                    .jsonPath("$.sharedWith").value(containsInAnyOrder(*(updateArtifactRequest.sharedWith!!.map { hasEntry("id", it.toInt()) }.toTypedArray())))
                     .jsonPath("$.tags").value(`is`(updateArtifactRequest.tags))
                     .returnResult()
                     .responseBody!!
@@ -669,7 +669,7 @@ class ArtifactControllerTest {
                     .jsonPath("$.description").value(`is`(updateArtifactRequest.description))
                     .jsonPath("$.owners").value(`is`(updateArtifactRequest.owners!!.map(Long::toInt)))
                     .jsonPath("$.groups").value(`is`(updateArtifactRequest.groups!!.map(Long::toInt)))
-                    .jsonPath("$.sharedWith").value(containsInAnyOrder(*(updateArtifactRequest.sharedWith!!.map{ hasEntry("id", it.toInt()) }.toTypedArray())))
+                    .jsonPath("$.sharedWith").value(containsInAnyOrder(*(updateArtifactRequest.sharedWith!!.map { hasEntry("id", it.toInt()) }.toTypedArray())))
                     .jsonPath("$.tags").value(`is`(updateArtifactRequest.tags))
                     .returnResult()
                     .responseBody!!

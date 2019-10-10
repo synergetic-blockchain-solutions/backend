@@ -1,5 +1,6 @@
 package com.synergeticsolutions.familyartefacts
 
+import java.util.Optional
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.`is`
 import org.hamcrest.Matchers.allOf
@@ -16,7 +17,6 @@ import org.mockito.ArgumentMatchers.anyLong
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mockito
 import org.springframework.data.repository.findByIdOrNull
-import java.util.Optional
 
 class ArtifactResourceServiceImplTest {
 
