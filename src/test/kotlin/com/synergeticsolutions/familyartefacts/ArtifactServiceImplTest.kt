@@ -31,9 +31,10 @@ class ArtifactServiceImplTest {
     private val artifactRepository: ArtifactRepository = Mockito.mock(ArtifactRepository::class.java)
     private val artifactResourceRepository: ArtifactResourceRepository =
         Mockito.mock(ArtifactResourceRepository::class.java)
+    private val albumRepository: AlbumRepository = Mockito.mock(AlbumRepository::class.java)
 
     private val artifactService: ArtifactService =
-        ArtifactServiceImpl(artifactRepository, userRepository, groupRepository, artifactResourceRepository)
+        ArtifactServiceImpl(artifactRepository, userRepository, groupRepository, artifactResourceRepository, albumRepository)
 
     @Nested
     inner class CreateArtifact {
