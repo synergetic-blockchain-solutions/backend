@@ -91,6 +91,19 @@ class AlbumServiceImpl(
             }
         }
 
+        val accessibleArtifacts =
+                creator.ownedArtifacts.map(Artifact::id) + creator.sharedArtifacts.map(Artifact::id) + creator.groups.flatMap {
+                    it.artifacts.map(Artifact::id)
+                } + user.ownedAlbums.flatMap {
+                    it.artifacts.map(Artifact::id)
+                } + user.sharedAlbums.flatMap {
+                    it.artifacts.map(Artifact::id)
+                }
+
+        artifactIDs.forEach {
+            if (!accessibleArtifacts.contains(it)) throw ActionNotAllowedException("User does not have access to artifact $it")
+        }
+
         val artifacts = artifactRepository.findAllById(artifactIDs)
         val owners = userRepository.findAllById(ownerIDs).toMutableList()
         val groups = groupRepository.findAllById(groupIDs).toMutableList()
@@ -143,24 +156,36 @@ class AlbumServiceImpl(
                 albumRepository.findByIdOrNull(id)
                         ?: throw AlbumNotFoundException("Could not find album with ID $id")
 
+        val accessibleArtifacts =
+                creator.ownedArtifacts.map(Artifact::id) + creator.sharedArtifacts.map(Artifact::id) + creator.groups.flatMap {
+                    it.artifacts.map(Artifact::id)
+                } + user.ownedAlbums.flatMap {
+                    it.artifacts.map(Artifact::id)
+                } + user.sharedAlbums.flatMap {
+                    it.artifacts.map(Artifact::id)
+                }
+
         assertCanUpdate(user, album, update)
         // Past this point we can perform any actions and be comfortable the user is authorised to perform them
 
         ((update.owners ?: listOf()) + (update.sharedWith ?: listOf())).forEach {
             if (!userRepository.existsById(it)) {
-                throw UserNotFoundException("Could not find user with ID $id")
+                throw UserNotFoundException("Could not find user with ID $it")
             }
         }
 
         (update.groups ?: listOf()).forEach {
             if (!groupRepository.existsById(it)) {
-                throw GroupNotFoundException("Could not find group with ID $id")
+                throw GroupNotFoundException("Could not find group with ID $it")
             }
         }
 
         (update.artifacts ?: listOf()).forEach {
             if (!artifactRepository.existsById(it)) {
-                throw ArtifactNotFoundException("Could not find artifact with ID $id")
+                throw ArtifactNotFoundException("Could not find artifact with ID $it")
+            }
+            if (!accessibleArtifacts.contains(it)) {
+                throw ActionNotAllowedException("User does not have access to artifact $it")
             }
         }
 

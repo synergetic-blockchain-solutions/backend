@@ -19,7 +19,10 @@ class ArtifactServiceImpl(
     @Autowired
     val groupRepository: GroupRepository,
     @Autowired
-    val artifactResourceRepository: ArtifactResourceRepository
+    val artifactResourceRepository: ArtifactResourceRepository,
+    @Autowired
+    val albumRepository: AlbumRepository
+
 ) : ArtifactService {
 
     val logger: Logger = LoggerFactory.getLogger(this::class.java)
@@ -118,15 +121,20 @@ class ArtifactServiceImpl(
      * @return Collection of artifacts the user has access to filtered by the given parameters
      * @throws UserNotFoundException when a user with [email] does not exist
      */
-    override fun findArtifactsByOwner(email: String, groupID: Long?, ownerID: Long?, sharedID: Long?, tag: String?): List<Artifact> {
+    override fun findArtifactsByOwner(email: String, groupID: Long?, ownerID: Long?, sharedID: Long?, tag: String?, albumID: Long?): List<Artifact> {
         val user =
             userRepository.findByEmail(email) ?: throw UserNotFoundException("No user with email $email was found")
+
+        if (groupID != null) { if (!groupRepository.existsById(groupID)) throw GroupNotFoundException("No group with ID $groupID was found") }
+        if (albumID != null) { if (!albumRepository.existsById(albumID)) throw AlbumNotFoundException("No album with ID $albumID was found") }
 
         val ownedArtifacts = artifactRepository.findByOwners_Email(email)
         val groupsArtifacts = user.groups.map(Group::id).flatMap(artifactRepository::findByGroups_Id)
         val sharedArtifacts = artifactRepository.findBySharedWith_Email(email)
+        val ownedAlbumArtifacts = user.ownedAlbums.map(Album::id).flatMap(artifactRepository::findByAlbums_Id)
+        val sharedAlbumArtifacts = user.sharedAlbums.map(Album::id).flatMap(artifactRepository::findByAlbums_Id)
 
-        var artifacts = ownedArtifacts.union(groupsArtifacts).union(sharedArtifacts).toList()
+        var artifacts = ownedArtifacts.union(groupsArtifacts).union(sharedArtifacts).union(ownedAlbumArtifacts).union(sharedAlbumArtifacts).toList()
 
         if (groupID != null) {
             artifacts = artifacts.filter { it.groups.map(Group::id).contains(groupID) }
@@ -138,6 +146,10 @@ class ArtifactServiceImpl(
 
         if (sharedID != null) {
             artifacts = artifacts.filter { it.sharedWith.map(User::id).contains(sharedID) }
+        }
+
+        if (albumID != null) {
+            artifacts = artifacts.filter { it.albums.map(Album::id).contains(albumID) }
         }
 
         if (tag != null) {
@@ -165,6 +177,10 @@ class ArtifactServiceImpl(
         // that has access to the artifact.
         val accessibleArtifacts =
             user.ownedArtifacts.map(Artifact::id) + user.sharedArtifacts.map(Artifact::id) + user.groups.flatMap {
+                it.artifacts.map(Artifact::id)
+            } + user.ownedAlbums.flatMap {
+                it.artifacts.map(Artifact::id)
+            } + user.sharedAlbums.flatMap {
                 it.artifacts.map(Artifact::id)
             }
         if (!accessibleArtifacts.contains(id)) {
