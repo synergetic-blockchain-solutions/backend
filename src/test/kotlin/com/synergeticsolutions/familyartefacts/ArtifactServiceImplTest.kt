@@ -469,20 +469,28 @@ class ArtifactServiceImplTest {
                 Artifact(13, "Artifact 13", "Description", owners = mutableListOf(), groups = mutableListOf()),
                 Artifact(14, "Artifact 14", "Description", owners = mutableListOf(), groups = mutableListOf())
             )
+            val albumArtifacts = listOf(
+                Artifact(15, "Artifact 15", "Description", owners = mutableListOf(), groups = mutableListOf()),
+                Artifact(16, "Artifact 16", "Description", owners = mutableListOf(), groups = mutableListOf()),
+                Artifact(17, "Artifact 17", "Description", owners = mutableListOf(), groups = mutableListOf()),
+                Artifact(18, "Artifact 18", "Description", owners = mutableListOf(), groups = mutableListOf())
+            )
+            val album = Album(1, "Album 1", "Description", owners = mutableListOf(), groups = mutableListOf(), sharedWith = mutableListOf())
+            val user = User(
+                    id = 1, name = "User 1", email = email, password = "password", groups = mutableListOf(
+                    Group(id = 1, name = "Group 1", members = mutableListOf(), description = "")
+            ), privateGroup = Group(2, "Group 2", members = mutableListOf(), description = ""), ownedAlbums = mutableListOf(album)
+            )
+
             Mockito.`when`(userRepository.findByEmail(email))
-                .thenReturn(
-                    User(
-                        id = 1, name = "User 1", email = email, password = "password", groups = mutableListOf(
-                            Group(id = 1, name = "Group 1", members = mutableListOf(), description = "")
-                        ), privateGroup = Group(2, "Group 2", members = mutableListOf(), description = "")
-                    )
-                )
+                .thenReturn(user)
             Mockito.`when`(artifactRepository.findByGroups_Id(anyLong())).thenReturn(groupArtifacts)
             Mockito.`when`(artifactRepository.findByOwners_Email(anyString())).thenReturn(ownerArtifacts)
             Mockito.`when`(artifactRepository.findBySharedWith_Email(anyString())).thenReturn(sharedArtifacts)
+            Mockito.`when`(artifactRepository.findByAlbums_Id(anyLong())).thenReturn(albumArtifacts)
 
             val foundArtifacts = artifactService.findArtifactsByOwner(email)
-            val allArtifacts = ownerArtifacts + groupArtifacts + sharedArtifacts
+            val allArtifacts = ownerArtifacts + groupArtifacts + sharedArtifacts + albumArtifacts
             assertEquals(allArtifacts.size, foundArtifacts.size)
             assertThat(foundArtifacts, containsInAnyOrder(*allArtifacts.toTypedArray()))
         }
@@ -588,6 +596,7 @@ class ArtifactServiceImplTest {
                         ), privateGroup = Group(2, "Group 2", members = mutableListOf(), description = "")
                     )
                 )
+            Mockito.`when`(groupRepository.existsById(anyLong())).thenReturn(true)
             Mockito.`when`(artifactRepository.findByGroups_Id(anyLong())).thenReturn(groupArtifacts)
             Mockito.`when`(artifactRepository.findByOwners_Email(anyString())).thenReturn(ownerArtifacts)
             Mockito.`when`(artifactRepository.findBySharedWith_Email(anyString())).thenReturn(sharedArtifacts)
