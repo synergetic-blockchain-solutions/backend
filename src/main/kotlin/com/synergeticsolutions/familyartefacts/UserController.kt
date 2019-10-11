@@ -77,9 +77,9 @@ class UserController(
      *
      * [updateUser] updates the textual informaton associated with user [id].
      */
-    // @PutMapping(path = ["/user/{id}"])
-    // fun updateUser(@PathVariable("id") id: Long, @RequestBody update: UserRequest, principal: Principal): User =
-    //     userService.update(principal.name, id, update)
+    @PutMapping(path = ["/user/{id}"])
+    fun updateUser(@PathVariable("id") id: Long, @RequestBody update: UserRequest, principal: Principal): User =
+        userService.update(principal.name, id, metadata = update)
 
     /**
      * PUT /user/{id}/image
@@ -87,8 +87,8 @@ class UserController(
      * [updateImage] updates the image associated with user [id].
      */
     @PutMapping(path = ["/user/{id}/image"])
-    fun updateImage(@PathVariable("id") id: Long, @RequestBody image: ByteArray) {
-    }
+    fun updateImage(@PathVariable("id") id: Long, @RequestBody profilePicture: ByteArray, principal: Principal) =
+        userService.update(principal.name, id, profilePicture = profilePicture)
 }
 
 /**

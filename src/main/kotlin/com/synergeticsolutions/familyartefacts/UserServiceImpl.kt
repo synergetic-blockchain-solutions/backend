@@ -1,6 +1,5 @@
 package com.synergeticsolutions.familyartefacts
 
-import javax.naming.AuthenticationException
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -8,6 +7,7 @@ import org.springframework.context.annotation.Lazy
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
+import javax.naming.AuthenticationException
 
 class UserAlreadyExistsException(msg: String) : AuthenticationException(msg)
 
@@ -57,11 +57,13 @@ class UserServiceImpl(
         val encPassword = passwordEncoder.encode(password)
 
         val group = groupRepository.save(
-                Group(
-                        name = "$name's Personal Group",
-                        description = "$name's Personal Group",
-                        members = mutableListOf(),
-                        admins = mutableListOf()))
+            Group(
+                name = "$name's Personal Group",
+                description = "$name's Personal Group",
+                members = mutableListOf(),
+                admins = mutableListOf()
+            )
+        )
         val user = userRepository.save(
                 User(
                         name = name,
@@ -84,15 +86,18 @@ class UserServiceImpl(
     }
 
     override fun findById(email: String, id: Long): User {
-        val user = userRepository.findByEmail(email) ?: throw UserNotFoundException("Could not find user with email $email")
+        val user =
+            userRepository.findByEmail(email) ?: throw UserNotFoundException("Could not find user with email $email")
         logger.info("Retrieving user $id for user ${user.id}")
-        val foundUser = userRepository.findByIdOrNull(id) ?: throw UserNotFoundException("Could not find user with id $id")
+        val foundUser =
+            userRepository.findByIdOrNull(id) ?: throw UserNotFoundException("Could not find user with id $id")
         logger.info("Found user $foundUser")
         return foundUser
     }
 
     override fun findUsers(email: String, filterEmail: String?, filterName: String?): List<User> {
-        val user = userRepository.findByEmail(email) ?: throw UserNotFoundException("Could not find user with email $email")
+        val user =
+            userRepository.findByEmail(email) ?: throw UserNotFoundException("Could not find user with email $email")
         logger.info("Finding users with email=$filterEmail and name=$filterName for user ${user.id}")
         var users = userRepository.findAll()
         if (filterEmail != null) {
@@ -109,5 +114,30 @@ class UserServiceImpl(
 
     override fun findByEmail(email: String): User {
         return userRepository.findByEmail(email) ?: throw UserNotFoundException("Could not find user with email $email")
+    }
+
+    override fun update(email: String, id: Long, metadata: UserRequest?, profilePicture: ByteArray?): User {
+        var user =
+            userRepository.findByEmail(email) ?: throw UserNotFoundException("Could not find user with email $email")
+        if (user.id != id) {
+            logger.warn("User ${user.id} attempted to update user $id")
+            throw ActionNotAllowedException("Users can only update themselves: User ${user.id} tried to update user $id")
+        }
+
+        metadata?.let {
+            user = user.copy(
+                name = it.name,
+                email = it.email,
+                password = it.password ?: user.password
+            )
+        }
+
+        profilePicture?.let {
+            user = user.copy(
+                image = it
+            )
+        }
+
+        return userRepository.save(user)
     }
 }

@@ -9,4 +9,5 @@ interface UserService {
     fun findById(email: String, id: Long): User
     fun findUsers(email: String, filterEmail: String? = null, filterName: String? = null): List<User>
     fun findByEmail(email: String): User
+    fun update(email: String, id: Long, metadata: UserRequest? = null, profilePicture: ByteArray? = null): User
 }
