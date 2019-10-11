@@ -1,5 +1,6 @@
 package com.synergeticsolutions.familyartefacts
 
+import org.hibernate.validator.constraints.Length
 import javax.validation.constraints.Email
 import javax.validation.constraints.NotBlank
 
@@ -16,5 +17,6 @@ data class UserRequest(
     val name: String,
     @field:Email(message = "'email' must be a well-formed email address")
     val email: String,
-    val password: String?
+    @field:Length(min = 6, message = "'password' must have at least 6 characters")
+    val password: String
 )

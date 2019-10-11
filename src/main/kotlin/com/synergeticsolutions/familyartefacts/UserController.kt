@@ -36,7 +36,7 @@ class UserController(
     @PostMapping(name = "createUser", path = ["/user", "/register"])
     fun createUser(@Valid @RequestBody request: UserRequest): ResponseEntity<User> {
         logger.info("Registering new request '${request.name}' with email '${request.email}")
-        val user = userService.createUser(request)
+        val user = userService.createUser(request.name, request.email, request.password)
         logger.info("User '${user.name}' was successfully created")
         logger.debug("$user")
         return ResponseEntity.status(HttpStatus.CREATED).body(user)
@@ -78,7 +78,7 @@ class UserController(
      * [updateUser] updates the textual informaton associated with user [id].
      */
     @PutMapping(path = ["/user/{id}"])
-    fun updateUser(@PathVariable("id") id: Long, @RequestBody update: UserRequest, principal: Principal): User =
+    fun updateUser(@PathVariable("id") id: Long, @RequestBody update: UserUpdateRequest, principal: Principal): User =
         userService.update(principal.name, id, metadata = update)
 
     /**
