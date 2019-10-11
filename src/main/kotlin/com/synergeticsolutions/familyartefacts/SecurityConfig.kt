@@ -11,6 +11,7 @@ import org.springframework.security.core.userdetails.UserDetailsService
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher
+import org.springframework.security.web.util.matcher.OrRequestMatcher
 import org.springframework.web.cors.CorsConfiguration
 import org.springframework.web.cors.CorsConfigurationSource
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource
@@ -22,20 +23,26 @@ class SecurityConfig : WebSecurityConfigurerAdapter() {
     @Autowired
     private lateinit var tokenService: TokenService
 
+    private val publicEndpoints = OrRequestMatcher(
+        AntPathRequestMatcher("/user", "POST"),
+        AntPathRequestMatcher("/register", "POST")
+    )
+
     override fun configure(auth: AuthenticationManagerBuilder) {
         auth.userDetailsService(userDetailsService).passwordEncoder(passwordEncoder())
     }
+
     override fun configure(http: HttpSecurity) {
         http
             .cors()
             .and().csrf().disable()
-                .authorizeRequests()
-                .requestMatchers(AntPathRequestMatcher("/user", "POST"), AntPathRequestMatcher("/register", "POST")).permitAll()
-                .anyRequest().authenticated()
-                .and()
-                .addFilter(JwtAuthenticationFilter(authenticationManager(), "/login", tokenService))
-                .addFilter(JwtAuthorizationFilter(authenticationManager(), tokenService))
-                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+            .authorizeRequests()
+            .requestMatchers(publicEndpoints).permitAll()
+            .anyRequest().authenticated()
+            .and()
+            .addFilter(JwtAuthenticationFilter(authenticationManager(), "/login", tokenService))
+            .addFilter(JwtAuthorizationFilter(authenticationManager(), tokenService))
+            .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
     }
 
     /**

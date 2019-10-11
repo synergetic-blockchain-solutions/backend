@@ -11,18 +11,18 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service
-class TokenServiceImpl : TokenService {
+class TokenServiceImpl(
     @Value("\${auth.jwtSecret}")
-    lateinit var jwtSecret: String
+    val jwtSecret: String,
     @Value("\${auth.jwtLifetime}")
-    val jwtLifetime: Long? = null
+    val jwtLifetime: Long,
     @Value("\${auth.audience}")
-    lateinit var audience: String
+    val audience: String,
     @Value("\${auth.issuer}")
-    lateinit var issuer: String
-
+    val issuer: String,
     @Autowired
-    lateinit var userRepository: UserRepository
+    val userRepository: UserRepository
+) : TokenService {
 
     override fun createToken(name: String, roles: List<String>): String {
         val signatureAlgorithm = SignatureAlgorithm.HS512
