@@ -16,6 +16,8 @@ import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
+import java.security.Principal
+import javax.validation.Valid
 
 @RestController
 class UserController(
@@ -25,16 +27,16 @@ class UserController(
     val logger: Logger = LoggerFactory.getLogger(this::class.java)
 
     /**
-     * [createUser] is the POST endpoint for '/user'. Requests to this endpoint should conform to
+     * [createUser] is the POST endpoint for '/request'. Requests to this endpoint should conform to
      * [UserRequest]. If the body is not valid a 4xx response will be returned with a message describing
-     * what is wrong with the request. If there is an issue creating the user a 5xx response will be returned
+     * what is wrong with the request. If there is an issue creating the request a 5xx response will be returned
      * describing what when wrong. Successful requests will return 201 Created status code. The body will be the
      * created [User] object without the password field.
      */
     @PostMapping(name = "createUser", path = ["/user", "/register"])
-    fun createUser(@Valid @RequestBody user: UserRequest): ResponseEntity<User> {
-        logger.info("Registering new user '${user.name}' with email '${user.email}")
-        val user = userService.createUser(user.name, user.email, user.password)
+    fun createUser(@Valid @RequestBody request: UserRequest): ResponseEntity<User> {
+        logger.info("Registering new request '${request.name}' with email '${request.email}")
+        val user = userService.createUser(request.name, request.email, request.password)
         logger.info("User '${user.name}' was successfully created")
         logger.debug("$user")
         return ResponseEntity.status(HttpStatus.CREATED).body(user)
