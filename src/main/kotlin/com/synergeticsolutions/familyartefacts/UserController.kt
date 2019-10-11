@@ -16,8 +16,6 @@ import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
-import java.security.Principal
-import javax.validation.Valid
 
 @RestController
 class UserController(
@@ -88,7 +86,6 @@ class UserController(
      */
     @PutMapping(path = ["/user/{id}/image"])
     fun updateImage(@PathVariable("id") id: Long, @RequestBody image: ByteArray) {
-
     }
 }
 
