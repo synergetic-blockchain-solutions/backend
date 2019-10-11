@@ -117,10 +117,14 @@ class UserServiceImpl(
         }
 
         metadata?.let {
+            var password = user.password
+            if (it.password != null) {
+                password = passwordEncoder.encode(it.password)
+            }
             user = user.copy(
                 name = it.name,
                 email = it.email,
-                password = it.password ?: user.password
+                password = password
             )
         }
 

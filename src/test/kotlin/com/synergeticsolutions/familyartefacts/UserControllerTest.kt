@@ -8,6 +8,10 @@ import org.hamcrest.Matchers.contains
 import org.hamcrest.Matchers.containsInAnyOrder
 import org.hamcrest.Matchers.hasEntry
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNotEquals
+import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assertions.assertNull
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -15,9 +19,11 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment
+import org.springframework.core.io.ClassPathResource
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
+import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.test.web.reactive.server.WebTestClient
 
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
@@ -38,6 +44,9 @@ class UserControllerTest {
 
     @Autowired
     lateinit var userService: UserService
+
+    @Autowired
+    lateinit var passwordEncoder: PasswordEncoder
 
     @BeforeEach
     fun beforeEach() {
@@ -304,6 +313,136 @@ class UserControllerTest {
                     .expectBody()
                     .jsonPath("$").isArray
                     .jsonPath("$").value(contains(hasEntry("id", user4.id.toInt())))
+            }
+        }
+
+        @Nested
+        inner class UpdateUserMetadata {
+
+            lateinit var user2: User
+
+            @BeforeEach
+            fun beforeEach() {
+                user2 = userService.createUser("user2", "example2@example.com", "password")
+            }
+
+            @Test
+            fun `it should not allow users to update other user's metadata`() {
+                client.put().uri("/user/${user2.id}")
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer $token")
+                    .syncBody(UserUpdateRequest("test", "test", "test"))
+                    .exchange()
+                    .expectStatus().isForbidden
+                    .expectBody()
+                    .jsonPath("$.message").exists()
+            }
+
+            @Test
+            fun `it should not update the user's password if one is not specified`() {
+                val updatedName = "Updated name"
+                val updatedEmail = "updatedemail@example.com"
+                client.put().uri("/user/${user.id}")
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer $token")
+                    .syncBody(UserUpdateRequest(updatedName, updatedEmail))
+                    .exchange()
+                    .expectStatus().isOk
+                    .expectBody()
+                    .jsonPath("$.id").value(`is`(user.id.toInt()))
+                    .jsonPath("$.name").value(`is`(updatedName))
+                    .jsonPath("$.email").value(`is`(updatedEmail))
+                    .jsonPath("$.password").doesNotExist()
+
+                val updatedUser = userRepository.findByIdOrNull(user.id)!!
+                assertEquals(updatedName, updatedUser.name)
+                assertEquals(updatedEmail, updatedUser.email)
+                assertEquals(user.password, updatedUser.password)
+            }
+
+            @Test
+            fun `it should update the user's password if it is specified`() {
+                val updatedName = "Updated name"
+                val updatedEmail = "updatedemail@example.com"
+                val updatedPassword = "updatedPassword"
+                client.put().uri("/user/${user.id}")
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer $token")
+                    .syncBody(UserUpdateRequest(updatedName, updatedEmail, updatedPassword))
+                    .exchange()
+                    .expectStatus().isOk
+                    .expectBody()
+                    .jsonPath("$.id").value(`is`(user.id.toInt()))
+                    .jsonPath("$.name").value(`is`(updatedName))
+                    .jsonPath("$.email").value(`is`(updatedEmail))
+                    .jsonPath("$.password").doesNotExist()
+
+                val updatedUser = userRepository.findByIdOrNull(user.id)!!
+                assertEquals(updatedName, updatedUser.name)
+                assertEquals(updatedEmail, updatedUser.email)
+                assertNotEquals(user.password, updatedUser.password)
+            }
+        }
+
+        @Nested
+        inner class UpdateUserImage {
+
+            lateinit var user2: User
+
+            @BeforeEach
+            fun beforeEach() {
+                user2 = userService.createUser("user2", "example2@example.com", "password")
+            }
+
+            @Test
+            fun `it should not allow users to update other user's images`() {
+                client.put().uri("/user/${user2.id}/image")
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer $token")
+                    .syncBody(ClassPathResource("test-image.jpg"))
+                    .exchange()
+                    .expectStatus().isForbidden
+                    .expectBody()
+                    .jsonPath("$.message").exists()
+            }
+
+            @Test
+            fun `it should allow users to update their own images`() {
+                client.put().uri("/user/${user.id}/image")
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer $token")
+                    .syncBody(ClassPathResource("test-image.jpg"))
+                    .exchange()
+                    .expectStatus().isOk
+
+                val updatedUser = userRepository.findByIdOrNull(user.id)!!
+                assertTrue(ClassPathResource("test-image.jpg").file.readBytes().contentEquals(updatedUser.image))
+            }
+        }
+
+        @Nested
+        inner class DeleteUser {
+
+            lateinit var user2: User
+
+            @BeforeEach
+            fun beforeEach() {
+                user2 = userService.createUser("user2", "example2@example.com", "password")
+            }
+
+            @Test
+            fun `it should not allow users to delete other users`() {
+                client.delete().uri("/user/${user2.id}")
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer $token")
+                    .exchange()
+                    .expectStatus().isForbidden
+                    .expectBody()
+                    .jsonPath("$.message").exists()
+                assertNotNull(userRepository.findByIdOrNull(user.id))
+            }
+
+            @Test
+            fun `it should allow users to delete themselves`() {
+                client.delete().uri("/user/${user.id}")
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer $token")
+                    .exchange()
+                    .expectStatus().isOk
+                assertNull(userRepository.findByIdOrNull(user.id))
             }
         }
     }

@@ -8,5 +8,5 @@ data class UserUpdateRequest(
     val name: String,
     @field:Email(message = "'email' must be a well-formed email address")
     val email: String,
-    val password: String?
+    val password: String? = null
 )

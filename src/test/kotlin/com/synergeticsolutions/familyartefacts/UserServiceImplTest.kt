@@ -1,6 +1,10 @@
 package com.synergeticsolutions.familyartefacts
 
 import java.util.Optional
+import org.hamcrest.CoreMatchers.allOf
+import org.hamcrest.MatcherAssert.assertThat
+import org.hamcrest.Matchers.`is`
+import org.hamcrest.Matchers.hasProperty
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertThrows
@@ -186,6 +190,101 @@ class UserServiceImplUnitTest {
         fun `it should filter users by the specified filter name and filter email`() {
             val foundUsers = userService.findUsers(email, filterName = "user2", filterEmail = "example2@example.com")
             assertEquals(users.filter { it.name == "user2" && it.email == "example2@example.com" }, foundUsers)
+        }
+    }
+
+    @Nested
+    inner class UpdateUser {
+        val user1 = User(1, "user1", "example1@example.com", "password", privateGroup = Group(2, "Group 2", "description", mutableListOf(), mutableListOf()))
+        val user2 = User(2, "user2", "example2@example.com", "password", privateGroup = Group(2, "Group 2", "description", mutableListOf(), mutableListOf()))
+
+        @BeforeEach
+        fun beforeEach() {
+            Mockito.`when`(userRepository.findByEmail(anyString())).then {
+                when {
+                    it.arguments[0] == user1.email -> user1
+                    it.arguments[0] == user2.email -> user2
+                    else -> throw NotImplementedError("${it.arguments[0]} not handled")
+                }
+            }
+            Mockito.`when`(userRepository.save(any<User>())).then { it.arguments[0] }
+        }
+
+        @Test
+        fun `it should not allow users to update other users`() {
+            assertThrows(ActionNotAllowedException::class.java) {
+                userService.update(user1.email, user2.id, metadata = UserUpdateRequest("test", "test", "test"))
+            }
+        }
+
+        @Test
+        fun `it should only update the metadata if the image is null`() {
+            val updatedUser = userService.update(user1.email, user1.id, metadata = UserUpdateRequest("test", "test", null))
+            assertThat(updatedUser, allOf(
+                hasProperty("id", `is`(user1.id)),
+                hasProperty("name", `is`("test")),
+                hasProperty("email", `is`("test")),
+                hasProperty("password", `is`(user1.password))
+            ))
+            Mockito.verify(userRepository).save(updatedUser)
+        }
+
+        @Test
+        fun `it should only update the image if the image is null`() {
+            val updatedUser = userService.update(user1.email, user1.id, profilePicture = "profilePicture".toByteArray())
+            assertThat(updatedUser, allOf(
+                hasProperty("id", `is`(user1.id)),
+                hasProperty("name", `is`(user1.name)),
+                hasProperty("email", `is`(user1.email)),
+                hasProperty("password", `is`(user1.password)),
+                hasProperty("image", `is`("profilePicture".toByteArray()))
+            ))
+            Mockito.verify(userRepository).save(updatedUser)
+        }
+
+        @Test
+        fun `it should update both the metadata and the image if they're both specified`() {
+            val updatedUser = userService.update(user1.email, user1.id,
+                metadata = UserUpdateRequest("test", "test", null),
+                profilePicture = "profilePicture".toByteArray())
+            assertThat(updatedUser, allOf(
+                hasProperty("id", `is`(user1.id)),
+                hasProperty("name", `is`("test")),
+                hasProperty("password", `is`(user1.password)),
+                hasProperty("image", `is`("profilePicture".toByteArray()))
+            ))
+            Mockito.verify(userRepository).save(updatedUser)
+        }
+    }
+
+    @Nested
+    inner class DeleteUser {
+        val user1 = User(1, "user1", "example1@example.com", "password", privateGroup = Group(2, "Group 2", "description", mutableListOf(), mutableListOf()))
+        val user2 = User(2, "user2", "example2@example.com", "password", privateGroup = Group(2, "Group 2", "description", mutableListOf(), mutableListOf()))
+
+        @BeforeEach
+        fun beforeEach() {
+            Mockito.`when`(userRepository.findByEmail(anyString())).then {
+                when {
+                    it.arguments[0] == user1.email -> user1
+                    it.arguments[0] == user2.email -> user2
+                    else -> throw NotImplementedError("${it.arguments[0]} not handled")
+                }
+            }
+            Mockito.`when`(userRepository.delete(any<User>())).then { null }
+        }
+
+        @Test
+        fun `it should allow users to delete themselves`() {
+            userService.delete(user1.email, user1.id)
+            Mockito.verify(userRepository).delete(user1)
+        }
+
+        @Test
+        fun `it should not allow users to delete other users`() {
+            assertThrows(ActionNotAllowedException::class.java) {
+                userService.delete(user1.email, user2.id)
+            }
         }
     }
 }
