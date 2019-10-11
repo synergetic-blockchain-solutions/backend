@@ -1,8 +1,8 @@
 package com.synergeticsolutions.familyartefacts
 
-import org.hibernate.validator.constraints.Length
 import javax.validation.constraints.Email
 import javax.validation.constraints.NotBlank
+import org.hibernate.validator.constraints.Length
 
 /**
  * UserRequest represents a request sent to the registration endpoint.
