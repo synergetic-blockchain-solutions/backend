@@ -1,6 +1,9 @@
 package com.synergeticsolutions.familyartefacts
 
+import com.fasterxml.jackson.annotation.JsonIdentityInfo
+import com.fasterxml.jackson.annotation.JsonIdentityReference
 import com.fasterxml.jackson.annotation.JsonIgnore
+import com.fasterxml.jackson.annotation.ObjectIdGenerators
 import com.fasterxml.jackson.databind.annotation.JsonSerialize
 import javax.persistence.Column
 import javax.persistence.Entity
