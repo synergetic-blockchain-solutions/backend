@@ -36,7 +36,7 @@ class UserController(
     @PostMapping(name = "createUser", path = ["/user", "/register"])
     fun createUser(@Valid @RequestBody request: UserRequest): ResponseEntity<User> {
         logger.info("Registering new request '${request.name}' with email '${request.email}")
-        val user = userService.createUser(request.name, request.email, request.password)
+        val user = userService.createUser(request)
         logger.info("User '${user.name}' was successfully created")
         logger.debug("$user")
         return ResponseEntity.status(HttpStatus.CREATED).body(user)

@@ -5,7 +5,7 @@ package com.synergeticsolutions.familyartefacts
  * implementation so we allow Spring's dependency injection to do its magic and make it easier for us to test.
  */
 interface UserService {
-    fun createUser(name: String, email: String, password: String): User
+    fun createUser(userRequest: UserRequest): User
     fun findById(email: String, id: Long): User
     fun findUsers(email: String, filterEmail: String? = null, filterName: String? = null): List<User>
     fun findByEmail(email: String): User

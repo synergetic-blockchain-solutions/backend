@@ -17,6 +17,5 @@ data class UserRequest(
     val name: String,
     @field:Email(message = "'email' must be a well-formed email address")
     val email: String,
-    @field:Length(min = 6, message = "'password' must have at least 6 characters")
-    val password: String
+    val password: String?
 )

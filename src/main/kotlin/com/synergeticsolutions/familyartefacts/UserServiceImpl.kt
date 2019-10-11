@@ -41,7 +41,15 @@ class UserServiceImpl(
      * @return [User] created in the [userRepository].
      * @throws [UserAlreadyExistsException] when trying to create a user with an [email] that already exists in the repository.
      */
-    override fun createUser(name: String, email: String, password: String): User {
+    override fun createUser(userRequest: UserRequest): User {
+        val name = userRequest.name
+        val email = userRequest.email
+        val password = userRequest.password ?: throw PasswordFieldRequired()
+
+        if (password.length < 6) {
+            throw PasswordTooShort(6)
+        }
+
         if (userRepository.existsByEmail(email)) {
             throw UserAlreadyExistsException("User already exists with email $email")
         }
