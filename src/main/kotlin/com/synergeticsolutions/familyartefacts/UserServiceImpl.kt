@@ -136,4 +136,14 @@ class UserServiceImpl(
 
         return userRepository.save(user)
     }
+
+    override fun delete(email: String, id: Long): User {
+        val user = userRepository.findByEmail(email) ?: throw UserNotFoundException("Could not find user with email $email")
+        if (user.id != id) {
+            logger.warn("User ${user.id} attempted to delete user $id")
+            throw ActionNotAllowedException("Users can only delete themselves: user ${user.id} tried to delete user $id")
+        }
+        userRepository.delete(user)
+        return user
+    }
 }

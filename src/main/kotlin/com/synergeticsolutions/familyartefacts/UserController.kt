@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
@@ -89,6 +90,14 @@ class UserController(
     @PutMapping(path = ["/user/{id}/image"])
     fun updateImage(@PathVariable("id") id: Long, @RequestBody profilePicture: ByteArray, principal: Principal) =
         userService.update(principal.name, id, profilePicture = profilePicture)
+
+    /**
+     * Delete /user/{id}
+     *
+     * [deleteUser] deletes the user associated with [id].
+     */
+    @DeleteMapping(path = ["/user/{id}"])
+    fun deleteUser(@PathVariable("id") id: Long, principal: Principal): User = userService.delete(principal.name, id)
 }
 
 /**
