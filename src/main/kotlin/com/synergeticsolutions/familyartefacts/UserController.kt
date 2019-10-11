@@ -27,15 +27,15 @@ class UserController(
 
     /**
      * [createUser] is the POST endpoint for '/user'. Requests to this endpoint should conform to
-     * [RegistrationRequest]. If the body is not valid a 4xx response will be returned with a message describing
+     * [UserRequest]. If the body is not valid a 4xx response will be returned with a message describing
      * what is wrong with the request. If there is an issue creating the user a 5xx response will be returned
      * describing what when wrong. Successful requests will return 201 Created status code. The body will be the
      * created [User] object without the password field.
      */
-    @PostMapping(path = ["/user", "/register"], name = "createUser")
-    fun createUser(@Valid @RequestBody registration: RegistrationRequest): ResponseEntity<User> {
-        logger.info("Registering new user '${registration.name}' with email '${registration.email}")
-        val user = userService.createUser(registration.name, registration.email, registration.password)
+    @PostMapping(name = "createUser", path = ["/user", "/register"])
+    fun createUser(@Valid @RequestBody user: UserRequest): ResponseEntity<User> {
+        logger.info("Registering new user '${user.name}' with email '${user.email}")
+        val user = userService.createUser(user.name, user.email, user.password)
         logger.info("User '${user.name}' was successfully created")
         logger.debug("$user")
         return ResponseEntity.status(HttpStatus.CREATED).body(user)
@@ -47,7 +47,7 @@ class UserController(
      * [getMe] gets the current user. A successful response will be the [User] entity of the authenticated user excluding the [User.password]
      * field.
      */
-    @GetMapping(path = ["/me"])
+    @GetMapping(path = ["/user/me"])
     fun getMe(principal: Principal): User = userService.findByEmail(principal.name)
 
     /**
@@ -56,7 +56,7 @@ class UserController(
      * [getUser] gets the text information associated with a user. A successful response will be the [User] entity
      * corresponding to [id] excluding the [User.password] field.
      */
-    @GetMapping(path = ["/{id}"])
+    @GetMapping(path = ["/user/{id}"])
     fun getUser(@PathVariable id: Long, principal: Principal): User = userService.findById(principal.name, id)
 
     /**
@@ -64,12 +64,31 @@ class UserController(
      *
      * [getUserByEmailOrName] retrieves all users and filters them by [email] and [name] if specified.
      */
-    @GetMapping
+    @GetMapping(path = ["/user"])
     fun getUserByEmailOrName(
         @RequestParam(name = "email", required = false) email: String?,
         @RequestParam(name = "name", required = false) name: String?,
         principal: Principal
     ): List<User> = userService.findUsers(principal.name, filterEmail = email, filterName = name)
+
+    /**
+     * PUT /user/{id}
+     *
+     * [updateUser] updates the textual informaton associated with user [id].
+     */
+    // @PutMapping(path = ["/user/{id}"])
+    // fun updateUser(@PathVariable("id") id: Long, @RequestBody update: UserRequest, principal: Principal): User =
+    //     userService.update(principal.name, id, update)
+
+    /**
+     * PUT /user/{id}/image
+     *
+     * [updateImage] updates the image associated with user [id].
+     */
+    @PutMapping(path = ["/user/{id}/image"])
+    fun updateImage(@PathVariable("id") id: Long, @RequestBody image: ByteArray) {
+
+    }
 }
 
 /**
