@@ -41,8 +41,7 @@ data class Group(
     val artifacts: MutableList<Artifact> = mutableListOf(),
     @LazyCollection(value = LazyCollectionOption.FALSE)
     @ManyToMany
-    @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator::class, property = "id")
-    @JsonIdentityReference(alwaysAsId = true)
+    @JsonSerialize(using = AlbumReferenceCollectionSerializer::class)
     val albums: MutableList<Album> = mutableListOf(),
     val contentType: String = "",
     @JsonIgnore

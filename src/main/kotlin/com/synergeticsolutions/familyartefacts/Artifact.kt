@@ -39,8 +39,7 @@ data class Artifact(
     val resources: MutableList<ArtifactResource> = mutableListOf(),
     @LazyCollection(value = LazyCollectionOption.FALSE)
     @ManyToMany(cascade = [CascadeType.ALL])
-    @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator::class, property = "id")
-    @JsonIdentityReference(alwaysAsId = true)
+    @JsonSerialize(using = AlbumReferenceCollectionSerializer::class)
     val albums: MutableList<Album> = mutableListOf(),
     @LazyCollection(value = LazyCollectionOption.FALSE)
     @ElementCollection
