@@ -64,6 +64,7 @@ data class User(
     @OneToOne
     @LazyToOne(value = LazyToOneOption.FALSE)
     val privateGroup: Group,
+    @JsonIgnore
     @Lob
     val image: ByteArray = byteArrayOf()
 
