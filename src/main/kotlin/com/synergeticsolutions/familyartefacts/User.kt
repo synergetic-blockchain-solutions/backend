@@ -57,6 +57,16 @@ data class User(
     @ManyToMany
     @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator::class, property = "id")
     @JsonIdentityReference(alwaysAsId = true)
+    val sharedAlbums: MutableList<Album> = mutableListOf(),
+    @LazyCollection(value = LazyCollectionOption.FALSE)
+    @ManyToMany
+    @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator::class, property = "id")
+    @JsonIdentityReference(alwaysAsId = true)
+    val ownedAlbums: MutableList<Album> = mutableListOf(),
+    @LazyCollection(value = LazyCollectionOption.FALSE)
+    @ManyToMany
+    @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator::class, property = "id")
+    @JsonIdentityReference(alwaysAsId = true)
     val ownedGroups: MutableList<Group> = mutableListOf(),
     @OneToOne
     @LazyToOne(value = LazyToOneOption.FALSE)

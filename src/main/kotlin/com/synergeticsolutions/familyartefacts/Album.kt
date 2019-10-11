@@ -3,64 +3,54 @@ package com.synergeticsolutions.familyartefacts
 import com.fasterxml.jackson.annotation.JsonIdentityInfo
 import com.fasterxml.jackson.annotation.JsonIdentityReference
 import com.fasterxml.jackson.annotation.ObjectIdGenerators
-import javax.persistence.CascadeType
-import javax.persistence.ElementCollection
 import javax.persistence.Entity
 import javax.persistence.GeneratedValue
 import javax.persistence.GenerationType
 import javax.persistence.Id
 import javax.persistence.ManyToMany
-import javax.persistence.OneToMany
 import javax.persistence.Table
 import org.hibernate.annotations.LazyCollection
 import org.hibernate.annotations.LazyCollectionOption
 
 @Entity
 @Table(name = "artifacts")
-data class Artifact(
+data class Album(
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     val id: Long = 0,
     val name: String,
     val description: String,
     @LazyCollection(value = LazyCollectionOption.FALSE)
-    @ManyToMany(mappedBy = "ownedArtifacts")
+    @ManyToMany(mappedBy = "ownedAlbums")
     @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator::class, property = "id")
     @JsonIdentityReference(alwaysAsId = true)
     val owners: MutableList<User>,
     @LazyCollection(value = LazyCollectionOption.FALSE)
-    @ManyToMany(mappedBy = "artifacts")
+    @ManyToMany(mappedBy = "albums")
     @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator::class, property = "id")
     @JsonIdentityReference(alwaysAsId = true)
-    val groups: MutableList<Group>,
+    val groups: MutableList<Group> = mutableListOf(),
     @LazyCollection(value = LazyCollectionOption.FALSE)
-    @ManyToMany(mappedBy = "sharedArtifacts")
+    @ManyToMany(mappedBy = "sharedAlbums")
     @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator::class, property = "id")
     @JsonIdentityReference(alwaysAsId = true)
     val sharedWith: MutableList<User> = mutableListOf(),
     @LazyCollection(value = LazyCollectionOption.FALSE)
-    @OneToMany(cascade = [CascadeType.ALL])
+    @ManyToMany(mappedBy = "albums")
     @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator::class, property = "id")
     @JsonIdentityReference(alwaysAsId = true)
-    val resources: MutableList<ArtifactResource> = mutableListOf(),
-    @LazyCollection(value = LazyCollectionOption.FALSE)
-    @ManyToMany(cascade = [CascadeType.ALL])
-    @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator::class, property = "id")
-    @JsonIdentityReference(alwaysAsId = true)
-    val albums: MutableList<Album> = mutableListOf(),
-    @LazyCollection(value = LazyCollectionOption.FALSE)
-    @ElementCollection
-    val tags: MutableList<String> = mutableListOf()
+    val artifacts: MutableList<Artifact> = mutableListOf()
+
 ) {
     override fun toString(): String {
         return listOf(
-            "id=$id",
-            "name=$name",
-            "description=$description",
-            "owners=${owners.map(User::id)}",
-            "groups=${groups.map(Group::id)}",
-            "sharedwith=${sharedWith.map(User::id)}",
-            "tags=$tags"
-        ).joinToString(separator = ", ", prefix = "Artifact(", postfix = ")")
+                "id=$id",
+                "name=$name",
+                "description=$description",
+                "owners=${owners.map(User::id)}",
+                "groups=${groups.map(Group::id)}",
+                "sharedWith=${sharedWith.map(User::id)}",
+                "artifacts=${artifacts.map(Artifact::id)}"
+        ).joinToString(separator = ", ", prefix = "Album(", postfix = ")")
     }
 }

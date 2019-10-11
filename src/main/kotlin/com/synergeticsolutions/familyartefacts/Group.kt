@@ -44,6 +44,11 @@ data class Group(
     @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator::class, property = "id")
     @JsonIdentityReference(alwaysAsId = true)
     val artifacts: MutableList<Artifact> = mutableListOf(),
+    @LazyCollection(value = LazyCollectionOption.FALSE)
+    @ManyToMany
+    @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator::class, property = "id")
+    @JsonIdentityReference(alwaysAsId = true)
+    val albums: MutableList<Album> = mutableListOf(),
     val contentType: String = "",
     @JsonIgnore
     @Lob

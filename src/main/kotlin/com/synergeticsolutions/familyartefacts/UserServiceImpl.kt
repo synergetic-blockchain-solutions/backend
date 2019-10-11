@@ -60,7 +60,9 @@ class UserServiceImpl(
                         password = encPassword,
                         privateGroup = group,
                         groups = mutableListOf(group),
-                        ownedGroups = mutableListOf(group)
+                        ownedGroups = mutableListOf(group),
+                        ownedAlbums = mutableListOf(),
+                        sharedAlbums = mutableListOf()
                 )
         )
         group.members.add(user)
