@@ -48,7 +48,7 @@ class UserControllerTest {
     inner class CreateUser {
         @Test
         fun `it should not allow blank names`() {
-            val registrationRequest = RegistrationRequest("", "example@example.com", "secret")
+            val registrationRequest = UserRequest("", "example@example.com", "secret")
             client.post().uri("/user")
                 .contentType(MediaType.APPLICATION_JSON_UTF8)
                 .syncBody(registrationRequest)
@@ -61,7 +61,7 @@ class UserControllerTest {
 
         @Test
         fun `it should not allow invalid emails`() {
-            val registrationRequest = RegistrationRequest("name", "example", "secret")
+            val registrationRequest = UserRequest("name", "example", "secret")
             client.post().uri("/user")
                 .contentType(MediaType.APPLICATION_JSON_UTF8)
                 .syncBody(registrationRequest)
@@ -74,7 +74,7 @@ class UserControllerTest {
 
         @Test
         fun `it should not allow short password `() {
-            val registrationRequest = RegistrationRequest("name", "example@example.com", "")
+            val registrationRequest = UserRequest("name", "example@example.com", "")
             client.post().uri("/user")
                 .contentType(MediaType.APPLICATION_JSON_UTF8)
                 .syncBody(registrationRequest)
@@ -91,7 +91,7 @@ class UserControllerTest {
 
         @Test
         fun `it should return all validation errors`() {
-            val registrationRequest = RegistrationRequest("", "example", "short")
+            val registrationRequest = UserRequest("", "example", "short")
             client.post().uri("/user")
                 .contentType(MediaType.APPLICATION_JSON_UTF8)
                 .syncBody(registrationRequest)
@@ -111,7 +111,7 @@ class UserControllerTest {
 
         @Test
         fun `it should return the created user without the password`() {
-            val registrationRequest = RegistrationRequest("name", "example@example.com", "secret")
+            val registrationRequest = UserRequest("name", "example@example.com", "secret")
             client.post().uri("/user")
                 .syncBody(registrationRequest)
                 .header("Content-Type", MediaType.APPLICATION_JSON_UTF8_VALUE)
@@ -126,7 +126,7 @@ class UserControllerTest {
         @Test
         fun `it should not allow registering the same email twice`() {
             val email = "example@example.com"
-            val registrationRequest = RegistrationRequest("name", email, "secret")
+            val registrationRequest = UserRequest("name", email, "secret")
             client.post().uri("/user")
                 .contentType(MediaType.APPLICATION_JSON_UTF8)
                 .syncBody(registrationRequest)
@@ -142,7 +142,7 @@ class UserControllerTest {
 
         @Test
         fun `it should create a private group for the user`() {
-            val registrationRequest = RegistrationRequest("name", "example@example.com", "secret")
+            val registrationRequest = UserRequest("name", "example@example.com", "secret")
             val body = String(
                 client.post().uri("/user")
                     .contentType(MediaType.APPLICATION_JSON_UTF8)
