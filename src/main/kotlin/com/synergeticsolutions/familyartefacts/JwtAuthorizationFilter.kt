@@ -1,9 +1,6 @@
 package com.synergeticsolutions.familyartefacts
 
 import io.jsonwebtoken.JwtException
-import javax.servlet.FilterChain
-import javax.servlet.http.HttpServletRequest
-import javax.servlet.http.HttpServletResponse
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.security.authentication.AuthenticationManager
@@ -12,6 +9,9 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter
 import org.springframework.web.bind.annotation.ResponseStatus
+import javax.servlet.FilterChain
+import javax.servlet.http.HttpServletRequest
+import javax.servlet.http.HttpServletResponse
 
 class JwtAuthorizationFilter(authMgr: AuthenticationManager, private val tokenService: TokenService) :
         BasicAuthenticationFilter(authMgr) {
@@ -36,6 +36,8 @@ class JwtAuthorizationFilter(authMgr: AuthenticationManager, private val tokenSe
                 log.warn("Request to parse JWT: {} failed: {}", token, e.message)
                 response.status = HttpStatus.UNAUTHORIZED.value()
             }
+        }  else {
+            chain.doFilter(request, response)
         }
     }
 }
