@@ -22,20 +22,26 @@ class SecurityConfig : WebSecurityConfigurerAdapter() {
     @Autowired
     private lateinit var tokenService: TokenService
 
+    private val publicEndpoints = OrRequestMatcher(
+        AntPathRequestMatcher("/user", "POST"),
+        AntPathRequestMatcher("/register", "POST")
+    )
+
     override fun configure(auth: AuthenticationManagerBuilder) {
         auth.userDetailsService(userDetailsService).passwordEncoder(passwordEncoder())
     }
+
     override fun configure(http: HttpSecurity) {
         http
             .cors()
             .and().csrf().disable()
-                .authorizeRequests()
-                .requestMatchers(AntPathRequestMatcher("/user", "POST"), AntPathRequestMatcher("/register", "POST")).permitAll()
-                .anyRequest().authenticated()
-                .and()
-                .addFilter(JwtAuthenticationFilter(authenticationManager(), "/login", tokenService))
-                .addFilter(JwtAuthorizationFilter(authenticationManager(), tokenService))
-                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+            .authorizeRequests()
+            .requestMatchers(publicEndpoints).permitAll()
+            .anyRequest().authenticated()
+            .and()
+            .addFilter(JwtAuthenticationFilter(authenticationManager(), "/login", tokenService))
+            .addFilter(JwtAuthorizationFilter(authenticationManager(), tokenService))
+            .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
     }
 
     /**
