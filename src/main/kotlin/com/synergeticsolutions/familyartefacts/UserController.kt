@@ -1,5 +1,6 @@
 package com.synergeticsolutions.familyartefacts
 
+import java.security.Principal
 import javax.validation.Valid
 import javax.validation.constraints.Email
 import javax.validation.constraints.NotBlank
@@ -9,13 +10,16 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.web.bind.annotation.DeleteMapping
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
-@RequestMapping
 class UserController(
     @Autowired
     val userService: UserService
@@ -23,20 +27,76 @@ class UserController(
     val logger: Logger = LoggerFactory.getLogger(this::class.java)
 
     /**
-     * [createUser] is the POST endpoint for '/user'. Requests to this endpoint should conform to
-     * [RegistrationRequest]. If the body is not valid a 4xx response will be returned with a message describing
-     * what is wrong with the request. If there is an issue creating the user a 5xx response will be returned
+     * [createUser] is the POST endpoint for '/request'. Requests to this endpoint should conform to
+     * [UserRequest]. If the body is not valid a 4xx response will be returned with a message describing
+     * what is wrong with the request. If there is an issue creating the request a 5xx response will be returned
      * describing what when wrong. Successful requests will return 201 Created status code. The body will be the
      * created [User] object without the password field.
      */
-    @PostMapping(path = ["/user", "/register"], name = "createUser")
-    fun createUser(@Valid @RequestBody registration: RegistrationRequest): ResponseEntity<User> {
-        logger.info("Registering new user '${registration.name}' with email '${registration.email}")
-        val user = userService.createUser(registration.name, registration.email, registration.password)
+    @PostMapping(name = "createUser", path = ["/user", "/register"])
+    fun createUser(@Valid @RequestBody request: UserRequest): ResponseEntity<User> {
+        logger.info("Registering new request '${request.name}' with email '${request.email}")
+        val user = userService.createUser(request.name, request.email, request.password)
         logger.info("User '${user.name}' was successfully created")
         logger.debug("$user")
         return ResponseEntity.status(HttpStatus.CREATED).body(user)
     }
+
+    /**
+     * GET /user/me
+     *
+     * [getMe] gets the current user. A successful response will be the [User] entity of the authenticated user excluding the [User.password]
+     * field.
+     */
+    @GetMapping(path = ["/user/me"])
+    fun getMe(principal: Principal): User = userService.findByEmail(principal.name)
+
+    /**
+     * GET /user/{id}
+     *
+     * [getUser] gets the text information associated with a user. A successful response will be the [User] entity
+     * corresponding to [id] excluding the [User.password] field.
+     */
+    @GetMapping(path = ["/user/{id}"])
+    fun getUser(@PathVariable id: Long, principal: Principal): User = userService.findById(principal.name, id)
+
+    /**
+     * Get /user?email=[email]&name=[name]
+     *
+     * [getUserByEmailOrName] retrieves all users and filters them by [email] and [name] if specified.
+     */
+    @GetMapping(path = ["/user"])
+    fun getUserByEmailOrName(
+        @RequestParam(name = "email", required = false) email: String?,
+        @RequestParam(name = "name", required = false) name: String?,
+        principal: Principal
+    ): List<User> = userService.findUsers(principal.name, filterEmail = email, filterName = name)
+
+    /**
+     * PUT /user/{id}
+     *
+     * [updateUser] updates the textual informaton associated with user [id].
+     */
+    @PutMapping(path = ["/user/{id}"])
+    fun updateUser(@PathVariable("id") id: Long, @RequestBody update: UserUpdateRequest, principal: Principal): User =
+        userService.update(principal.name, id, metadata = update)
+
+    /**
+     * PUT /user/{id}/image
+     *
+     * [updateImage] updates the image associated with user [id].
+     */
+    @PutMapping(path = ["/user/{id}/image"])
+    fun updateImage(@PathVariable("id") id: Long, @RequestBody profilePicture: ByteArray, principal: Principal) =
+        userService.update(principal.name, id, profilePicture = profilePicture)
+
+    /**
+     * Delete /user/{id}
+     *
+     * [deleteUser] deletes the user associated with [id].
+     */
+    @DeleteMapping(path = ["/user/{id}"])
+    fun deleteUser(@PathVariable("id") id: Long, principal: Principal): User = userService.delete(principal.name, id)
 }
 
 /**

@@ -5,6 +5,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Lazy
+import org.springframework.data.repository.findByIdOrNull
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 
@@ -48,11 +49,13 @@ class UserServiceImpl(
         val encPassword = passwordEncoder.encode(password)
 
         val group = groupRepository.save(
-                Group(
-                        name = "$name's Personal Group",
-                        description = "$name's Personal Group",
-                        members = mutableListOf(),
-                        admins = mutableListOf()))
+            Group(
+                name = "$name's Personal Group",
+                description = "$name's Personal Group",
+                members = mutableListOf(),
+                admins = mutableListOf()
+            )
+        )
         val user = userRepository.save(
                 User(
                         name = name,
@@ -72,5 +75,75 @@ class UserServiceImpl(
         logger.debug("Created user: $updatedUser")
         logger.debug("Personal group: $updatedGroup")
         return updatedUser
+    }
+
+    override fun findById(email: String, id: Long): User {
+        val user =
+            userRepository.findByEmail(email) ?: throw UserNotFoundException("Could not find user with email $email")
+        logger.info("Retrieving user $id for user ${user.id}")
+        val foundUser =
+            userRepository.findByIdOrNull(id) ?: throw UserNotFoundException("Could not find user with id $id")
+        logger.info("Found user $foundUser")
+        return foundUser
+    }
+
+    override fun findUsers(email: String, filterEmail: String?, filterName: String?): List<User> {
+        val user =
+            userRepository.findByEmail(email) ?: throw UserNotFoundException("Could not find user with email $email")
+        logger.info("Finding users with email=$filterEmail and name=$filterName for user ${user.id}")
+        var users = userRepository.findAll()
+        if (filterEmail != null) {
+            users = users.filter { it.email == filterEmail }
+        }
+
+        if (filterName != null) {
+            users = users.filter { it.name == filterName }
+        }
+
+        logger.info("Found ${users.size} using filter email=$filterName and name=$filterName")
+        return users
+    }
+
+    override fun findByEmail(email: String): User {
+        return userRepository.findByEmail(email) ?: throw UserNotFoundException("Could not find user with email $email")
+    }
+
+    override fun update(email: String, id: Long, metadata: UserUpdateRequest?, profilePicture: ByteArray?): User {
+        var user =
+            userRepository.findByEmail(email) ?: throw UserNotFoundException("Could not find user with email $email")
+        if (user.id != id) {
+            logger.warn("User ${user.id} attempted to update user $id")
+            throw ActionNotAllowedException("Users can only update themselves: User ${user.id} tried to update user $id")
+        }
+
+        metadata?.let {
+            var password = user.password
+            if (it.password != null) {
+                password = passwordEncoder.encode(it.password)
+            }
+            user = user.copy(
+                name = it.name,
+                email = it.email,
+                password = password
+            )
+        }
+
+        profilePicture?.let {
+            user = user.copy(
+                image = it
+            )
+        }
+
+        return userRepository.save(user)
+    }
+
+    override fun delete(email: String, id: Long): User {
+        val user = userRepository.findByEmail(email) ?: throw UserNotFoundException("Could not find user with email $email")
+        if (user.id != id) {
+            logger.warn("User ${user.id} attempted to delete user $id")
+            throw ActionNotAllowedException("Users can only delete themselves: user ${user.id} tried to delete user $id")
+        }
+        userRepository.delete(user)
+        return user
     }
 }

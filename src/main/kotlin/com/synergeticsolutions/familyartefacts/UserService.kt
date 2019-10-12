@@ -6,4 +6,9 @@ package com.synergeticsolutions.familyartefacts
  */
 interface UserService {
     fun createUser(name: String, email: String, password: String): User
+    fun findById(email: String, id: Long): User
+    fun findUsers(email: String, filterEmail: String? = null, filterName: String? = null): List<User>
+    fun findByEmail(email: String): User
+    fun update(email: String, id: Long, metadata: UserUpdateRequest? = null, profilePicture: ByteArray? = null): User
+    abstract fun delete(email: String, id: Long): User
 }
