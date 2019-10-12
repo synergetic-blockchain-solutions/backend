@@ -1,8 +1,5 @@
 package com.synergeticsolutions.familyartefacts
 
-import javax.validation.Valid
-import javax.validation.constraints.Email
-import javax.validation.constraints.NotBlank
 import org.hibernate.validator.constraints.Length
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -17,6 +14,10 @@ import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
+import java.security.Principal
+import javax.validation.Valid
+import javax.validation.constraints.Email
+import javax.validation.constraints.NotBlank
 
 @RestController
 class UserController(
