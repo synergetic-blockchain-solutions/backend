@@ -9,7 +9,9 @@ package com.synergeticsolutions.familyartefacts
  * @param[tags] Tags associated with the resource. Maps to [ArtifactResource.tags]
  */
 data class ArtifactResourceMetadata(
+    val id: Long,
     val name: String,
     val description: String,
-    val tags: List<String>? = listOf()
+    val tags: List<String>? = listOf(),
+    val artifactId: Long
 )

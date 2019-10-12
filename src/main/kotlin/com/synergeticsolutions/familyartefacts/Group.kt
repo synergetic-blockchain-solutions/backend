@@ -1,9 +1,7 @@
 package com.synergeticsolutions.familyartefacts
 
-import com.fasterxml.jackson.annotation.JsonIdentityInfo
-import com.fasterxml.jackson.annotation.JsonIdentityReference
 import com.fasterxml.jackson.annotation.JsonIgnore
-import com.fasterxml.jackson.annotation.ObjectIdGenerators
+import com.fasterxml.jackson.databind.annotation.JsonSerialize
 import javax.persistence.Entity
 import javax.persistence.GeneratedValue
 import javax.persistence.GenerationType
@@ -31,23 +29,19 @@ data class Group(
     val description: String,
     @LazyCollection(value = LazyCollectionOption.FALSE)
     @ManyToMany(mappedBy = "groups")
-    @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator::class, property = "id")
-    @JsonIdentityReference(alwaysAsId = true)
+    @JsonSerialize(using = UserReferenceCollectionSerializer::class)
     val members: MutableList<User> = mutableListOf(),
     @LazyCollection(value = LazyCollectionOption.FALSE)
     @ManyToMany(mappedBy = "ownedGroups")
-    @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator::class, property = "id")
-    @JsonIdentityReference(alwaysAsId = true)
+    @JsonSerialize(using = UserReferenceCollectionSerializer::class)
     val admins: MutableList<User> = mutableListOf(),
     @LazyCollection(value = LazyCollectionOption.FALSE)
     @ManyToMany
-    @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator::class, property = "id")
-    @JsonIdentityReference(alwaysAsId = true)
+    @JsonSerialize(using = ArtifactReferenceCollectionSerializer::class)
     val artifacts: MutableList<Artifact> = mutableListOf(),
     @LazyCollection(value = LazyCollectionOption.FALSE)
     @ManyToMany
-    @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator::class, property = "id")
-    @JsonIdentityReference(alwaysAsId = true)
+    @JsonSerialize(using = AlbumReferenceCollectionSerializer::class)
     val albums: MutableList<Album> = mutableListOf(),
     val contentType: String = "",
     @JsonIgnore

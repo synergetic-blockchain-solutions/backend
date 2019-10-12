@@ -8,6 +8,7 @@ import org.hamcrest.Matchers.`is`
 import org.hamcrest.Matchers.contains
 import org.hamcrest.Matchers.containsInAnyOrder
 import org.hamcrest.Matchers.greaterThan
+import org.hamcrest.Matchers.hasEntry
 import org.hamcrest.Matchers.hasItem
 import org.hamcrest.Matchers.hasItems
 import org.hamcrest.Matchers.hasProperty
@@ -266,10 +267,10 @@ class AlbumControllerTest {
                     .jsonPath("$.id").value(`is`(album.id.toInt()))
                     .jsonPath("$.name").value(`is`(album.name))
                     .jsonPath("$.description").value(`is`(album.description))
-                    .jsonPath("$.owners").value(`is`(album.owners.map { it.id.toInt() }))
-                    .jsonPath("$.groups").value(`is`(album.groups.map { it.id.toInt() }))
-                    .jsonPath("$.sharedWith").value(`is`(album.sharedWith.map { it.id.toInt() }))
-                    .jsonPath("$.artifacts").value(`is`(album.artifacts.map { it.id.toInt() }))
+                    .jsonPath("$.owners").value(containsInAnyOrder(*(album.owners.map { hasEntry("id", it.id.toInt()) }.toTypedArray())))
+                    .jsonPath("$.groups").value(containsInAnyOrder(*(album.groups.map { hasEntry("id", it.id.toInt()) }.toTypedArray())))
+                    .jsonPath("$.sharedWith").value(containsInAnyOrder(*(album.sharedWith.map { hasEntry("id", it.id.toInt()) }.toTypedArray())))
+                    .jsonPath("$.artifacts").value(containsInAnyOrder(*(album.artifacts.map { hasEntry("id", it.id.toInt()) }.toTypedArray())))
         }
     }
 
@@ -300,10 +301,10 @@ class AlbumControllerTest {
                     .jsonPath("$.id").value(greaterThan(0))
                     .jsonPath("$.name").value(`is`(albumRequest.name))
                     .jsonPath("$.description").value(`is`(albumRequest.description))
-                    .jsonPath("$.owners").value(`is`(listOf(user.id.toInt())))
-                    .jsonPath("$.groups").value(containsInAnyOrder(user.privateGroup.id.toInt(), group.id.toInt()))
-                    .jsonPath("$.sharedWith").value(`is`(listOf(user2.id.toInt())))
-                    .jsonPath("$.artifacts").value(`is`(albumRequest.artifacts))
+                    .jsonPath("$.owners").value(contains(hasEntry("id", user.id.toInt())))
+                    .jsonPath("$.groups").value(containsInAnyOrder(hasEntry("id", user.privateGroup.id.toInt()), hasEntry("id", group.id.toInt())))
+                    .jsonPath("$.sharedWith").value(contains(hasEntry("id", user2.id.toInt())))
+                    .jsonPath("$.artifacts").value(containsInAnyOrder(*(albumRequest.artifacts.map { hasEntry("id", it.toInt()) }.toTypedArray())))
                     .returnResult()
                     .responseBody!!
             val returnedAlbum = ObjectMapper().registerKotlinModule().readValue<Map<String, Any>>(String(response))
@@ -351,10 +352,10 @@ class AlbumControllerTest {
                     AlbumRequest(
                             name = returnedAlbum["name"] as String,
                             description = returnedAlbum["description"] as String,
-                            owners = (returnedAlbum["owners"] as List<Int>).map(Int::toLong),
-                            groups = (returnedAlbum["groups"] as List<Int>).map(Int::toLong),
-                            sharedWith = (returnedAlbum["sharedWith"] as List<Int>).map(Int::toLong),
-                            artifacts = (returnedAlbum["artifacts"] as List<Int>).map(Int::toLong)
+                            owners = (returnedAlbum["owners"] as List<Map<String, Any>>).map { (it.getValue("id") as Int).toLong() },
+                            groups = (returnedAlbum["groups"] as List<Map<String, Any>>).map { (it.getValue("id") as Int).toLong() },
+                            sharedWith = (returnedAlbum["sharedWith"] as List<Map<String, Any>>).map { (it.getValue("id") as Int).toLong() },
+                            artifacts = (returnedAlbum["artifacts"] as List<Map<String, Any>>).map { (it.getValue("id") as Int).toLong() }
                     )
             val updateAlbumResponse = client.put()
                     .uri("/album/${returnedAlbum["id"]}")
@@ -466,10 +467,10 @@ class AlbumControllerTest {
                     AlbumRequest(
                             name = returnedAlbum["name"] as String,
                             description = returnedAlbum["description"] as String,
-                            owners = (returnedAlbum["owners"] as List<Int>).map(Int::toLong),
-                            groups = (returnedAlbum["groups"] as List<Int>).map(Int::toLong),
-                            sharedWith = (returnedAlbum["owners"] as List<Int>).map(Int::toLong),
-                            artifacts = (returnedAlbum["artifacts"] as List<Int>).map(Int::toLong)
+                            owners = (returnedAlbum["owners"] as List<Map<String, Any>>).map { (it.getValue("id") as Int).toLong() },
+                            groups = (returnedAlbum["groups"] as List<Map<String, Any>>).map { (it.getValue("id") as Int).toLong() },
+                            sharedWith = (returnedAlbum["owners"] as List<Map<String, Any>>).map { (it.getValue("id") as Int).toLong() },
+                            artifacts = (returnedAlbum["artifacts"] as List<Map<String, Any>>).map { (it.getValue("id") as Int).toLong() }
                     )
             val altUser = userService.createUser("user 2", "exampl2@example.com", "password")
             val altToken = getToken(altUser.email, "password")
@@ -507,10 +508,10 @@ class AlbumControllerTest {
                     .jsonPath("$.id").value(`is`(album.id.toInt()))
                     .jsonPath("$.name").value(`is`(updateAlbumRequest.name))
                     .jsonPath("$.description").value(`is`(updateAlbumRequest.description))
-                    .jsonPath("$.owners").value(`is`(updateAlbumRequest.owners!!.map(Long::toInt)))
-                    .jsonPath("$.groups").value(`is`(updateAlbumRequest.groups!!.map(Long::toInt)))
-                    .jsonPath("$.sharedWith").value(`is`(updateAlbumRequest.sharedWith!!.map(Long::toInt)))
-                    .jsonPath("$.artifacts").value(`is`(updateAlbumRequest.artifacts!!.map(Long::toInt)))
+                    .jsonPath("$.owners").value(containsInAnyOrder(*(updateAlbumRequest.owners.map { hasEntry("id", it.toInt()) }.toTypedArray())))
+                    .jsonPath("$.groups").value(containsInAnyOrder(*(updateAlbumRequest.groups.map { hasEntry("id", it.toInt()) }.toTypedArray())))
+                    .jsonPath("$.sharedWith").value(containsInAnyOrder(*(updateAlbumRequest.sharedWith.map { hasEntry("id", it.toInt()) }.toTypedArray())))
+                    .jsonPath("$.artifacts").value(containsInAnyOrder(*(updateAlbumRequest.artifacts.map { hasEntry("id", it.toInt()) }.toTypedArray())))
                     .returnResult()
                     .responseBody!!
             val response = ObjectMapper().registerKotlinModule().readValue<Map<String, Any>>(updateAlbumResponse)
@@ -545,10 +546,10 @@ class AlbumControllerTest {
                     .jsonPath("$.id").value(`is`(album.id.toInt()))
                     .jsonPath("$.name").value(`is`(updateAlbumRequest.name))
                     .jsonPath("$.description").value(`is`(updateAlbumRequest.description))
-                    .jsonPath("$.owners").value(`is`(updateAlbumRequest.owners!!.map(Long::toInt)))
-                    .jsonPath("$.groups").value(`is`(updateAlbumRequest.groups!!.map(Long::toInt)))
-                    .jsonPath("$.sharedWith").value(`is`(updateAlbumRequest.sharedWith!!.map(Long::toInt)))
-                    .jsonPath("$.artifacts").value(`is`(updateAlbumRequest.artifacts!!.map(Long::toInt)))
+                    .jsonPath("$.owners").value(containsInAnyOrder(*(updateAlbumRequest.owners.map { hasEntry("id", it.toInt()) }.toTypedArray())))
+                    .jsonPath("$.groups").value(containsInAnyOrder(*(updateAlbumRequest.groups.map { hasEntry("id", it.toInt()) }.toTypedArray())))
+                    .jsonPath("$.sharedWith").value(containsInAnyOrder(*(updateAlbumRequest.sharedWith.map { hasEntry("id", it.toInt()) }.toTypedArray())))
+                    .jsonPath("$.artifacts").value(containsInAnyOrder(*(updateAlbumRequest.artifacts.map { hasEntry("id", it.toInt()) }.toTypedArray())))
                     .returnResult()
                     .responseBody!!
             val response = ObjectMapper().registerKotlinModule().readValue<Map<String, Any>>(updateAlbumResponse)
@@ -581,10 +582,10 @@ class AlbumControllerTest {
                     .jsonPath("$.id").value(`is`(album.id.toInt()))
                     .jsonPath("$.name").value(`is`(updateAlbumRequest.name))
                     .jsonPath("$.description").value(`is`(updateAlbumRequest.description))
-                    .jsonPath("$.owners").value(`is`(updateAlbumRequest.owners!!.map(Long::toInt)))
-                    .jsonPath("$.groups").value(`is`(updateAlbumRequest.groups!!.map(Long::toInt)))
-                    .jsonPath("$.sharedWith").value(`is`(updateAlbumRequest.sharedWith!!.map(Long::toInt)))
-                    .jsonPath("$.artifacts").value(`is`(updateAlbumRequest.artifacts!!.map(Long::toInt)))
+                    .jsonPath("$.owners").value(containsInAnyOrder(*(updateAlbumRequest.owners.map { hasEntry("id", it.toInt()) }.toTypedArray())))
+                    .jsonPath("$.groups").value(containsInAnyOrder(*(updateAlbumRequest.groups.map { hasEntry("id", it.toInt()) }.toTypedArray())))
+                    .jsonPath("$.sharedWith").value(containsInAnyOrder(*(updateAlbumRequest.sharedWith.map { hasEntry("id", it.toInt()) }.toTypedArray())))
+                    .jsonPath("$.artifacts").value(containsInAnyOrder(*(updateAlbumRequest.artifacts.map { hasEntry("id", it.toInt()) }.toTypedArray())))
                     .returnResult()
                     .responseBody!!
             val response = ObjectMapper().registerKotlinModule().readValue<Map<String, Any>>(updateAlbumResponse)

@@ -15,6 +15,7 @@ import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
+import org.springframework.util.Base64Utils
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -50,7 +51,7 @@ class ArtifactResourceController(
             parameters["metadata"]?.firstOrNull(),
             { "Checked that the parameter map contained 'metadata' earlier" }
         )
-        return ObjectMapper().registerKotlinModule().readValue<ArtifactResourceMetadata>(metadataPart)
+        return ObjectMapper().registerKotlinModule().readValue(metadataPart)
     }
 
     /**
@@ -108,6 +109,11 @@ class ArtifactResourceController(
         return artifactResourceService.findMetadataById(principal.name, artifactId, resourceId)
     }
 
+    /**
+     * GET /artifact/artifact{id}/resource/{resourceId}/resource
+     *
+     * Get the resource for a resource [resourceId] associated with artifact [artifactId]
+     */
     @GetMapping(path = ["/{resourceId}/resource"], produces = [MediaType.APPLICATION_JSON_UTF8_VALUE])
     fun getResourceById(
         @PathVariable artifactId: Long,
@@ -115,9 +121,10 @@ class ArtifactResourceController(
         principal: Principal
     ): ResponseEntity<ByteArrayResource> {
         val resource = artifactResourceService.findResourceById(principal.name, artifactId, resourceId)
+        val base64Resource = Base64Utils.encode(resource.resource)
         return ResponseEntity.ok()
             .contentType(MediaType.parseMediaType(resource.contentType))
-            .body(ByteArrayResource(resource.resource))
+            .body(ByteArrayResource(base64Resource))
     }
 
     /**

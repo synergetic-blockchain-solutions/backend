@@ -1,8 +1,6 @@
 package com.synergeticsolutions.familyartefacts
 
-import com.fasterxml.jackson.annotation.JsonIdentityInfo
-import com.fasterxml.jackson.annotation.JsonIdentityReference
-import com.fasterxml.jackson.annotation.ObjectIdGenerators
+import com.fasterxml.jackson.databind.annotation.JsonSerialize
 import javax.persistence.CascadeType
 import javax.persistence.ElementCollection
 import javax.persistence.Entity
@@ -25,28 +23,23 @@ data class Artifact(
     val description: String,
     @LazyCollection(value = LazyCollectionOption.FALSE)
     @ManyToMany(mappedBy = "ownedArtifacts")
-    @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator::class, property = "id")
-    @JsonIdentityReference(alwaysAsId = true)
+    @JsonSerialize(using = UserReferenceCollectionSerializer::class)
     val owners: MutableList<User>,
     @LazyCollection(value = LazyCollectionOption.FALSE)
     @ManyToMany(mappedBy = "artifacts")
-    @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator::class, property = "id")
-    @JsonIdentityReference(alwaysAsId = true)
+    @JsonSerialize(using = GroupReferenceCollectionSerializer::class)
     val groups: MutableList<Group>,
     @LazyCollection(value = LazyCollectionOption.FALSE)
     @ManyToMany(mappedBy = "sharedArtifacts")
-    @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator::class, property = "id")
-    @JsonIdentityReference(alwaysAsId = true)
+    @JsonSerialize(using = UserReferenceCollectionSerializer::class)
     val sharedWith: MutableList<User> = mutableListOf(),
     @LazyCollection(value = LazyCollectionOption.FALSE)
     @OneToMany(cascade = [CascadeType.ALL])
-    @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator::class, property = "id")
-    @JsonIdentityReference(alwaysAsId = true)
+    @JsonSerialize(using = ArtifactResourceReferenceCollectionSerializer::class)
     val resources: MutableList<ArtifactResource> = mutableListOf(),
     @LazyCollection(value = LazyCollectionOption.FALSE)
     @ManyToMany(cascade = [CascadeType.ALL])
-    @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator::class, property = "id")
-    @JsonIdentityReference(alwaysAsId = true)
+    @JsonSerialize(using = AlbumReferenceCollectionSerializer::class)
     val albums: MutableList<Album> = mutableListOf(),
     @LazyCollection(value = LazyCollectionOption.FALSE)
     @ElementCollection

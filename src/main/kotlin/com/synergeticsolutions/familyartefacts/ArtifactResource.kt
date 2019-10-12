@@ -1,10 +1,7 @@
 package com.synergeticsolutions.familyartefacts
 
-import com.fasterxml.jackson.annotation.JsonIdentityInfo
-import com.fasterxml.jackson.annotation.JsonIdentityReference
 import com.fasterxml.jackson.annotation.JsonIgnore
-import com.fasterxml.jackson.annotation.ObjectIdGenerators
-import javax.persistence.ElementCollection
+import com.fasterxml.jackson.databind.annotation.JsonSerialize
 import javax.persistence.Entity
 import javax.persistence.GeneratedValue
 import javax.persistence.GenerationType
@@ -23,7 +20,6 @@ import org.hibernate.annotations.LazyCollectionOption
  * @param[contentType] Mime type of the resource saved in [resource]. This is used when sending the resource back to a user
  * @param[resource] Actual resource being stored. This is just a binary blob and can be man different types, to differentiate [contentType] is used
  * @param[artifact] Artifact the resource is associated with
- * @param[tags] Tags associated with the artifact
  */
 @Entity
 data class ArtifactResource(
@@ -38,12 +34,8 @@ data class ArtifactResource(
     val resource: ByteArray,
     @LazyCollection(value = LazyCollectionOption.FALSE)
     @ManyToOne
-    @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator::class, property = "id")
-    @JsonIdentityReference(alwaysAsId = true)
-    val artifact: Artifact,
-    @LazyCollection(value = LazyCollectionOption.FALSE)
-    @ElementCollection
-    val tags: MutableList<String> = mutableListOf()
+    @JsonSerialize(using = ArtifactReferenceSerializer::class)
+    val artifact: Artifact
 ) {
     override fun toString(): String {
         return listOf(
@@ -51,8 +43,7 @@ data class ArtifactResource(
             "name=$name",
             "description=$description",
             "contentType=$contentType",
-            "artifact=${artifact.id}",
-            "tags=$tags"
+            "artifact=${artifact.id}"
         ).joinToString(separator = ", ", prefix = "ArtifactResource(", postfix = ")")
     }
 
@@ -68,7 +59,6 @@ data class ArtifactResource(
         if (contentType != other.contentType) return false
         if (!resource.contentEquals(other.resource)) return false
         if (artifact != other.artifact) return false
-        if (tags != other.tags) return false
 
         return true
     }
@@ -80,7 +70,6 @@ data class ArtifactResource(
         result = 31 * result + contentType.hashCode()
         result = 31 * result + resource.contentHashCode()
         result = 31 * result + artifact.hashCode()
-        result = 31 * result + tags.hashCode()
         return result
     }
 }

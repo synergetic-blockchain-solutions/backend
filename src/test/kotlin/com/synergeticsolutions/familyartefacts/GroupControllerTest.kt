@@ -170,8 +170,8 @@ class GroupControllerTest {
                     GroupRequest(
                             name = returnedGroup["name"] as String,
                             description = returnedGroup["description"] as String,
-                            admins = (returnedGroup["admins"] as List<Int>).map(Int::toLong),
-                            members = (returnedGroup["members"] as List<Int>).map(Int::toLong)
+                            admins = (returnedGroup["admins"] as List<Map<String, Any>>).map { (it["id"] as Int).toLong() },
+                            members = (returnedGroup["members"] as List<Map<String, Any>>).map { (it["id"] as Int).toLong() }
                     )
             val updateGroupResponse = client.put()
                     .uri("/group/${returnedGroup["id"]}")
