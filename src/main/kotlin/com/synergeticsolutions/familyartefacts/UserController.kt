@@ -17,10 +17,6 @@ import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
-import java.security.Principal
-import javax.validation.Valid
-import javax.validation.constraints.Email
-import javax.validation.constraints.NotBlank
 
 @RestController
 class UserController(
