@@ -216,13 +216,23 @@ class UserServiceImplUnitTest {
         @Test
         fun `it should not allow users to update other users`() {
             assertThrows(ActionNotAllowedException::class.java) {
-                userService.update(user1.email, user2.id, metadata = UserUpdateRequest("test", "test", "test"))
+                userService.update(
+                    user1.email,
+                    user2.id,
+                    metadata = UserUpdateRequest("test", "test", "test"),
+                    contentType = null
+                )
             }
         }
 
         @Test
         fun `it should only update the metadata if the image is null`() {
-            val updatedUser = userService.update(user1.email, user1.id, metadata = UserUpdateRequest("test", "test", null))
+            val updatedUser = userService.update(
+                user1.email,
+                user1.id,
+                metadata = UserUpdateRequest("test", "test", null),
+                contentType = null
+            )
             assertThat(updatedUser, allOf(
                 hasProperty("id", `is`(user1.id)),
                 hasProperty("name", `is`("test")),
@@ -234,7 +244,12 @@ class UserServiceImplUnitTest {
 
         @Test
         fun `it should only update the image if the image is null`() {
-            val updatedUser = userService.update(user1.email, user1.id, profilePicture = "profilePicture".toByteArray())
+            val updatedUser = userService.update(
+                user1.email,
+                user1.id,
+                profilePicture = "profilePicture".toByteArray(),
+                contentType = null
+            )
             assertThat(updatedUser, allOf(
                 hasProperty("id", `is`(user1.id)),
                 hasProperty("name", `is`(user1.name)),
@@ -247,9 +262,12 @@ class UserServiceImplUnitTest {
 
         @Test
         fun `it should update both the metadata and the image if they're both specified`() {
-            val updatedUser = userService.update(user1.email, user1.id,
+            val updatedUser = userService.update(
+                user1.email, user1.id,
                 metadata = UserUpdateRequest("test", "test", null),
-                profilePicture = "profilePicture".toByteArray())
+                profilePicture = "profilePicture".toByteArray(),
+                contentType = null
+            )
             assertThat(updatedUser, allOf(
                 hasProperty("id", `is`(user1.id)),
                 hasProperty("name", `is`("test")),

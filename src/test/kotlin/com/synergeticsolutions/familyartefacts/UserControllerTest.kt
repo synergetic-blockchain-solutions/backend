@@ -19,6 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment
+import org.springframework.core.io.ByteArrayResource
 import org.springframework.core.io.ClassPathResource
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpHeaders
@@ -184,7 +185,12 @@ class UserControllerTest {
         @BeforeEach
         fun beforeEach() {
             user = userService.createUser("user1", "example@example.com", "password")
-            user = userService.update(user.email, user.id, profilePicture = ClassPathResource("test-image.jpg").file.readBytes())
+            user = userService.update(
+                user.email,
+                user.id,
+                profilePicture = ClassPathResource("test-image.jpg").file.readBytes(),
+                contentType = null
+            )
             val resp = client.post()
                 .uri("/login")
                 .syncBody(LoginRequest(email = user.email, password = "password"))
@@ -455,7 +461,12 @@ class UserControllerTest {
             @BeforeEach
             fun beforeEach() {
                 user2 = userService.createUser("user2", "example2@example.com", "password")
-                user2 = userService.update(user.email, user.id, profilePicture = ClassPathResource("test-image.jpg").file.readBytes())
+                user2 = userService.update(
+                    user.email,
+                    user.id,
+                    profilePicture = ClassPathResource("test-image.jpg").file.readBytes(),
+                    contentType = null
+                )
             }
 
             @Test
@@ -467,7 +478,7 @@ class UserControllerTest {
                     .expectBody()
                     .returnResult()
                     .responseBody!!
-                assertEquals(Base64Utils.encode(user2.image), responseBody)
+                assertEquals(ByteArrayResource(Base64Utils.encode(user2.image)), ByteArrayResource(responseBody))
             }
 
             @Test
@@ -492,7 +503,7 @@ class UserControllerTest {
                     .expectBody()
                     .returnResult()
                     .responseBody!!
-                assertEquals(Base64Utils.encode(user.image), responseBody)
+                assertEquals(ByteArrayResource(Base64Utils.encode(user.image)), ByteArrayResource(responseBody))
             }
         }
     }
