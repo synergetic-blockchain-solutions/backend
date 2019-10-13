@@ -1,6 +1,5 @@
 package com.synergeticsolutions.familyartefacts
 
-import java.util.Optional
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.containsInAnyOrder
 import org.hamcrest.Matchers.equalTo
@@ -18,6 +17,7 @@ import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mockito
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.security.core.userdetails.UsernameNotFoundException
+import java.util.Optional
 
 class GroupServiceImplTest {
     private val userRepository: UserRepository = Mockito.mock(UserRepository::class.java)
@@ -236,6 +236,11 @@ class GroupServiceImplTest {
                                             description = "description",
                                             members = mutableListOf(),
                                             admins = mutableListOf())))
+            Mockito.`when`(groupRepository.findById(anyLong()))
+                .thenReturn(
+                    Optional.of(
+                        Group(1, "Group 1", "Description 1", members = mutableListOf(), admins = mutableListOf())
+                        ))
             Mockito.`when`(userRepository.existsById(anyLong()))
                     .thenReturn(true)
             Mockito.`when`(groupRepository.save(any<Group>())).then { it.arguments[0] as Group }
@@ -272,6 +277,11 @@ class GroupServiceImplTest {
                                     privateGroup = Group(1, "Group 1", members = mutableListOf(), description = "")
                             )
                     )
+            Mockito.`when`(groupRepository.findById(anyLong()))
+                .thenReturn(
+                    Optional.of(
+                        Group(1, "Group 1", "Description 1", members = mutableListOf(), admins = mutableListOf())
+                    ))
             Mockito.`when`(userRepository.existsById(anyLong())).thenReturn(true)
             Mockito.`when`(userRepository.findByIdOrNull(anyLong())).then {
                 User(
