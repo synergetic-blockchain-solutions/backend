@@ -1,7 +1,5 @@
 package com.synergeticsolutions.familyartefacts
 
-import org.springframework.core.io.ByteArrayResource
-
 /**
  * Interface for a service that performs user related actions. This interface should be used rather than an actual
  * implementation so we allow Spring's dependency injection to do its magic and make it easier for us to test.

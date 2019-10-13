@@ -1,7 +1,5 @@
 package com.synergeticsolutions.familyartefacts
 
-import org.springframework.core.io.ByteArrayResource
-
 interface GroupService {
     fun createGroup(
         email: String,
