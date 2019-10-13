@@ -19,6 +19,4 @@ interface UserService {
         contentType: String? = null
     ): User
     fun delete(email: String, id: Long): User
-    fun findImageByEmail(email: String): ByteArrayResource
-    fun findImageById(email: String, id: Long): ByteArrayResource
 }

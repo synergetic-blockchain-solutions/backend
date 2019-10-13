@@ -146,17 +146,4 @@ class UserServiceImpl(
         userRepository.delete(user)
         return user
     }
-
-    override fun findImageByEmail(email: String): ByteArrayResource {
-        val user = userRepository.findByEmail(email) ?: throw UserNotFoundException("Could not find user with email $email")
-        return findImageById(email, user.id)
-    }
-
-    override fun findImageById(email: String, id: Long): ByteArrayResource {
-        val requestingUser = userRepository.findByEmail(email) ?: throw UserNotFoundException("Could not find user with email $email")
-        val user = userRepository.findByIdOrNull(id) ?: throw UserNotFoundException("Could not find user $id")
-        logger.info("User ${requestingUser.id} accessing profile picture of user $id")
-        // return ByteArrayResource(Base64Utils.encode(user.image))
-        return ByteArrayResource(user.image)
-    }
 }

@@ -335,13 +335,4 @@ class GroupServiceImpl(
         groupRepository.delete(group)
         return group
     }
-
-    override fun findGroupImageById(email: String, id: Long): ByteArrayResource {
-        val group = groupRepository.findByIdOrNull(id) ?: throw GroupNotFoundException("No group with id $id was found")
-        val user = userRepository.findByEmail(email) ?: throw UserNotFoundException("No user with email $email was found")
-        if (!(user.groups.contains(group))) {
-            throw ActionNotAllowedException("User ${user.id} does not have access to group ${group.id}")
-        }
-        return ByteArrayResource(Base64Utils.encode(group.image))
-    }
 }
