@@ -1,5 +1,7 @@
 package com.synergeticsolutions.familyartefacts
 
+import org.springframework.core.io.ByteArrayResource
+
 /**
  * Interface for a service that performs user related actions. This interface should be used rather than an actual
  * implementation so we allow Spring's dependency injection to do its magic and make it easier for us to test.
@@ -10,5 +12,7 @@ interface UserService {
     fun findUsers(email: String, filterEmail: String? = null, filterName: String? = null): List<User>
     fun findByEmail(email: String): User
     fun update(email: String, id: Long, metadata: UserUpdateRequest? = null, profilePicture: ByteArray? = null): User
-    abstract fun delete(email: String, id: Long): User
+    fun delete(email: String, id: Long): User
+    fun findImageByEmail(email: String): ByteArrayResource
+    fun findImageById(email: String, id: Long): ByteArrayResource
 }

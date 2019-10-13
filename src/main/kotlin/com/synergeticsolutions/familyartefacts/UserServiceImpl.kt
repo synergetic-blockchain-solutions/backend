@@ -5,6 +5,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Lazy
+import org.springframework.core.io.ByteArrayResource
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
@@ -145,5 +146,16 @@ class UserServiceImpl(
         }
         userRepository.delete(user)
         return user
+    }
+
+    override fun findImageByEmail(email: String): ByteArrayResource {
+        TODO("not implemented") // To change body of created functions use File | Settings | File Templates.
+    }
+
+    override fun findImageById(email: String, id: Long): ByteArrayResource {
+        val requestingUser = userRepository.findByEmail(email) ?: throw UserNotFoundException("Could not find user with email $email")
+        val user = userRepository.findByIdOrNull(id) ?: throw UserNotFoundException("Could not find user $id")
+        logger.info("User ${requestingUser.id} accessing profile picture of user $id")
+        return ByteArrayResource(user.image)
     }
 }

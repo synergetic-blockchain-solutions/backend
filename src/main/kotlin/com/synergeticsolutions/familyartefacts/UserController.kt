@@ -8,6 +8,7 @@ import org.hibernate.validator.constraints.Length
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.core.io.ByteArrayResource
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.DeleteMapping
@@ -52,6 +53,14 @@ class UserController(
     fun getMe(principal: Principal): User = userService.findByEmail(principal.name)
 
     /**
+     * GET /user/me/image
+     *
+     * [getMyImage] gets the profile picture of the current user.
+     */
+    @GetMapping(path = ["/user/me/image"])
+    fun getMyImage(principal: Principal): ByteArrayResource = userService.findImageByEmail(principal.name)
+
+    /**
      * GET /user/{id}
      *
      * [getUser] gets the text information associated with a user. A successful response will be the [User] entity
@@ -59,6 +68,14 @@ class UserController(
      */
     @GetMapping(path = ["/user/{id}"])
     fun getUser(@PathVariable id: Long, principal: Principal): User = userService.findById(principal.name, id)
+
+    /**
+     * GET /user/{id}/image
+     *
+     * [getUserImage] gets the profile picture for user [id].
+     */
+    @GetMapping(path = ["/user/{id}/image"])
+    fun getUserImage(@PathVariable id: Long, principal: Principal): ByteArrayResource = userService.findImageById(principal.name, id)
 
     /**
      * Get /user?email=[email]&name=[name]
