@@ -3,12 +3,10 @@ package com.synergeticsolutions.familyartefacts
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.core.io.ByteArrayResource
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpStatus
 import org.springframework.security.core.userdetails.UsernameNotFoundException
 import org.springframework.stereotype.Service
-import org.springframework.util.Base64Utils
 import org.springframework.web.bind.annotation.ResponseStatus
 
 @ResponseStatus(HttpStatus.BAD_REQUEST)
@@ -306,7 +304,7 @@ class GroupServiceImpl(
                 groupRepository.findByIdOrNull(id)
                         ?: throw GroupNotFoundException("Could not find group with ID $id")
         logger.debug("Checking if user $email is an admin of Group $id")
-        if (!group.admins.contains(user)) {
+        if (!group.admins.map(User::id).contains(user.id)) {
             throw ActionNotAllowedException("User with email $email is not allowed to update the group")
         }
         logger.debug("Updating image in Group $id")
