@@ -180,6 +180,7 @@ class AlbumServiceImpl(
             }
         }
 
+        // User can only add/remove artifacts that they have access to to/from the album
         (update.artifacts ?: listOf()).forEach {
             if (!artifactRepository.existsById(it)) {
                 throw ArtifactNotFoundException("Could not find artifact with ID $it")
@@ -188,14 +189,8 @@ class AlbumServiceImpl(
                 throw ActionNotAllowedException("User does not have access to artifact $it")
             }
         }
-
-        // User can only add/remove artifacts that they own to/from the album
         val updatedArtifacts = artifactRepository.findAllById(update.artifacts ?: listOf())
-        updatedArtifacts.forEach {
-            if (!it.owners.contains(user)) {
-                throw ActionNotAllowedException("User is not owner of artifact ${it.id}")
-            }
-        }
+
         album.artifacts.subtract(updatedArtifacts).forEach { it.albums.remove(album) }
         updatedArtifacts.subtract(album.artifacts).forEach { it.albums.add(album) }
         artifactRepository.saveAll(album.artifacts)
