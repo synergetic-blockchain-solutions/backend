@@ -8,6 +8,7 @@ import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpStatus
 import org.springframework.security.core.userdetails.UsernameNotFoundException
 import org.springframework.stereotype.Service
+import org.springframework.util.Base64Utils
 import org.springframework.web.bind.annotation.ResponseStatus
 
 @ResponseStatus(HttpStatus.BAD_REQUEST)
@@ -341,6 +342,6 @@ class GroupServiceImpl(
         if (!(user.groups.contains(group))) {
             throw ActionNotAllowedException("User ${user.id} does not have access to group ${group.id}")
         }
-        return ByteArrayResource(group.image)
+        return ByteArrayResource(Base64Utils.encode(group.image))
     }
 }

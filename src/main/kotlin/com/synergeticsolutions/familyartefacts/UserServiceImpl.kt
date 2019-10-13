@@ -1,6 +1,5 @@
 package com.synergeticsolutions.familyartefacts
 
-import javax.naming.AuthenticationException
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -9,6 +8,8 @@ import org.springframework.core.io.ByteArrayResource
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
+import org.springframework.util.Base64Utils
+import javax.naming.AuthenticationException
 
 class UserAlreadyExistsException(msg: String) : AuthenticationException(msg)
 
@@ -149,13 +150,14 @@ class UserServiceImpl(
     }
 
     override fun findImageByEmail(email: String): ByteArrayResource {
-        TODO("not implemented") // To change body of created functions use File | Settings | File Templates.
+        val user = userRepository.findByEmail(email) ?: throw UserNotFoundException("Could not find user with email $email")
+        return ByteArrayResource(Base64Utils.encode(user.image))
     }
 
     override fun findImageById(email: String, id: Long): ByteArrayResource {
         val requestingUser = userRepository.findByEmail(email) ?: throw UserNotFoundException("Could not find user with email $email")
         val user = userRepository.findByIdOrNull(id) ?: throw UserNotFoundException("Could not find user $id")
         logger.info("User ${requestingUser.id} accessing profile picture of user $id")
-        return ByteArrayResource(user.image)
+        return ByteArrayResource(Base64Utils.encode(user.image))
     }
 }
