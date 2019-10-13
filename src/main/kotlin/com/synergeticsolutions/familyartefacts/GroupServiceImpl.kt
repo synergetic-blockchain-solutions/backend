@@ -3,6 +3,7 @@ package com.synergeticsolutions.familyartefacts
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.core.io.ByteArrayResource
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpStatus
 import org.springframework.security.core.userdetails.UsernameNotFoundException
@@ -332,5 +333,14 @@ class GroupServiceImpl(
         group.admins.forEach { it.ownedGroups.remove(group) }
         groupRepository.delete(group)
         return group
+    }
+
+    override fun findGroupImageById(email: String, id: Long): ByteArrayResource {
+        val group = groupRepository.findByIdOrNull(id) ?: throw GroupNotFoundException("No group with id $id was found")
+        val user = userRepository.findByEmail(email) ?: throw UserNotFoundException("No user with email $email was found")
+        if (!(user.groups.contains(group))) {
+            throw ActionNotAllowedException("User ${user.id} does not have access to group ${group.id}")
+        }
+        return ByteArrayResource(group.image)
     }
 }

@@ -3,6 +3,7 @@ package com.synergeticsolutions.familyartefacts
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.core.io.ByteArrayResource
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -58,6 +59,18 @@ class GroupController(
         val currentUser = SecurityContextHolder.getContext().authentication
         val group = groupService.findGroupById(currentUser.principal as String, id)
         return ResponseEntity.ok(group)
+    }
+
+    /**
+     * GET /group/{id}/image
+     *
+     * @param id ID of the group image to get
+     * @return The group's image
+     */
+    @GetMapping(path = ["/{id}/image"])
+    fun getGroupImageById(@PathVariable id: Long): ByteArrayResource {
+        val currentUser = SecurityContextHolder.getContext().authentication
+        return groupService.findGroupImageById(currentUser.principal as String, id)
     }
 
     /**
