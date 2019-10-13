@@ -11,7 +11,13 @@ interface UserService {
     fun findById(email: String, id: Long): User
     fun findUsers(email: String, filterEmail: String? = null, filterName: String? = null): List<User>
     fun findByEmail(email: String): User
-    fun update(email: String, id: Long, metadata: UserUpdateRequest? = null, profilePicture: ByteArray? = null): User
+    fun update(
+        email: String,
+        id: Long,
+        metadata: UserUpdateRequest? = null,
+        profilePicture: ByteArray? = null,
+        contentType: String? = null
+    ): User
     fun delete(email: String, id: Long): User
     fun findImageByEmail(email: String): ByteArrayResource
     fun findImageById(email: String, id: Long): ByteArrayResource

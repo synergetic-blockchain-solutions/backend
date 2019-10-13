@@ -9,14 +9,18 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.core.io.ByteArrayResource
+import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
+import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
+import org.springframework.util.Base64Utils
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 
@@ -58,7 +62,12 @@ class UserController(
      * [getMyImage] gets the profile picture of the current user.
      */
     @GetMapping(path = ["/user/me/image"])
-    fun getMyImage(principal: Principal): ByteArrayResource = userService.findImageByEmail(principal.name)
+    fun getMyImage(principal: Principal): ResponseEntity<ByteArrayResource> {
+        val user = userService.findByEmail(principal.name)
+        return ResponseEntity.ok()
+            .contentType(MediaType.parseMediaType(user.contentType ?: "image/png"))
+            .body(ByteArrayResource(Base64Utils.encode(user.image)))
+    }
 
     /**
      * GET /user/{id}
@@ -75,8 +84,12 @@ class UserController(
      * [getUserImage] gets the profile picture for user [id].
      */
     @GetMapping(path = ["/user/{id}/image"])
-    fun getUserImage(@PathVariable id: Long, principal: Principal): ByteArrayResource = userService.findImageById(principal.name, id)
-
+    fun getUserImage(@PathVariable id: Long, principal: Principal): ResponseEntity<ByteArrayResource> {
+        val user = userService.findById(principal.name, id)
+        return ResponseEntity.ok()
+            .contentType(MediaType.parseMediaType(user.contentType ?: "image/png"))
+            .body(ByteArrayResource(Base64Utils.encode(user.image)))
+    }
     /**
      * Get /user?email=[email]&name=[name]
      *
@@ -96,7 +109,7 @@ class UserController(
      */
     @PutMapping(path = ["/user/{id}"])
     fun updateUser(@PathVariable("id") id: Long, @RequestBody update: UserUpdateRequest, principal: Principal): User =
-        userService.update(principal.name, id, metadata = update)
+        userService.update(principal.name, id, metadata = update, contentType = null)
 
     /**
      * PUT /user/{id}/image
@@ -104,8 +117,13 @@ class UserController(
      * [updateImage] updates the image associated with user [id].
      */
     @PutMapping(path = ["/user/{id}/image"])
-    fun updateImage(@PathVariable("id") id: Long, @RequestBody profilePicture: ByteArray, principal: Principal) =
-        userService.update(principal.name, id, profilePicture = profilePicture)
+    fun updateImage(
+        @RequestHeader(HttpHeaders.CONTENT_TYPE) contentType: String,
+        @PathVariable("id") id: Long,
+        @RequestBody profilePicture: ByteArray,
+        principal: Principal
+    ) =
+        userService.update(principal.name, id, profilePicture = profilePicture, contentType = contentType)
 
     /**
      * Delete /user/{id}

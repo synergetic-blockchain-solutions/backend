@@ -43,6 +43,7 @@ data class Group(
     @ManyToMany
     @JsonSerialize(using = AlbumReferenceCollectionSerializer::class)
     val albums: MutableList<Album> = mutableListOf(),
+    @JsonIgnore
     val contentType: String = "",
     @JsonIgnore
     @Lob

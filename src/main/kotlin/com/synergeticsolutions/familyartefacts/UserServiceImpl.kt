@@ -9,7 +9,6 @@ import org.springframework.core.io.ByteArrayResource
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
-import org.springframework.util.Base64Utils
 
 class UserAlreadyExistsException(msg: String) : AuthenticationException(msg)
 
@@ -110,7 +109,13 @@ class UserServiceImpl(
         return userRepository.findByEmail(email) ?: throw UserNotFoundException("Could not find user with email $email")
     }
 
-    override fun update(email: String, id: Long, metadata: UserUpdateRequest?, profilePicture: ByteArray?): User {
+    override fun update(
+        email: String,
+        id: Long,
+        metadata: UserUpdateRequest?,
+        profilePicture: ByteArray?,
+        contentType: String?
+    ): User {
         var user =
             userRepository.findByEmail(email) ?: throw UserNotFoundException("Could not find user with email $email")
         if (user.id != id) {
@@ -123,18 +128,11 @@ class UserServiceImpl(
             if (it.password != null) {
                 password = passwordEncoder.encode(it.password)
             }
-            user = user.copy(
-                name = it.name,
-                email = it.email,
-                password = password
-            )
+            user = user.copy(name = it.name, email = it.email, password = password)
         }
 
-        profilePicture?.let {
-            user = user.copy(
-                image = it
-            )
-        }
+        profilePicture?.let { user = user.copy(image = it) }
+        contentType?.let { user = user.copy(contentType = it) }
 
         return userRepository.save(user)
     }
@@ -151,13 +149,14 @@ class UserServiceImpl(
 
     override fun findImageByEmail(email: String): ByteArrayResource {
         val user = userRepository.findByEmail(email) ?: throw UserNotFoundException("Could not find user with email $email")
-        return ByteArrayResource(Base64Utils.encode(user.image))
+        return findImageById(email, user.id)
     }
 
     override fun findImageById(email: String, id: Long): ByteArrayResource {
         val requestingUser = userRepository.findByEmail(email) ?: throw UserNotFoundException("Could not find user with email $email")
         val user = userRepository.findByIdOrNull(id) ?: throw UserNotFoundException("Could not find user $id")
         logger.info("User ${requestingUser.id} accessing profile picture of user $id")
-        return ByteArrayResource(Base64Utils.encode(user.image))
+        // return ByteArrayResource(Base64Utils.encode(user.image))
+        return ByteArrayResource(user.image)
     }
 }
