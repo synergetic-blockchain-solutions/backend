@@ -25,6 +25,7 @@ import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.test.web.reactive.server.WebTestClient
+import org.springframework.util.Base64Utils
 
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 @AutoConfigureWebTestClient
@@ -183,6 +184,7 @@ class UserControllerTest {
         @BeforeEach
         fun beforeEach() {
             user = userService.createUser("user1", "example@example.com", "password")
+            user = userService.update(user.email, user.id, profilePicture = ClassPathResource("test-image.jpg").file.readBytes())
             val resp = client.post()
                 .uri("/login")
                 .syncBody(LoginRequest(email = user.email, password = "password"))
@@ -443,6 +445,54 @@ class UserControllerTest {
                     .exchange()
                     .expectStatus().isOk
                 assertNull(userRepository.findByIdOrNull(user.id))
+            }
+        }
+
+        @Nested
+        inner class GetUserImage {
+            lateinit var user2: User
+
+            @BeforeEach
+            fun beforeEach() {
+                user2 = userService.createUser("user2", "example2@example.com", "password")
+                user2 = userService.update(user.email, user.id, profilePicture = ClassPathResource("test-image.jpg").file.readBytes())
+            }
+
+            @Test
+            fun `it should get the profile picture for the user with ID in base64 encoding`() {
+                val responseBody = client.get().uri("/user/${user2.id}/image")
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer $token")
+                    .exchange()
+                    .expectStatus().isOk
+                    .expectBody()
+                    .returnResult()
+                    .responseBody!!
+                assertEquals(Base64Utils.encode(user2.image), responseBody)
+            }
+
+            @Test
+            fun `it should return 404 if the user does not exist`() {
+                client.get().uri("/user/10000/image")
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer $token")
+                    .exchange()
+                    .expectStatus().isNotFound
+                    .expectBody()
+                    .jsonPath("$.message").exists()
+            }
+        }
+
+        @Nested
+        inner class GetMyImage {
+            @Test
+            fun `it should get the profile picture of the authenticated user in base64 encoding`() {
+                val responseBody = client.get().uri("/user/me/image")
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer $token")
+                    .exchange()
+                    .expectStatus().isOk
+                    .expectBody()
+                    .returnResult()
+                    .responseBody!!
+                assertEquals(Base64Utils.encode(user.image), responseBody)
             }
         }
     }

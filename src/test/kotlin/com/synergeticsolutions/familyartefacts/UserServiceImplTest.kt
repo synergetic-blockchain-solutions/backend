@@ -19,9 +19,12 @@ import org.mockito.ArgumentMatchers.argThat
 import org.mockito.Mockito
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.core.io.ByteArrayResource
+import org.springframework.core.io.ClassPathResource
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.test.context.junit.jupiter.SpringExtension
+import org.springframework.util.Base64Utils
 
 class UserServiceImplUnitTest {
     private val userRepository: UserRepository = Mockito.mock(UserRepository::class.java)
@@ -284,6 +287,70 @@ class UserServiceImplUnitTest {
         fun `it should not allow users to delete other users`() {
             assertThrows(ActionNotAllowedException::class.java) {
                 userService.delete(user1.email, user2.id)
+            }
+        }
+    }
+
+    @Nested
+    inner class GetImageByEmail {
+        @Test
+        fun `it should get the image of the authenticated user and return in base64 encoding`() {
+            val email = "example@example.com"
+            val user = User(
+                name = "name",
+                email = email,
+                password = "secret",
+                privateGroup = Group(
+                    2,
+                    "Group 2",
+                    description = "description",
+                    members = mutableListOf(),
+                    admins = mutableListOf()
+                ),
+                image = ClassPathResource("test-image.jpg").file.readBytes()
+            )
+            Mockito.`when`(userRepository.findByEmail(anyString())).thenReturn(user)
+            val returnedImage = userService.findImageByEmail(email)
+            assertEquals(ByteArrayResource(Base64Utils.encode(ClassPathResource("test-image.jpg").file.readBytes())), returnedImage)
+        }
+
+        @Test
+        fun `it should throw UserNotFoundException if the user email does not exist`() {
+            assertThrows(UserNotFoundException::class.java) {
+                userService.findImageByEmail("example@example.com")
+            }
+        }
+    }
+
+    @Nested
+    inner class GetImageByID {
+        @Test
+        fun `it should get the image of the user with ID and return in base64 encoding`() {
+            val email = "example@example.com"
+            val user = User(
+                id = 1,
+                name = "name",
+                email = email,
+                password = "secret",
+                privateGroup = Group(
+                    2,
+                    "Group 2",
+                    description = "description",
+                    members = mutableListOf(),
+                    admins = mutableListOf()
+                ),
+                image = ClassPathResource("test-image.jpg").file.readBytes()
+            )
+            Mockito.`when`(userRepository.findByEmail(anyString())).thenReturn(user)
+            Mockito.`when`(userRepository.findById(anyLong())).thenReturn(Optional.of(user))
+            val returnedImage = userService.findImageById("example@example.com", 1)
+            assertEquals(ByteArrayResource(Base64Utils.encode(ClassPathResource("test-image.jpg").file.readBytes())), returnedImage)
+        }
+
+        @Test
+        fun `it should throw UserNotFoundException if the user ID does not exist`() {
+            assertThrows(UserNotFoundException::class.java) {
+                userService.findImageById("example@example.com", 2)
             }
         }
     }
