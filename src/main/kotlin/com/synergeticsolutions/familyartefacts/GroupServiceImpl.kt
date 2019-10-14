@@ -143,101 +143,6 @@ class GroupServiceImpl(
     }
 
     /**
-     * [addMembers] adds the specified members to the group
-     * @param membersToAdd List of users to be added to group
-     * @param group The group to add members to
-     * @return The updated [Group]
-     * @throws MemberAlreadyInGroupException when the one of the members is already in the group
-     */
-    override fun addMembers(membersToAdd: List<User>, group: Group): Group {
-        membersToAdd.forEach {
-            if (group.members.contains(it)) {
-                throw MemberAlreadyInGroupException("Member with email ${it.email} is already in the group")
-            }
-        }
-        membersToAdd.forEach {
-            group.members.add(it)
-            it.groups.add(group)
-        }
-        val updatedGroup = groupRepository.save(group)
-        userRepository.saveAll(membersToAdd)
-        return updatedGroup
-    }
-
-    /**
-     * [addAdmins] makes the specified members the admins
-     * @param adminsToAdd List of members to be made admin
-     * @param group The group to update admins
-     * @return The updated [Group]
-     * @throws UserIsNotMemberException when one of the users is not member of the group
-     * @throws MemberIsAlreadyAdminException when one of the members is already an admin
-     */
-    override fun addAdmins(adminsToAdd: List<User>, group: Group): Group {
-        adminsToAdd.forEach {
-            if (!group.members.contains(it)) {
-                throw UserIsNotMemberException("User with email ${it.email} is not a member")
-            } else {
-                if (group.admins.contains(it)) {
-                    throw MemberIsAlreadyAdminException("User with email ${it.email} is already an admin")
-                }
-            }
-        }
-        adminsToAdd.forEach {
-            group.admins.add(it)
-            it.ownedGroups.add(group)
-        }
-        val savedGroup = groupRepository.save(group)
-        userRepository.saveAll(adminsToAdd)
-        return savedGroup
-    }
-
-    /**
-     * [removeMembers] removes the specified members from the group
-     * @param membersToRemove List of members to be removed
-     * @param group The group to update members
-     * @return The updated [Group]
-     * @throws UserIsNotMemberException when one of the users is not member of the group
-     */
-    override fun removeMembers(membersToRemove: List<User>, group: Group): Group {
-        membersToRemove.forEach {
-            if (!group.members.contains(it)) {
-                throw UserIsNotMemberException("User with email ${it.email} is not a member")
-            }
-        }
-        membersToRemove.forEach {
-            group.members.remove(it)
-            it.groups.remove(group)
-            if (group.admins.contains(it)) {
-                group.admins.remove(it)
-                it.ownedGroups.remove(group)
-            }
-        }
-        userRepository.saveAll(membersToRemove)
-        return groupRepository.save(group)
-    }
-
-    /**
-     * [removeAdmins] makes the member not an admin anymore
-     * @param adminsToRemove List of admins to be made normal members
-     * @param group The group to update admins
-     * @return The updated [Group]
-     * @throws UserIsNotAdminException when one of the users is not admin of the group
-     */
-    override fun removeAdmins(email: String, adminsToRemove: List<User>, group: Group): Group {
-        adminsToRemove.forEach {
-            if (!group.admins.contains(it)) {
-                throw UserIsNotAdminException("User with email ${it.email} is not an admin")
-            }
-        }
-        adminsToRemove.forEach {
-            group.admins.remove(it)
-            it.ownedGroups.remove(group)
-        }
-        userRepository.saveAll(adminsToRemove)
-        return groupRepository.save(group)
-    }
-
-    /**
      * [updateGroup] updates the group from the details given by:
      * @param email Email of the user performing the action
      * @param groupID ID of the group to be updated
@@ -269,20 +174,23 @@ class GroupServiceImpl(
         }
 
         val updatedAdmins = userRepository.findAllById(groupRequest.admins ?: listOf())
-        val adminsToRemove = group.admins.subtract(updatedAdmins).toList()
-        val adminsToAdd = updatedAdmins.subtract(group.admins).toList()
-        group = addAdmins(adminsToAdd, group)
-        group = removeAdmins(email, adminsToRemove, group)
+        group.admins.subtract(updatedAdmins).forEach { it.ownedGroups.remove(group) }
+        updatedAdmins.subtract(group.admins).forEach { it.ownedGroups.add(group) }
+        userRepository.saveAll(group.admins)
+        userRepository.saveAll(updatedAdmins)
 
         val updatedMembers = userRepository.findAllById(groupRequest.members ?: listOf())
-        val membersToRemove = group.members.subtract(updatedMembers).toList()
-        val membersToAdd = updatedAdmins.subtract(group.members).toList()
-        group = addMembers(membersToAdd, group)
-        group = removeMembers(membersToRemove, group)
-
-        group = group.copy(description = groupRequest.description)
-        group = group.copy(name = groupRequest.name)
-        return groupRepository.save(group)
+        group.members.subtract(updatedMembers).forEach { it.groups.remove(group) }
+        updatedMembers.subtract(group.members).forEach { it.groups.add(group) }
+        userRepository.saveAll(group.members)
+        userRepository.saveAll(updatedMembers)
+        val updatedGroup = group.copy(
+                name = groupRequest.name,
+                description = groupRequest.description,
+                admins = updatedAdmins,
+                members = updatedMembers
+        )
+        return groupRepository.save(updatedGroup)
     }
 
     /**
