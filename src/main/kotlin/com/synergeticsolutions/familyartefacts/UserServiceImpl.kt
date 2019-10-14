@@ -93,11 +93,11 @@ class UserServiceImpl(
         logger.info("Finding users with email=$filterEmail and name=$filterName for user ${user.id}")
         var users = userRepository.findAll()
         if (filterEmail != null) {
-            users = users.filter { it.email.startsWith(filterEmail) }
+            users = users.filter { it.email.startsWith(filterEmail, ignoreCase = true) }
         }
 
         if (filterName != null) {
-            users = users.filter { it.name.startsWith(filterName) }
+            users = users.filter { it.name.startsWith(filterName, ignoreCase = true) }
         }
 
         logger.info("Found ${users.size} using filter email=$filterName and name=$filterName")
