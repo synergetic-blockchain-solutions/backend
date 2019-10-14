@@ -7,6 +7,8 @@ import org.hamcrest.Matchers.equalTo
 import org.hamcrest.Matchers.hasItem
 import org.hamcrest.Matchers.hasItems
 import org.hamcrest.Matchers.hasProperty
+import org.hamcrest.beans.HasPropertyWithValue
+import org.hamcrest.core.IsCollectionContaining
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -507,6 +509,86 @@ class GroupServiceImplTest {
                     updatedGroup, equalTo(group.copy(description = "updated description"))
             )
             Mockito.verify(groupRepository).save(group.copy(description = "updated description"))
+        }
+
+        @Test
+        fun `it should update group members`() {
+            val email = "example@example.com"
+            var group = Group(
+                    id = 1,
+                    name = "Group 1",
+                    description = "",
+                    members = mutableListOf(),
+                    admins = mutableListOf())
+            var owningUser = User(
+                    id = 2,
+                    name = "User 2",
+                    email = "example@example2.com",
+                    password = "password",
+                    groups = mutableListOf(group),
+                    ownedGroups = mutableListOf(group),
+                    privateGroup = Group(
+                            2, "Group 2", members = mutableListOf(), description = ""))
+            var addedUser = User(
+                    id = 3,
+                    name = "User 3",
+                    email = "example@example3.com",
+                    password = "password",
+                    groups = mutableListOf(),
+                    ownedGroups = mutableListOf(),
+                    privateGroup = Group(
+                            3, "Group 3", members = mutableListOf(), description = ""))
+            group = group.copy(admins = mutableListOf(owningUser), members = mutableListOf(owningUser))
+            Mockito.`when`(userRepository.findByEmail(anyString())).then {
+                when (it.arguments[0]) {
+                    owningUser.email -> owningUser
+                    else -> throw RuntimeException("${it.arguments[0]} not handled")
+                }
+            }
+            Mockito.`when`(groupRepository.findByIdOrNull(anyLong())).then {
+                if (it.arguments[0] == group.id) {
+                    Optional.of(group)
+                } else {
+                    Optional.empty()
+                }
+            }
+
+            Mockito.`when`(groupRepository.save(any<Group>())).then { it.arguments[0] as Group }
+
+            Mockito.`when`(userRepository.existsById(anyLong())).thenReturn(true)
+            Mockito.`when`(userRepository.findAllById(any<Iterable<Long>>())).then {
+                (it.arguments[0] as Iterable<Long>).map { id ->
+                    User(
+                            id = id,
+                            name = "User $id",
+                            email = "example$id@example.com",
+                            password = "password",
+                            privateGroup = Group(
+                                    1, "Group1", members = mutableListOf(), description = ""
+                            )
+                    )
+                }
+            }
+            val updatedGroup = groupService.updateGroup(
+                    owningUser.email,
+                    group.id,
+                    GroupRequest(
+                            group.name,
+                            "updated description",
+                            admins = listOf(owningUser.id),
+                            members = listOf(2, 3))
+            )
+            val argCapturer = ArgumentCaptor.forClass(Group::class.java)
+            Mockito.verify(groupRepository).save(argCapturer.capture())
+            val matcher =
+                    HasPropertyWithValue.hasProperty<Group>(
+                            "members",
+                            IsCollectionContaining.hasItems<User>(
+                                    HasPropertyWithValue.hasProperty("id", equalTo(2L)),
+                                    HasPropertyWithValue.hasProperty("id", equalTo(3L))
+                            )
+                    )
+            assertThat(argCapturer.value, matcher)
         }
     }
 
