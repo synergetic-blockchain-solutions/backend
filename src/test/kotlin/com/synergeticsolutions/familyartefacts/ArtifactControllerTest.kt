@@ -3,14 +3,19 @@ package com.synergeticsolutions.familyartefacts
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
+import java.time.Instant
+import java.util.Date
+import org.assertj.core.util.DateUtil
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.`is`
+import org.hamcrest.Matchers.allOf
 import org.hamcrest.Matchers.contains
 import org.hamcrest.Matchers.containsInAnyOrder
 import org.hamcrest.Matchers.greaterThan
 import org.hamcrest.Matchers.hasEntry
 import org.hamcrest.Matchers.hasItem
 import org.hamcrest.Matchers.hasItems
+import org.hamcrest.Matchers.hasKey
 import org.hamcrest.Matchers.hasProperty
 import org.hamcrest.Matchers.not
 import org.hamcrest.collection.IsCollectionWithSize.hasSize
@@ -106,7 +111,9 @@ class ArtifactControllerTest {
                     .expectBody()
                     .jsonPath("$").isArray
                     .jsonPath("$").value(hasSize<Artifact>(3))
-                    .jsonPath("$").value(containsInAnyOrder(artifacts.map { hasEntry("id", it.id.toInt()) }))
+                    .jsonPath("$").value(containsInAnyOrder(artifacts.map {
+                        allOf(hasEntry("id", it.id.toInt()), hasKey("dateTaken"))
+                }))
         }
 
         @Test
@@ -126,7 +133,8 @@ class ArtifactControllerTest {
                         description = "description",
                         ownerIDs = listOf(),
                         groupIDs = listOf(it.value),
-                        sharedWith = listOf()
+                        sharedWith = listOf(),
+                        dateTaken = Date.from(Instant.now())
                 )
             }
             client.get()
@@ -398,6 +406,7 @@ class ArtifactControllerTest {
                     .responseBody!!
             val returnedArtifact =
                     ObjectMapper().registerKotlinModule().readValue<Map<String, Any>>(String(createArtifactResponse))
+            val dateTaken = Date()
             @Suppress("UNCHECKED_CAST")
             val updateArtifactRequest =
                     ArtifactRequest(
@@ -405,7 +414,8 @@ class ArtifactControllerTest {
                             description = returnedArtifact["description"] as String,
                             owners = (returnedArtifact["owners"] as List<Map<String, Any>>).map { (it["id"] as Int).toLong() },
                             groups = (returnedArtifact["groups"] as List<Map<String, Any>>).map { (it["id"] as Int).toLong() },
-                            sharedWith = (returnedArtifact["owners"] as List<Map<String, Any>>).map { (it["id"] as Int).toLong() }
+                            sharedWith = (returnedArtifact["owners"] as List<Map<String, Any>>).map { (it["id"] as Int).toLong() },
+                            dateTaken = dateTaken
                     )
             val updateArtifactResponse = client.put()
                     .uri("/artifact/${returnedArtifact["id"]}")
@@ -434,6 +444,8 @@ class ArtifactControllerTest {
                     mutableListOf(userRepository.findByEmail(email)!!.id),
                     updatedArtifact.sharedWith.map(User::id)
             )
+
+            assertEquals(DateUtil.truncateTime(dateTaken), DateUtil.truncateTime(updatedArtifact.dateTaken))
         }
 
         @Test
