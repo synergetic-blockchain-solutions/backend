@@ -320,6 +320,29 @@ class AlbumControllerTest {
             // Check shared with
             assertThat(createdAlbum.sharedWith.map(User::id), contains(user2.id))
         }
+
+        @Test
+        fun `it should allow creating albums with large descriptions`() {
+            val user = userRepository.findByEmail(email)!!
+            val user2 = userService.createUser("user2", "example2@example.com", "password")
+            val group = groupService.createGroup(user.email, "group1", "description", memberIDs = listOf(user2.id), adminIDs = listOf())
+            val albumRequest = AlbumRequest(
+                name = "Album 1",
+                description = "Description".repeat(1000),
+                owners = listOf(),
+                groups = listOf(group.id),
+                sharedWith = listOf(user2.id),
+                artifacts = listOf()
+            )
+            val response = client.post()
+                .uri("/album")
+                .accept(MediaType.APPLICATION_JSON_UTF8)
+                .contentType(MediaType.APPLICATION_JSON_UTF8)
+                .header(HttpHeaders.AUTHORIZATION, "Bearer $token")
+                .syncBody(albumRequest)
+                .exchange()
+                .expectStatus().isCreated
+        }
     }
 
     @Nested
