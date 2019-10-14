@@ -527,3 +527,121 @@ Content-Type: application/json
 A successful response will be the created user object (without the password
 field). This will include an array of groups with the only element being the
 newly created private group for that user.
+
+## `POST /album`
+
+Creates an album with given name, description, IDs of owners, groups, sharedWith, and
+artifacts to be added in the album
+
+### Example Request
+
+    POST http://localhost:8080/album
+    Accept: application/json
+    Content-Type: application/json
+    Authorization: Bearer {token}
+
+    {
+        "name": "Album 1",
+        "description": "Album description",
+        "owners": [],
+        "groups": [],
+        "sharedWith": [],
+        "artifacts": []
+    }
+
+### Response
+
+A successful response will be a JSON document representing
+the created album. It will be the same as the request document with the
+following differences:
+
+- "id" field: the group ID
+- "owners" field may have the creator's ID in addition to the other IDs if it
+  was not explicitly passed in
+- "groups" field may have the creator's private group if it was not explicitly passed in
+
+## `GET /album`
+
+Get all albums a user has access to (owns, group they're part of, shared with). 
+Parameters:
+
+- `group` (int) - Only return albums that are associated with the group with ID
+- `owner` (int) - Only return albums that are owned by the user with this ID
+- `shared` (int) - Only return albums shared with the user with this ID
+None of the query parameters are required and they can be used together to
+further filter the returned albums.
+
+### Example Request
+
+``` http request
+GET http://localhost:8080/album
+Accept: application/json
+Content-Type: application/json
+Authorization: Bearer {token}
+```
+
+### Response
+
+A successful response will be a JSON document with a list of all the albums.
+
+## `GET /album/{id}`
+
+Get album with ID. Can only get the album if the user has access to the album
+
+### Example Request
+
+``` http request
+GET http://localhost:8080/album/{id}
+Accept: application/json
+Content-Type: application/json
+Authorization: Bearer {token}
+```
+
+### Response
+
+A successful response will be a JSON document with a representation of the
+retrieved album.
+
+## `PUT /album/{id}`
+
+Update the album with ID. Can only be performed by album owners, and group
+admins that want to remove their group from the album.
+
+### Example Request
+
+``` http request
+PUT http://localhost:8080/album
+Accept: application/json
+Content-Type: application/json
+Authorization: Bearer {token}
+
+{
+    "name": "Album 1",
+    "description": "Album description",
+    "owners": [],
+    "groups": [],
+    "sharedWith": [],
+    "artifacts": []
+}
+```
+
+### Response
+
+A successful response will be a JSON representation of the updated album.
+
+## `DELETE /album/{id}`
+
+Delete the album with ID. Can only be performed by album owners
+
+### Example Request
+
+``` http request
+DELETE http://localhost:8080/album
+Accept: application/json
+Content-Type: application/json
+Authorization: Bearer {token}
+```
+
+### Response
+
+A successful response will be a JSON representation of the deleted album
