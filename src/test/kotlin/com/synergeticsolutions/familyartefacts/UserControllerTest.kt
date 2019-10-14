@@ -147,7 +147,7 @@ class UserControllerTest {
                 .contentType(MediaType.APPLICATION_JSON_UTF8)
                 .syncBody(registrationRequest)
                 .exchange()
-                .expectStatus().is5xxServerError
+                .expectStatus().isBadRequest
                 .expectBody().jsonPath("$.message").isEqualTo("User already exists with email $email")
         }
 
@@ -426,6 +426,15 @@ class UserControllerTest {
                 assertEquals(updatedName, updatedUser.name)
                 assertEquals(updatedEmail, updatedUser.email)
                 assertNotEquals(user.password, updatedUser.password)
+            }
+
+            @Test
+            fun `it cannot update a user's email to one that already exists`() {
+                client.put().uri("/user/${user.id}")
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer $token")
+                    .syncBody(UserUpdateRequest(user.name, user2.email))
+                    .exchange()
+                    .expectStatus().isBadRequest
             }
         }
 

@@ -227,13 +227,13 @@ class UserServiceImplUnitTest {
             val updatedUser = userService.update(
                 user1.email,
                 user1.id,
-                metadata = UserUpdateRequest("test", "test", null),
+                metadata = UserUpdateRequest("test", user1.email, null),
                 contentType = null
             )
             assertThat(updatedUser, allOf(
                 hasProperty("id", `is`(user1.id)),
                 hasProperty("name", `is`("test")),
-                hasProperty("email", `is`("test")),
+                hasProperty("email", `is`(user1.email)),
                 hasProperty("password", `is`(user1.password))
             ))
             Mockito.verify(userRepository).save(updatedUser)
@@ -261,7 +261,7 @@ class UserServiceImplUnitTest {
         fun `it should update both the metadata and the image if they're both specified`() {
             val updatedUser = userService.update(
                 user1.email, user1.id,
-                metadata = UserUpdateRequest("test", "test", null),
+                metadata = UserUpdateRequest("test", user1.email, null),
                 profilePicture = "profilePicture".toByteArray(),
                 contentType = null
             )
