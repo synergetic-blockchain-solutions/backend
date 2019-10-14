@@ -314,6 +314,46 @@ class UserControllerTest {
                     .jsonPath("$").isArray
                     .jsonPath("$").value(contains(hasEntry("id", user4.id.toInt())))
             }
+
+            @Test
+            fun `it should find users with a partial name match`() {
+                client.get().uri("/user?name=user")
+                    .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_UTF8_VALUE)
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer $token")
+                    .exchange()
+                    .expectStatus().isOk
+                    .expectBody()
+                    .jsonPath("$").isArray
+                    .jsonPath("$").value(
+                        containsInAnyOrder(
+                            hasEntry("id", user.id.toInt()),
+                            hasEntry("id", user2.id.toInt()),
+                            hasEntry("id", user3.id.toInt()),
+                            hasEntry("id", user4.id.toInt()),
+                            hasEntry("id", user5.id.toInt())
+                        )
+                    )
+            }
+
+            @Test
+            fun `it should find users with a partial email match`() {
+                client.get().uri("/user?email=example")
+                    .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_UTF8_VALUE)
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer $token")
+                    .exchange()
+                    .expectStatus().isOk
+                    .expectBody()
+                    .jsonPath("$").isArray
+                    .jsonPath("$").value(
+                        containsInAnyOrder(
+                            hasEntry("id", user.id.toInt()),
+                            hasEntry("id", user2.id.toInt()),
+                            hasEntry("id", user3.id.toInt()),
+                            hasEntry("id", user4.id.toInt()),
+                            hasEntry("id", user5.id.toInt())
+                        )
+                    )
+            }
         }
 
         @Nested
