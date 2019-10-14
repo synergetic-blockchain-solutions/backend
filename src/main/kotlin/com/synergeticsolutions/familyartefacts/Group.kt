@@ -72,6 +72,7 @@ data class Group(
         if (members != other.members) return false
         if (admins != other.admins) return false
         if (artifacts != other.artifacts) return false
+        if (albums != other.albums) return false
         if (contentType != other.contentType) return false
         if (!image.contentEquals(other.image)) return false
 
@@ -85,6 +86,7 @@ data class Group(
         result = 31 * result + members.hashCode()
         result = 31 * result + admins.hashCode()
         result = 31 * result + artifacts.hashCode()
+        result = 31 * result + albums.hashCode()
         result = 31 * result + contentType.hashCode()
         result = 31 * result + image.contentHashCode()
         return result

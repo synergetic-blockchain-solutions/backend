@@ -212,7 +212,7 @@ class GroupServiceImpl(
                 groupRepository.findByIdOrNull(id)
                         ?: throw GroupNotFoundException("Could not find group with ID $id")
         logger.debug("Checking if user $email is an admin of Group $id")
-        if (!group.admins.contains(user)) {
+        if (!group.admins.map(User::id).contains(user.id)) {
             throw ActionNotAllowedException("User with email $email is not allowed to update the group")
         }
         logger.debug("Updating image in Group $id")

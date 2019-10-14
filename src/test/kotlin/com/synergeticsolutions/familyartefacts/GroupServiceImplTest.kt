@@ -238,6 +238,11 @@ class GroupServiceImplTest {
                                             description = "description",
                                             members = mutableListOf(),
                                             admins = mutableListOf())))
+            Mockito.`when`(groupRepository.findById(anyLong()))
+                .thenReturn(
+                    Optional.of(
+                        Group(1, "Group 1", "Description 1", members = mutableListOf(), admins = mutableListOf())
+                        ))
             Mockito.`when`(userRepository.existsById(anyLong()))
                     .thenReturn(true)
             Mockito.`when`(groupRepository.save(any<Group>())).then { it.arguments[0] as Group }
@@ -274,6 +279,11 @@ class GroupServiceImplTest {
                                     privateGroup = Group(1, "Group 1", members = mutableListOf(), description = "")
                             )
                     )
+            Mockito.`when`(groupRepository.findById(anyLong()))
+                .thenReturn(
+                    Optional.of(
+                        Group(1, "Group 1", "Description 1", members = mutableListOf(), admins = mutableListOf())
+                    ))
             Mockito.`when`(userRepository.existsById(anyLong())).thenReturn(true)
             Mockito.`when`(userRepository.findByIdOrNull(anyLong())).then {
                 User(

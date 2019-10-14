@@ -108,7 +108,13 @@ class UserServiceImpl(
         return userRepository.findByEmail(email) ?: throw UserNotFoundException("Could not find user with email $email")
     }
 
-    override fun update(email: String, id: Long, metadata: UserUpdateRequest?, profilePicture: ByteArray?): User {
+    override fun update(
+        email: String,
+        id: Long,
+        metadata: UserUpdateRequest?,
+        profilePicture: ByteArray?,
+        contentType: String?
+    ): User {
         var user =
             userRepository.findByEmail(email) ?: throw UserNotFoundException("Could not find user with email $email")
         if (user.id != id) {
@@ -121,18 +127,11 @@ class UserServiceImpl(
             if (it.password != null) {
                 password = passwordEncoder.encode(it.password)
             }
-            user = user.copy(
-                name = it.name,
-                email = it.email,
-                password = password
-            )
+            user = user.copy(name = it.name, email = it.email, password = password)
         }
 
-        profilePicture?.let {
-            user = user.copy(
-                image = it
-            )
-        }
+        profilePicture?.let { user = user.copy(image = it) }
+        contentType?.let { user = user.copy(contentType = it) }
 
         return userRepository.save(user)
     }

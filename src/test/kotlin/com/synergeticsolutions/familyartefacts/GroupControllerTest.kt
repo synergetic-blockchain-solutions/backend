@@ -23,6 +23,7 @@ import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
+import org.springframework.util.Base64Utils
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureWebTestClient
@@ -48,6 +49,7 @@ class GroupControllerTest {
     val email: String = "example@example.com"
     val password: String = "password"
     lateinit var token: String
+    lateinit var user: User
 
     fun getToken(userEmail: String, userPassword: String): String {
         val resp = client.post()
@@ -65,7 +67,7 @@ class GroupControllerTest {
     @BeforeEach
     fun beforeEach() {
         testUtils.clearDatabase()
-        val user = userService.createUser("name", email, password)
+        user = userService.createUser("name", email, password)
         userRepository.save(user)
         token = getToken(email, password)
     }
@@ -308,6 +310,45 @@ class GroupControllerTest {
                     .header(HttpHeaders.AUTHORIZATION, "Bearer $altToken")
                     .exchange()
                     .expectStatus().isForbidden
+        }
+    }
+
+    @Nested
+    inner class GetGroupImage {
+        @Test
+        fun `it should return the groups image`() {
+            var group = groupService.createGroup(user.email, "Test Group", "Description", listOf(), listOf())
+            group = groupService.addImage(user.email, "image/jpg", group.id, image = ClassPathResource("test-image.jpg").file.readBytes())
+            val responseBody = client.get().uri("/group/${group.id}/image")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer $token")
+                .exchange()
+                .expectStatus().isOk
+                .expectBody()
+                .returnResult()
+                .responseBody!!
+
+            val returnedImage = Base64Utils.decode(responseBody)
+            assertTrue(group.image.contentEquals(returnedImage))
+        }
+
+        @Test
+        fun `it should return a 404 when the group does not exist`() {
+            val responseBody = client.get().uri("/group/1000/image")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer $token")
+                .exchange()
+                .expectStatus().isNotFound
+        }
+
+        @Test
+        fun `it should return a 403 when the user does not have access to the groups`() {
+            var group = groupService.createGroup(user.email, "Test Group", "Description", listOf(), listOf())
+            group = groupService.addImage(user.email, "image/jpg", group.id, image = ClassPathResource("test-image.jpg").file.readBytes())
+            val user2 = userService.createUser("user2", "example@example.com.au", "password")
+            val token2 = getToken(user2.email, "password")
+            val responseBody = client.get().uri("/group/${group.id}/image")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer $token2")
+                .exchange()
+                .expectStatus().isForbidden
         }
     }
 }
