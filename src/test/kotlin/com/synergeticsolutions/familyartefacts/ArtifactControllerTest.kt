@@ -349,6 +349,29 @@ class ArtifactControllerTest {
             // Check tags
             assertThat(createdArtifact.tags, containsInAnyOrder(*(artifactRequest.tags!!.toTypedArray())))
         }
+
+        @Test
+        fun `it should allow the creation of artifacts with large descriptions`() {
+            val user = userRepository.findByEmail(email)!!
+            val user2 = userService.createUser("user2", "example2@example.com", "password")
+            val group = groupService.createGroup(user.email, "group1", "description", memberIDs = listOf(user2.id), adminIDs = listOf())
+            val artifactRequest = ArtifactRequest(
+                name = "Artifact 1",
+                description = "Description".repeat(1000),
+                owners = listOf(),
+                groups = listOf(group.id),
+                sharedWith = listOf(user2.id),
+                tags = listOf("test1", "test2")
+            )
+            val response = client.post()
+                .uri("/artifact")
+                .accept(MediaType.APPLICATION_JSON_UTF8)
+                .contentType(MediaType.APPLICATION_JSON_UTF8)
+                .header(HttpHeaders.AUTHORIZATION, "Bearer $token")
+                .syncBody(artifactRequest)
+                .exchange()
+                .expectStatus().isCreated
+        }
     }
 
     @Nested

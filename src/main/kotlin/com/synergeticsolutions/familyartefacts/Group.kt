@@ -26,6 +26,7 @@ data class Group(
     @GeneratedValue(strategy = GenerationType.AUTO)
     val id: Long = 0,
     val name: String,
+    @Lob
     val description: String,
     @LazyCollection(value = LazyCollectionOption.FALSE)
     @ManyToMany(mappedBy = "groups")

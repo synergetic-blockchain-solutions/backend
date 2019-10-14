@@ -140,6 +140,24 @@ class GroupControllerTest {
             val createdGroup = groupRepository.findByIdOrNull((returnedGroup["id"] as Int).toLong())!!
             assertEquals(mutableListOf(userRepository.findByEmail(email)!!.id), createdGroup.admins.map(User::id))
         }
+
+        @Test
+        fun `it should allow the creation of groups with large descriptions`() {
+            val groupRequest = GroupRequest(
+                name = "Group 1",
+                description = "Group description".repeat(1000),
+                members = listOf(),
+                admins = listOf()
+            )
+            val response = client.post()
+                .uri("/group")
+                .accept(MediaType.APPLICATION_JSON_UTF8)
+                .contentType(MediaType.APPLICATION_JSON_UTF8)
+                .header(HttpHeaders.AUTHORIZATION, "Bearer $token")
+                .syncBody(groupRequest)
+                .exchange()
+                .expectStatus().isCreated
+        }
     }
 
     @Nested

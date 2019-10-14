@@ -182,6 +182,25 @@ class ArtifactResourceControllerTest(
                 .returnResult()
                 .responseBody!!
         }
+
+        @Test
+        fun `it should allow the creation of resources with large descriptions`() {
+            val artifactRequest = ArtifactRequest(
+                name = "Artifact 1",
+                description = "Description".repeat(1000),
+                owners = listOf(user1.id),
+                groups = listOf(),
+                sharedWith = listOf()
+            )
+            val createArtifactResponse = client.post()
+                .uri("/artifact")
+                .accept(MediaType.APPLICATION_JSON_UTF8)
+                .contentType(MediaType.APPLICATION_JSON_UTF8)
+                .header(HttpHeaders.AUTHORIZATION, "Bearer $user1Token")
+                .syncBody(artifactRequest)
+                .exchange()
+                .expectStatus().isCreated
+        }
     }
 
     @Nested

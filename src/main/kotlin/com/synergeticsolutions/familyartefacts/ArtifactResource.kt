@@ -27,6 +27,7 @@ data class ArtifactResource(
     @GeneratedValue(strategy = GenerationType.AUTO)
     val id: Long = 0,
     val name: String,
+    @Lob
     val description: String,
     val contentType: String,
     @JsonIgnore
