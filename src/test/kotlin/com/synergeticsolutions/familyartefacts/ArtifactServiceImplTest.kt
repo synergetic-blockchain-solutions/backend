@@ -489,7 +489,7 @@ class ArtifactServiceImplTest {
             Mockito.`when`(artifactRepository.findBySharedWith_Email(anyString())).thenReturn(sharedArtifacts)
             Mockito.`when`(artifactRepository.findByAlbums_Id(anyLong())).thenReturn(albumArtifacts)
 
-            val foundArtifacts = artifactService.findArtifactsByOwner(email)
+            val foundArtifacts = artifactService.findArtifactsByOwner(email, artifactName = null)
             val allArtifacts = ownerArtifacts + groupArtifacts + sharedArtifacts + albumArtifacts
             assertEquals(allArtifacts.size, foundArtifacts.size)
             assertThat(foundArtifacts, containsInAnyOrder(*allArtifacts.toTypedArray()))
@@ -601,7 +601,7 @@ class ArtifactServiceImplTest {
             Mockito.`when`(artifactRepository.findByOwners_Email(anyString())).thenReturn(ownerArtifacts)
             Mockito.`when`(artifactRepository.findBySharedWith_Email(anyString())).thenReturn(sharedArtifacts)
 
-            val foundArtifacts = artifactService.findArtifactsByOwner(email, groupID = 1)
+            val foundArtifacts = artifactService.findArtifactsByOwner(email, groupID = 1, artifactName = null)
             val expectedArtifacts =
                 (groupArtifacts + ownerArtifacts + sharedArtifacts).filter { it.groups.first().id == (1).toLong() }
             assertEquals(expectedArtifacts.size, foundArtifacts.size)
@@ -711,7 +711,7 @@ class ArtifactServiceImplTest {
             Mockito.`when`(artifactRepository.findByOwners_Email(anyString())).thenReturn(ownerArtifacts)
             Mockito.`when`(artifactRepository.findBySharedWith_Email(anyString())).thenReturn(sharedArtifacts)
 
-            val foundArtifacts = artifactService.findArtifactsByOwner(email, ownerID = user.id)
+            val foundArtifacts = artifactService.findArtifactsByOwner(email, ownerID = user.id, artifactName = null)
             val expectedArtifacts =
                 (groupArtifacts + ownerArtifacts + sharedArtifacts).filter { it.owners.firstOrNull()?.id == user.id }
             assertEquals(expectedArtifacts.size, foundArtifacts.size)
@@ -853,7 +853,7 @@ class ArtifactServiceImplTest {
             Mockito.`when`(artifactRepository.findByOwners_Email(anyString())).thenReturn(ownerArtifacts)
             Mockito.`when`(artifactRepository.findBySharedWith_Email(anyString())).thenReturn(sharedArtifacts)
 
-            val foundArtifacts = artifactService.findArtifactsByOwner(email, sharedID = user.id)
+            val foundArtifacts = artifactService.findArtifactsByOwner(email, sharedID = user.id, artifactName = null)
             val expectedArtifacts =
                 (groupArtifacts + ownerArtifacts + sharedArtifacts).filter { it.sharedWith.firstOrNull()?.id == user.id }
             assertEquals(expectedArtifacts.size, foundArtifacts.size)
@@ -987,7 +987,7 @@ class ArtifactServiceImplTest {
             Mockito.`when`(artifactRepository.findByOwners_Email(anyString())).thenReturn(ownerArtifacts)
             Mockito.`when`(artifactRepository.findBySharedWith_Email(anyString())).thenReturn(sharedArtifacts)
 
-            val foundArtifacts = artifactService.findArtifactsByOwner(email)
+            val foundArtifacts = artifactService.findArtifactsByOwner(email, artifactName = null)
             val expectedArtifacts = (groupArtifacts + ownerArtifacts + sharedArtifacts).toSet().toList()
             assertEquals(expectedArtifacts.size, foundArtifacts.size)
             assertThat(foundArtifacts, containsInAnyOrder(*expectedArtifacts.toTypedArray()))

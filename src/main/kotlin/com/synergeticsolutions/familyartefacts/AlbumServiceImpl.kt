@@ -26,7 +26,13 @@ class AlbumServiceImpl(
 
     val logger: Logger = LoggerFactory.getLogger(this::class.java)
 
-    override fun findAlbumsByOwner(email: String, groupID: Long?, ownerID: Long?, sharedID: Long?): List<Album> {
+    override fun findAlbumsByOwner(
+        email: String,
+        groupID: Long?,
+        ownerID: Long?,
+        sharedID: Long?,
+        albumName: String?
+    ): List<Album> {
         val user =
                 userRepository.findByEmail(email) ?: throw UserNotFoundException("No user with email $email was found")
 
@@ -47,6 +53,10 @@ class AlbumServiceImpl(
         if (sharedID != null) {
             albums = albums.filter { it.sharedWith.map(User::id).contains(sharedID) }
         }
+
+        if (albumName != null) {
+                albums = albums.filter { it.name.startsWith(albumName, ignoreCase = true) }
+            }
 
         return albums.toSet().toList()
     }

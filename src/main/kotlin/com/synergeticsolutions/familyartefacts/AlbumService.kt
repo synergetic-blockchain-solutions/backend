@@ -11,7 +11,13 @@ interface AlbumService {
         artifactIDs: List<Long>
     ): Album
     fun findAlbumById(email: String, id: Long): Album
-    fun findAlbumsByOwner(email: String, groupID: Long?, ownerID: Long?, sharedID: Long?): List<Album>
+    fun findAlbumsByOwner(
+        email: String,
+        groupID: Long?,
+        ownerID: Long?,
+        sharedID: Long?,
+        albumName: String?
+    ): List<Album>
     fun updateAlbum(email: String, id: Long, update: AlbumRequest): Album
     fun deleteAlbum(email: String, id: Long): Album
 }

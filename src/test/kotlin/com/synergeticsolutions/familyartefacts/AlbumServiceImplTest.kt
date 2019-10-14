@@ -53,7 +53,13 @@ class AlbumServiceImplTest {
             Mockito.`when`(albumRepository.findByOwners_Email(ArgumentMatchers.anyString())).thenReturn(ownedAlbums)
             Mockito.`when`(albumRepository.findBySharedWith_Email(ArgumentMatchers.anyString())).thenReturn(sharedAlbums)
 
-            val foundAlbums = albumService.findAlbumsByOwner(email, groupID = null, sharedID = null, ownerID = null)
+            val foundAlbums = albumService.findAlbumsByOwner(
+                email,
+                groupID = null,
+                ownerID = null,
+                sharedID = null,
+                albumName = null
+            )
             val allAlbums = ownedAlbums + groupAlbums + sharedAlbums
             Assertions.assertEquals(allAlbums.size, foundAlbums.size)
             MatcherAssert.assertThat(foundAlbums, containsInAnyOrder(*allAlbums.toTypedArray()))
@@ -87,7 +93,13 @@ class AlbumServiceImplTest {
             Mockito.`when`(albumRepository.findByOwners_Email(ArgumentMatchers.anyString())).thenReturn(ownedAlbums)
             Mockito.`when`(albumRepository.findBySharedWith_Email(ArgumentMatchers.anyString())).thenReturn(sharedAlbums)
 
-            val foundAlbums = albumService.findAlbumsByOwner(email, groupID = 1, sharedID = null, ownerID = null)
+            val foundAlbums = albumService.findAlbumsByOwner(
+                email,
+                groupID = 1,
+                ownerID = null,
+                sharedID = null,
+                albumName = null
+            )
             val expectedAlbums =
                     (groupAlbums + ownedAlbums + sharedAlbums).filter { it.groups.firstOrNull()?.id == (1).toLong() }
             Assertions.assertEquals(expectedAlbums.size, foundAlbums.size)
@@ -119,7 +131,13 @@ class AlbumServiceImplTest {
             Mockito.`when`(albumRepository.findByOwners_Email(ArgumentMatchers.anyString())).thenReturn(ownedAlbums)
             Mockito.`when`(albumRepository.findBySharedWith_Email(ArgumentMatchers.anyString())).thenReturn(sharedAlbums)
 
-            val foundAlbums = albumService.findAlbumsByOwner(email, groupID = null, sharedID = null, ownerID = user.id)
+            val foundAlbums = albumService.findAlbumsByOwner(
+                email,
+                groupID = null,
+                ownerID = user.id,
+                sharedID = null,
+                albumName = null
+            )
             val expectedAlbums =
                     (groupAlbums + ownedAlbums + sharedAlbums).filter { it.owners.firstOrNull()?.id == user.id }
             Assertions.assertEquals(expectedAlbums.size, foundAlbums.size)
@@ -151,7 +169,13 @@ class AlbumServiceImplTest {
             Mockito.`when`(albumRepository.findByOwners_Email(ArgumentMatchers.anyString())).thenReturn(ownedAlbums)
             Mockito.`when`(albumRepository.findBySharedWith_Email(ArgumentMatchers.anyString())).thenReturn(sharedAlbums)
 
-            val foundAlbums = albumService.findAlbumsByOwner(email, groupID = null, sharedID = user.id, ownerID = null)
+            val foundAlbums = albumService.findAlbumsByOwner(
+                email,
+                groupID = null,
+                ownerID = null,
+                sharedID = user.id,
+                albumName = null
+            )
             val expectedAlbums =
                     (groupAlbums + ownedAlbums + sharedAlbums).filter { it.sharedWith.firstOrNull()?.id == user.id }
             Assertions.assertEquals(expectedAlbums.size, foundAlbums.size)
@@ -183,7 +207,13 @@ class AlbumServiceImplTest {
             Mockito.`when`(albumRepository.findByOwners_Email(ArgumentMatchers.anyString())).thenReturn(ownedAlbums)
             Mockito.`when`(albumRepository.findBySharedWith_Email(ArgumentMatchers.anyString())).thenReturn(sharedAlbums)
 
-            val foundAlbums = albumService.findAlbumsByOwner(email, groupID = null, sharedID = null, ownerID = null)
+            val foundAlbums = albumService.findAlbumsByOwner(
+                email,
+                groupID = null,
+                ownerID = null,
+                sharedID = null,
+                albumName = null
+            )
             val expectedAlbums = (groupAlbums + ownedAlbums + sharedAlbums).toSet().toList()
             Assertions.assertEquals(expectedAlbums.size, foundAlbums.size)
             MatcherAssert.assertThat(foundAlbums, containsInAnyOrder(*expectedAlbums.toTypedArray()))
