@@ -34,6 +34,7 @@ class ArtifactController(
      */
     @GetMapping
     fun getArtifacts(
+        @RequestParam(name = "name", required = false) artifactName: String?,
         @RequestParam(name = "group", required = false) groupID: Long?,
         @RequestParam(name = "owner", required = false) ownerID: Long?,
         @RequestParam(name = "shared", required = false) sharedID: Long?,
@@ -44,6 +45,7 @@ class ArtifactController(
         val artifacts =
             artifactService.findArtifactsByOwner(
                 email = currentUser.principal as String,
+                artifactName = artifactName,
                 groupID = groupID,
                 ownerID = ownerID,
                 sharedID = sharedID,

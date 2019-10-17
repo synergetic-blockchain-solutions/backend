@@ -272,6 +272,102 @@ class AlbumControllerTest {
                     .jsonPath("$.sharedWith").value(containsInAnyOrder(*(album.sharedWith.map { hasEntry("id", it.id.toInt()) }.toTypedArray())))
                     .jsonPath("$.artifacts").value(containsInAnyOrder(*(album.artifacts.map { hasEntry("id", it.id.toInt()) }.toTypedArray())))
         }
+
+        @Test
+        fun `it should filter albums by their name`() {
+            val usr1 = userRepository.findByEmail(email)!!
+            val usr2 = userService.createUser("user2", "exampl2@example.com", "password")
+            val grp1 =
+                groupService.createGroup(email = usr1.email, groupName = "group1", memberIDs = mutableListOf(usr1.id), description = "", adminIDs = listOf())
+            val albums = listOf(
+                albumService.createAlbum(
+                    email,
+                    "album1",
+                    "",
+                    ownerIDs = listOf(),
+                    groupIDs = listOf(grp1.id),
+                    sharedWithIDs = listOf(),
+                    artifactIDs = listOf()
+                ),
+                albumService.createAlbum(
+                    usr2.email,
+                    "album1",
+                    "",
+                    ownerIDs = listOf(),
+                    groupIDs = listOf(grp1.id),
+                    sharedWithIDs = listOf(),
+                    artifactIDs = listOf()
+                ),
+                albumService.createAlbum(
+                    email,
+                    "album3",
+                    "",
+                    ownerIDs = listOf(),
+                    groupIDs = listOf(grp1.id),
+                    sharedWithIDs = listOf(),
+                    artifactIDs = listOf()
+                )
+            )
+            client.get()
+                .uri("/album?name=album1")
+                .accept(MediaType.APPLICATION_JSON_UTF8)
+                .header(HttpHeaders.AUTHORIZATION, "Bearer $token")
+                .exchange()
+                .expectStatus().isOk
+                .expectBody()
+                .jsonPath("$").isArray
+                .jsonPath("$").value(hasSize<Album>(2))
+                .jsonPath("$")
+                .value(containsInAnyOrder(albums.filter { it.name == "album1" }.map { hasEntry("id", it.id.toInt()) }))
+        }
+
+        @Test
+        fun `it should return partial matches on names`() {
+            val usr1 = userRepository.findByEmail(email)!!
+            val usr2 = userService.createUser("user2", "exampl2@example.com", "password")
+            val grp1 =
+                groupService.createGroup(email = usr1.email, groupName = "group1", memberIDs = mutableListOf(usr1.id), description = "", adminIDs = listOf())
+            val albums = listOf(
+                albumService.createAlbum(
+                    email,
+                    "album1",
+                    "",
+                    ownerIDs = listOf(),
+                    groupIDs = listOf(grp1.id),
+                    sharedWithIDs = listOf(),
+                    artifactIDs = listOf()
+                ),
+                albumService.createAlbum(
+                    usr2.email,
+                    "album2",
+                    "",
+                    ownerIDs = listOf(),
+                    groupIDs = listOf(grp1.id),
+                    sharedWithIDs = listOf(),
+                    artifactIDs = listOf()
+                ),
+                albumService.createAlbum(
+                    email,
+                    "album3",
+                    "",
+                    ownerIDs = listOf(),
+                    groupIDs = listOf(grp1.id),
+                    sharedWithIDs = listOf(),
+                    artifactIDs = listOf()
+                )
+            )
+            client.get()
+                .uri("/album?name=album")
+                .accept(MediaType.APPLICATION_JSON_UTF8)
+                .header(HttpHeaders.AUTHORIZATION, "Bearer $token")
+                .exchange()
+                .expectStatus().isOk
+                .expectBody()
+                .jsonPath("$").isArray
+                .jsonPath("$").value(hasSize<Album>(3))
+                .jsonPath("$")
+                .value(containsInAnyOrder(albums.map { hasEntry("id", it.id.toInt()) }))
+        }
     }
 
     @Nested

@@ -39,13 +39,15 @@ class GroupController(
     @GetMapping
     fun getGroups(
         @RequestParam(name = "owner", required = false) adminID: Long?,
-        @RequestParam(name = "member", required = false) memberID: Long?
+        @RequestParam(name = "member", required = false) memberID: Long?,
+        @RequestParam(name = "name", required = false) name: String?
     ): ResponseEntity<List<Group>> {
         val currentUser = SecurityContextHolder.getContext().authentication
         val groups = groupService.findGroups(
                 email = currentUser.principal as String,
                 adminID = adminID,
-                memberID = memberID
+                memberID = memberID,
+                name = name
         )
         return ResponseEntity.ok(groups)
     }
