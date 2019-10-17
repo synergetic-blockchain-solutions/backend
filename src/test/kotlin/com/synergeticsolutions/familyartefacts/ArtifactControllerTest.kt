@@ -299,6 +299,42 @@ class ArtifactControllerTest {
                     .jsonPath("$.sharedWith").value(`is`(artifact.sharedWith.map { it.id.toInt() }))
                     .jsonPath("$.tags").value(`is`(artifact.tags))
         }
+
+        @Test
+        fun `it should filter by artifact name`() {
+            val usr = userRepository.findByEmail(email)!!
+            val grp1 = groupService.createGroup(usr.email, "group1", "description", memberIDs = listOf(), adminIDs = listOf())
+            val grp2 = groupService.createGroup(usr.email, "group2", "description", memberIDs = listOf(), adminIDs = listOf())
+            val artifacts = listOf(
+                listOf("artifact1", grp1.id),
+                listOf("artifact1", grp1.id),
+                listOf("artifact3", grp2.id)
+            ).map {
+                artifactService.createArtifact(
+                    email = email,
+                    name = it[0] as String,
+                    description = "description",
+                    ownerIDs = listOf(),
+                    groupIDs = listOf(it[1] as Long),
+                    sharedWith = listOf()
+                )
+            }
+            client.get()
+                .uri("/artifact?name=artifact1")
+                .accept(MediaType.APPLICATION_JSON_UTF8)
+                .header(HttpHeaders.AUTHORIZATION, "Bearer $token")
+                .exchange()
+                .expectStatus().isOk
+                .expectBody()
+                .jsonPath("$").isArray
+                .jsonPath("$").value(hasSize<Artifact>(2))
+                .jsonPath("$").value(containsInAnyOrder(artifacts.filter { it.name == "artifact1" }.map {
+                    hasEntry(
+                        "id",
+                        it.id.toInt()
+                    )
+                }))
+        }
     }
 
     @Nested

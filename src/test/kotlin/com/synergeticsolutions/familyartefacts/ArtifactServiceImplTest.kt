@@ -1,6 +1,5 @@
 package com.synergeticsolutions.familyartefacts
 
-import java.util.Optional
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.contains
 import org.hamcrest.Matchers.containsInAnyOrder
@@ -23,6 +22,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.test.context.junit.jupiter.SpringExtension
+import java.util.Optional
 
 @Suppress("UNCHECKED_CAST")
 class ArtifactServiceImplTest {
@@ -989,6 +989,148 @@ class ArtifactServiceImplTest {
 
             val foundArtifacts = artifactService.findArtifactsByOwner(email, artifactName = null)
             val expectedArtifacts = (groupArtifacts + ownerArtifacts + sharedArtifacts).toSet().toList()
+            assertEquals(expectedArtifacts.size, foundArtifacts.size)
+            assertThat(foundArtifacts, containsInAnyOrder(*expectedArtifacts.toTypedArray()))
+        }
+
+        @Test
+        fun `it should filter by artifact name`() {
+            val email = "example@example.com"
+            val user = User(
+                id = 1, name = "User 1", email = email, password = "password", groups = mutableListOf(
+                    Group(id = 1, name = "Group 1", members = mutableListOf(), description = "")
+                ), privateGroup = Group(2, "Group 2", members = mutableListOf(), description = "")
+            )
+            val groupArtifacts = listOf(
+                Artifact(
+                    1,
+                    "Artifact 100",
+                    "Description",
+                    owners = mutableListOf(),
+                    groups = mutableListOf(Group(id = 1, name = "Group 1", members = mutableListOf(), description = ""))
+                ),
+                Artifact(
+                    2,
+                    "Artifact 2",
+                    "Description",
+                    owners = mutableListOf(),
+                    groups = mutableListOf(Group(id = 1, name = "Group 1", members = mutableListOf(), description = ""))
+                ),
+                Artifact(
+                    3,
+                    "Artifact 3",
+                    "Description",
+                    owners = mutableListOf(),
+                    groups = mutableListOf(Group(id = 1, name = "Group 1", members = mutableListOf(), description = ""))
+                ),
+                Artifact(
+                    4,
+                    "Artifact 100",
+                    "Description",
+                    owners = mutableListOf(),
+                    groups = mutableListOf(Group(id = 1, name = "Group 1", members = mutableListOf(), description = ""))
+                )
+            )
+            val ownerArtifacts = listOf(
+                Artifact(
+                    5,
+                    "Artifact 7",
+                    "Description",
+                    owners = mutableListOf(user),
+                    groups = mutableListOf(Group(id = 2, name = "Group 2", members = mutableListOf(), description = ""))
+                ),
+                Artifact(
+                    6,
+                    "Artifact 8",
+                    "Description",
+                    owners = mutableListOf(user),
+                    groups = mutableListOf(Group(id = 2, name = "Group 2", members = mutableListOf(), description = ""))
+                ),
+                Artifact(
+                    7,
+                    "Artifact 9",
+                    "Description",
+                    owners = mutableListOf(user),
+                    groups = mutableListOf(Group(id = 2, name = "Group 2", members = mutableListOf(), description = ""))
+                ),
+                Artifact(
+                    8,
+                    "Artifact 10",
+                    "Description",
+                    owners = mutableListOf(user),
+                    groups = mutableListOf(Group(id = 2, name = "Group 2", members = mutableListOf(), description = ""))
+                )
+            )
+            val sharedArtifacts = listOf(
+                Artifact(
+                    11,
+                    "Artifact 100",
+                    "Description",
+                    owners = mutableListOf(),
+                    groups = mutableListOf(
+                        Group(
+                            id = 2,
+                            name = "Group 2",
+                            members = mutableListOf(),
+                            description = ""
+                        )
+                    ),
+                    sharedWith = mutableListOf(user)
+                ),
+                Artifact(
+                    12,
+                    "Artifact 12",
+                    "Description",
+                    owners = mutableListOf(),
+                    groups = mutableListOf(
+                        Group(
+                            id = 2,
+                            name = "Group 2",
+                            members = mutableListOf(),
+                            description = ""
+                        )
+                    ),
+                    sharedWith = mutableListOf(user)
+                ),
+                Artifact(
+                    13,
+                    "Artifact 13",
+                    "Description",
+                    owners = mutableListOf(),
+                    groups = mutableListOf(
+                        Group(
+                            id = 2,
+                            name = "Group 2",
+                            members = mutableListOf(),
+                            description = ""
+                        )
+                    ),
+                    sharedWith = mutableListOf(user)
+                ),
+                Artifact(
+                    14,
+                    "Artifact 100",
+                    "Description",
+                    owners = mutableListOf(),
+                    groups = mutableListOf(
+                        Group(
+                            id = 2,
+                            name = "Group 2",
+                            members = mutableListOf(),
+                            description = ""
+                        )
+                    ),
+                    sharedWith = mutableListOf(user)
+                )
+            )
+            Mockito.`when`(userRepository.findByEmail(email)).thenReturn(user)
+            Mockito.`when`(artifactRepository.findByGroups_Id(anyLong())).thenReturn(groupArtifacts)
+            Mockito.`when`(artifactRepository.findByOwners_Email(anyString())).thenReturn(ownerArtifacts)
+            Mockito.`when`(artifactRepository.findBySharedWith_Email(anyString())).thenReturn(sharedArtifacts)
+
+            val foundArtifacts = artifactService.findArtifactsByOwner(email, artifactName = "Artifact 100")
+            val expectedArtifacts =
+                (groupArtifacts + ownerArtifacts + sharedArtifacts).filter { it.name == "Artifact 100" }
             assertEquals(expectedArtifacts.size, foundArtifacts.size)
             assertThat(foundArtifacts, containsInAnyOrder(*expectedArtifacts.toTypedArray()))
         }
