@@ -55,8 +55,8 @@ class AlbumServiceImpl(
         }
 
         if (albumName != null) {
-                albums = albums.filter { it.name.startsWith(albumName, ignoreCase = true) }
-            }
+            albums = albums.filter { it.name.startsWith(albumName, ignoreCase = true) }
+        }
 
         return albums.toSet().toList()
     }
