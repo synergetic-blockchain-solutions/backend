@@ -54,7 +54,7 @@ class GroupServiceImplTest {
 
             Mockito.`when`(groupRepository.findByAdmins_Email(anyString())).thenReturn(ownedGroups)
             Mockito.`when`(groupRepository.findByMembers_Email(anyString())).thenReturn(allGroups)
-            val foundGroups = groupService.findGroups(email = email, adminID = null, memberID = null)
+            val foundGroups = groupService.findGroups(email = email, adminID = null, memberID = null, name = null)
 
             assertEquals(allGroups.size, foundGroups.size)
             assertThat(foundGroups, containsInAnyOrder(*allGroups.toTypedArray()))
@@ -85,7 +85,7 @@ class GroupServiceImplTest {
             Mockito.`when`(groupRepository.findByAdmins_Email(anyString())).thenReturn(ownedGroups)
             Mockito.`when`(groupRepository.findByMembers_Email(anyString())).thenReturn(allGroups)
 
-            val foundGroups = groupService.findGroups(email, adminID = user.id, memberID = null)
+            val foundGroups = groupService.findGroups(email, adminID = user.id, memberID = null, name = null)
             val expectedGroups =
                     (ownedGroups + groups).filter { it.admins.firstOrNull()?.id == user.id }
             assertEquals(expectedGroups.size, foundGroups.size)
@@ -113,7 +113,7 @@ class GroupServiceImplTest {
             Mockito.`when`(groupRepository.findByAdmins_Email(anyString())).thenReturn(ownedGroups)
             Mockito.`when`(groupRepository.findByMembers_Email(anyString())).thenReturn(allGroups)
 
-            val foundGroups = groupService.findGroups(email, adminID = null, memberID = user.id)
+            val foundGroups = groupService.findGroups(email, adminID = null, memberID = user.id, name = null)
             val expectedGroups =
                     (ownedGroups + groups).filter { it.members.firstOrNull()?.id == user.id }
             assertEquals(expectedGroups.size, foundGroups.size)
@@ -146,8 +146,40 @@ class GroupServiceImplTest {
             Mockito.`when`(groupRepository.findByAdmins_Email(anyString())).thenReturn(ownedGroups)
             Mockito.`when`(groupRepository.findByMembers_Email(anyString())).thenReturn(allGroups)
 
-            val foundGroups = groupService.findGroups(email, adminID = user.id, memberID = user.id)
+            val foundGroups = groupService.findGroups(email, adminID = user.id, memberID = user.id, name = null)
             val expectedGroups = (ownedGroups).toSet().toList()
+            assertEquals(expectedGroups.size, foundGroups.size)
+            assertThat(foundGroups, containsInAnyOrder(*expectedGroups.toTypedArray()))
+        }
+
+        @Test
+        fun `it should filter groups by their name`() {
+            val email = "example@example.com"
+            val user = User(
+                id = 1,
+                name = "User 1",
+                email = email,
+                password = "password",
+                groups = mutableListOf(),
+                privateGroup = Group(7, "Group 7", members = mutableListOf(), description = ""))
+            val groups = listOf(
+                Group(1, "Group 1", "Description 1", members = mutableListOf(user), admins = mutableListOf()),
+                Group(2, "Group 2", "Description 2", members = mutableListOf(user), admins = mutableListOf()),
+                Group(3, "Group 3", "Description 3", members = mutableListOf(user), admins = mutableListOf())
+            )
+            val ownedGroups = listOf(
+                Group(4, "Group 1", "Description 4", members = mutableListOf(user), admins = mutableListOf(user)),
+                Group(5, "Group 5", "Description 5", members = mutableListOf(user), admins = mutableListOf(user)),
+                Group(6, "Group 6", "Description 6", members = mutableListOf(user), admins = mutableListOf(user))
+            )
+            val allGroups = groups + ownedGroups
+            Mockito.`when`(userRepository.findByEmail(email)).thenReturn(user)
+            Mockito.`when`(groupRepository.findByAdmins_Email(anyString())).thenReturn(ownedGroups)
+            Mockito.`when`(groupRepository.findByMembers_Email(anyString())).thenReturn(allGroups)
+
+            val foundGroups = groupService.findGroups(email, adminID = null, memberID = null, name = "Group 1")
+            val expectedGroups =
+                (ownedGroups + groups).filter { it.name == "Group 1" }
             assertEquals(expectedGroups.size, foundGroups.size)
             assertThat(foundGroups, containsInAnyOrder(*expectedGroups.toTypedArray()))
         }

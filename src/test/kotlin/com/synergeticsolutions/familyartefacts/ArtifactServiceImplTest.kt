@@ -1,5 +1,6 @@
 package com.synergeticsolutions.familyartefacts
 
+import java.util.Optional
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.contains
 import org.hamcrest.Matchers.containsInAnyOrder
@@ -22,7 +23,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.test.context.junit.jupiter.SpringExtension
-import java.util.Optional
 
 @Suppress("UNCHECKED_CAST")
 class ArtifactServiceImplTest {

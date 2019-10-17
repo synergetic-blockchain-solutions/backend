@@ -5,6 +5,8 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.`is`
+import org.hamcrest.Matchers.containsInAnyOrder
+import org.hamcrest.Matchers.hasEntry
 import org.hamcrest.Matchers.hasItems
 import org.hamcrest.Matchers.hasProperty
 import org.hamcrest.Matchers.hasSize
@@ -110,6 +112,26 @@ class GroupControllerTest {
                     .expectBody()
                     .jsonPath("$").isArray
                     .jsonPath("$").value(hasSize<Group>(3))
+        }
+
+        @Test
+        fun `it should filter groups by name`() {
+            val user = userRepository.findByEmail(email)!!
+            userService.createUser("name2", "example2@example.com", "password")
+            val groups = listOf(
+                groupService.createGroup(email = email, groupName = "Group1", description = "description1", memberIDs = listOf(), adminIDs = listOf()),
+                groupService.createGroup(email = email, groupName = "Group1", description = "description2", memberIDs = listOf(), adminIDs = listOf())
+            )
+            client.get()
+                .uri("/group?name=Group1")
+                .accept(MediaType.APPLICATION_JSON_UTF8)
+                .header(HttpHeaders.AUTHORIZATION, "Bearer $token")
+                .exchange()
+                .expectStatus().isOk
+                .expectBody()
+                .jsonPath("$").isArray
+                .jsonPath("$").value(hasSize<Group>(2))
+                .jsonPath("$").value(containsInAnyOrder(*(groups.map { hasEntry("id", it.id.toInt()) }.toTypedArray())))
         }
     }
 
