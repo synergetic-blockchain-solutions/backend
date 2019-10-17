@@ -58,7 +58,7 @@ class AlbumServiceImpl(
             albums = albums.filter { it.name.startsWith(albumName, ignoreCase = true) }
         }
 
-        return albums.toSet().toList()
+        return albums.toList()
     }
 
     override fun findAlbumById(email: String, id: Long): Album {
