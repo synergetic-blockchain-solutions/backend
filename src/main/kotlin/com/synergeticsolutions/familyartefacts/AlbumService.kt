@@ -20,4 +20,5 @@ interface AlbumService {
     ): List<Album>
     fun updateAlbum(email: String, id: Long, update: AlbumRequest): Album
     fun deleteAlbum(email: String, id: Long): Album
+    fun addArtifact(email: String, albumID: Long, artifactID: Long): Album
 }

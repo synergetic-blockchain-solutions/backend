@@ -159,6 +159,35 @@ class AlbumServiceImpl(
         return savedAlbum
     }
 
+    override fun addArtifact(email: String, albumID: Long, artifactID: Long): Album {
+        val user =
+                userRepository.findByEmail(email) ?: throw UserNotFoundException("User with email $email does not exist")
+        val album =
+                albumRepository.findByIdOrNull(albumID)
+                        ?: throw AlbumNotFoundException("Could not find album with ID $albumID")
+        val artifact =
+                artifactRepository.findByIdOrNull(artifactID)
+                        ?: throw ArtifactNotFoundException("Could not find artifact with ID $artifactID")
+        if (!user.ownedAlbums.contains(album)) {
+            throw ActionNotAllowedException("User is not owner of album $albumID")
+        }
+        val accessibleArtifacts =
+                user.ownedArtifacts.map(Artifact::id) + user.sharedArtifacts.map(Artifact::id) + user.groups.flatMap {
+                    it.artifacts.map(Artifact::id)
+                } + user.ownedAlbums.flatMap {
+                    it.artifacts.map(Artifact::id)
+                } + user.sharedAlbums.flatMap {
+                    it.artifacts.map(Artifact::id)
+                }
+        if (!accessibleArtifacts.contains(artifactID)) {
+            throw ActionNotAllowedException("User does not have access to artifact $artifactID")
+        }
+        album.artifacts.add(artifact)
+        artifact.albums.add(album)
+        artifactRepository.save(artifact)
+        return albumRepository.save(album)
+    }
+
     override fun updateAlbum(email: String, id: Long, update: AlbumRequest): Album {
         val user =
                 userRepository.findByEmail(email) ?: throw UserNotFoundException("User with email $email does not exist")
