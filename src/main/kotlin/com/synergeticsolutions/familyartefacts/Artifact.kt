@@ -1,6 +1,8 @@
 package com.synergeticsolutions.familyartefacts
 
+import com.fasterxml.jackson.annotation.JsonFormat
 import com.fasterxml.jackson.databind.annotation.JsonSerialize
+import java.util.Date
 import javax.persistence.CascadeType
 import javax.persistence.ElementCollection
 import javax.persistence.Entity
@@ -11,6 +13,8 @@ import javax.persistence.Lob
 import javax.persistence.ManyToMany
 import javax.persistence.OneToMany
 import javax.persistence.Table
+import javax.persistence.Temporal
+import javax.persistence.TemporalType
 import org.hibernate.annotations.LazyCollection
 import org.hibernate.annotations.LazyCollectionOption
 
@@ -45,7 +49,10 @@ data class Artifact(
     val albums: MutableList<Album> = mutableListOf(),
     @LazyCollection(value = LazyCollectionOption.FALSE)
     @ElementCollection
-    val tags: MutableList<String> = mutableListOf()
+    val tags: MutableList<String> = mutableListOf(),
+    @JsonFormat(pattern = "yyyy-MM-dd")
+    @Temporal(TemporalType.DATE)
+    val dateTaken: Date? = null
 ) {
     override fun toString(): String {
         return listOf(

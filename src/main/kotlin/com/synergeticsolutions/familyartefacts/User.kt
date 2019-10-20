@@ -65,7 +65,6 @@ data class User(
     @LazyToOne(value = LazyToOneOption.FALSE)
     val privateGroup: Group,
 
-    @JsonIgnore
     val contentType: String? = null,
     @JsonIgnore
     @Lob

@@ -1,5 +1,6 @@
 package com.synergeticsolutions.familyartefacts
 
+import java.util.Date
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -48,7 +49,8 @@ class ArtifactServiceImpl(
         groupIDs: List<Long>,
         sharedWith: List<Long>,
         resourceIDs: List<Long>,
-        tags: List<String>
+        tags: List<String>,
+        dateTaken: Date?
     ): Artifact {
         val creator =
             userRepository.findByEmail(email) ?: throw UserNotFoundException("No user with email $email was found")
@@ -87,7 +89,8 @@ class ArtifactServiceImpl(
             groups = groups,
             sharedWith = shares,
             resources = resources,
-            tags = tags.toMutableList()
+            tags = tags.toMutableList(),
+            dateTaken = dateTaken
         )
         val savedArtifact = artifactRepository.save(artifact)
 
@@ -121,7 +124,15 @@ class ArtifactServiceImpl(
      * @return Collection of artifacts the user has access to filtered by the given parameters
      * @throws UserNotFoundException when a user with [email] does not exist
      */
-    override fun findArtifactsByOwner(email: String, groupID: Long?, ownerID: Long?, sharedID: Long?, tag: String?, albumID: Long?): List<Artifact> {
+    override fun findArtifactsByOwner(
+        email: String,
+        groupID: Long?,
+        ownerID: Long?,
+        sharedID: Long?,
+        tag: String?,
+        albumID: Long?,
+        artifactName: String?
+    ): List<Artifact> {
         val user =
             userRepository.findByEmail(email) ?: throw UserNotFoundException("No user with email $email was found")
 
@@ -154,6 +165,10 @@ class ArtifactServiceImpl(
 
         if (tag != null) {
             artifacts = artifacts.filter { it.tags.contains(tag) }
+        }
+
+        if (artifactName != null) {
+            artifacts = artifacts.filter { it.name.startsWith(artifactName, ignoreCase = true) }
         }
 
         return artifacts
@@ -265,7 +280,8 @@ class ArtifactServiceImpl(
             owners = updatedOwners,
             groups = updatedGroups,
             sharedWith = updatedShares,
-            tags = update.tags?.toMutableList() ?: mutableListOf()
+            tags = update.tags?.toMutableList() ?: mutableListOf(),
+            dateTaken = update.dateTaken ?: artifact.dateTaken
         )
         return artifactRepository.save(updatedArtifact)
     }

@@ -1,5 +1,7 @@
 package com.synergeticsolutions.familyartefacts
 
+import java.util.Date
+
 interface ArtifactService {
     fun findArtifactsByOwner(
         email: String,
@@ -7,7 +9,8 @@ interface ArtifactService {
         ownerID: Long? = null,
         sharedID: Long? = null,
         tag: String? = null,
-        albumID: Long? = null
+        albumID: Long? = null,
+        artifactName: String?
     ): List<Artifact>
 
     fun findArtifactById(email: String, id: Long): Artifact
@@ -20,7 +23,8 @@ interface ArtifactService {
         groupIDs: List<Long> = listOf(),
         sharedWith: List<Long> = listOf(),
         resourceIDs: List<Long> = listOf(),
-        tags: List<String> = listOf()
+        tags: List<String> = listOf(),
+        dateTaken: Date? = null
     ): Artifact
 
     fun updateArtifact(email: String, id: Long, update: ArtifactRequest): Artifact

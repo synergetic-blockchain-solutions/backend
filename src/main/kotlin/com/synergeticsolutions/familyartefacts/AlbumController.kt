@@ -26,6 +26,7 @@ class AlbumController(
 
     @GetMapping
     fun getAlbums(
+        @RequestParam(name = "name", required = false) albumName: String?,
         @RequestParam(name = "group", required = false) groupID: Long?,
         @RequestParam(name = "owner", required = false) ownerID: Long?,
         @RequestParam(name = "shared", required = false) sharedID: Long?
@@ -35,6 +36,7 @@ class AlbumController(
         val albums =
                 albumService.findAlbumsByOwner(
                         email = currentUser.principal as String,
+                        albumName = albumName,
                         groupID = groupID,
                         ownerID = ownerID,
                         sharedID = sharedID

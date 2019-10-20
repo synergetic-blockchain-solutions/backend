@@ -6,9 +6,12 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Lazy
 import org.springframework.data.repository.findByIdOrNull
+import org.springframework.http.HttpStatus
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
+import org.springframework.web.bind.annotation.ResponseStatus
 
+@ResponseStatus(HttpStatus.BAD_REQUEST)
 class UserAlreadyExistsException(msg: String) : AuthenticationException(msg)
 
 /**
@@ -127,6 +130,11 @@ class UserServiceImpl(
             if (it.password != null) {
                 password = passwordEncoder.encode(it.password)
             }
+
+            if ((it.email != user.email) && userRepository.findByEmail(it.email) != null) {
+                throw UserAlreadyExistsException("Cannot update user ${user.id} email to ${it.email} as there is already as user with that email")
+            }
+
             user = user.copy(name = it.name, email = it.email, password = password)
         }
 

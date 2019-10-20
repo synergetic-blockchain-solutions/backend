@@ -1,5 +1,7 @@
 package com.synergeticsolutions.familyartefacts
 
+import java.util.Date
+
 /**
  * [ArtifactRequest] represents a request to create an artifact.
  *
@@ -16,5 +18,6 @@ data class ArtifactRequest(
     val groups: List<Long>?,
     val sharedWith: List<Long>?,
     val resources: List<Long>? = listOf(),
-    val tags: List<String>? = listOf()
+    val tags: List<String>? = listOf(),
+    val dateTaken: Date? = null
 )

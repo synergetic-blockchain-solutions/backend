@@ -41,7 +41,7 @@ class GroupServiceImpl(
      * @return Collection of groups the user has access to filtered by the given parameters
      * @throws UsernameNotFoundException when a user with [email] does not exist
      */
-    override fun findGroups(email: String, adminID: Long?, memberID: Long?): List<Group> {
+    override fun findGroups(email: String, adminID: Long?, memberID: Long?, name: String?): List<Group> {
         val user = userRepository.findByEmail(email) ?: throw UsernameNotFoundException("No user with email $email was found")
         val ownedGroups = groupRepository.findByAdmins_Email(email)
         val memberGroup = groupRepository.findByMembers_Email(email)
@@ -55,7 +55,11 @@ class GroupServiceImpl(
             groups = groups.filter { it.members.map(User::id).contains(memberID) }
         }
 
-        return groups.toSet().toList()
+        if (name != null) {
+            groups = groups.filter { it.name.startsWith(name) }
+        }
+
+        return groups.toList()
     }
 
     /**
