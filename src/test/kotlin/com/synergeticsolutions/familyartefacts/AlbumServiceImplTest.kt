@@ -855,7 +855,6 @@ class AlbumServiceImplTest {
         }
     }
 
-
     @Nested
     inner class DeleteAlbum {
         @Test
