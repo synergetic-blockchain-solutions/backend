@@ -618,6 +618,42 @@ class AlbumControllerTest {
     }
 
     @Nested
+    inner class AddArtifact {
+        @Test
+        fun `it should add the artifact to the album`() {
+            val user = userRepository.findByEmail(email)!!
+            val album = albumService.createAlbum(
+                    email,
+                    name = "Album",
+                    description = "Album description",
+                    ownerIDs = mutableListOf(),
+                    groupIDs = mutableListOf(),
+                    sharedWithIDs = mutableListOf(),
+                    artifactIDs = mutableListOf())
+            val artifact = artifactService.createArtifact(
+                    email,
+                    name = "Artifact",
+                    description = "Artifact description",
+                    ownerIDs = mutableListOf(),
+                    groupIDs = mutableListOf(),
+                    sharedWith = mutableListOf())
+            val updateAlbumResponse = client.put()
+                    .uri("/album/${album.id}/artifact/${artifact.id}")
+                    .accept(MediaType.APPLICATION_JSON_UTF8)
+                    .contentType(MediaType.APPLICATION_JSON_UTF8)
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer $token")
+                    .exchange()
+                    .expectStatus().isOk
+                    .expectBody()
+                    .returnResult()
+                    .responseBody!!
+            val response = ObjectMapper().registerKotlinModule().readValue<Map<String, Any>>(updateAlbumResponse)
+            val updatedAlbum = albumRepository.findByIdOrNull((response.getValue("id") as Int).toLong())!!
+            assertThat(updatedAlbum.artifacts.map(Artifact::id), containsInAnyOrder(artifact.id))
+        }
+    }
+
+    @Nested
     inner class DeleteAlbum {
         @Test
         fun `it should allow owners to delete the album`() {

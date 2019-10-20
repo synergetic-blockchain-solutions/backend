@@ -77,6 +77,14 @@ class AlbumController(
         return ResponseEntity.ok(updatedAlbum)
     }
 
+    @PutMapping(path = ["/{albumID}/artifact/{artifactID}"])
+    fun addArtifact(@PathVariable albumID: Long, @PathVariable artifactID: Long): ResponseEntity<Album> {
+        val currentUser = SecurityContextHolder.getContext().authentication ?: throw NoAuthenticationException()
+        val updatedAlbum = albumService.addArtifact(currentUser.principal as String, albumID, artifactID)
+        logger.info("Added artifact $artifactID to album $albumID")
+        return ResponseEntity.ok(updatedAlbum)
+    }
+
     @DeleteMapping(path = ["/{id}"])
     fun deleteAlbum(@PathVariable id: Long): ResponseEntity<Album> {
         val currentUser = SecurityContextHolder.getContext().authentication ?: throw NoAuthenticationException()
