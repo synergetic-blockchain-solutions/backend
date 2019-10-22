@@ -120,10 +120,6 @@ class GroupServiceImpl(
             }
         }
 
-        if (!memberIDs.containsAll(adminIDs)) {
-            throw UserIsNotMemberException("AdminIDs is not a sublist of memberIDs")
-        }
-
         val members = userRepository.findAllById(memberIDs).toMutableList()
         if (!members.contains(owner)) {
             members.add(owner)
@@ -131,6 +127,11 @@ class GroupServiceImpl(
         val admins = userRepository.findAllById(adminIDs).toMutableList()
         if (!admins.contains(owner)) {
             admins.add(owner)
+        }
+        admins.forEach {
+            if (!members.contains(it)) {
+                members.add(it)
+            }
         }
         members.forEach {
             it.groups.add(group)
