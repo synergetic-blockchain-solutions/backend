@@ -13,6 +13,7 @@ import com.synergeticsolutions.familyartefacts.repositories.ArtifactRepository
 import com.synergeticsolutions.familyartefacts.repositories.ArtifactResourceRepository
 import com.synergeticsolutions.familyartefacts.repositories.GroupRepository
 import com.synergeticsolutions.familyartefacts.repositories.UserRepository
+import com.synergeticsolutions.familyartefacts.services.AlbumNotFoundException
 import com.synergeticsolutions.familyartefacts.services.ArtifactService
 import com.synergeticsolutions.familyartefacts.services.ArtifactServiceImpl
 import com.synergeticsolutions.familyartefacts.services.UserService
