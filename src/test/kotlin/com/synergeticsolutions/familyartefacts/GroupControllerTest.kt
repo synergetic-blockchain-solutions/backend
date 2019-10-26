@@ -3,6 +3,15 @@ package com.synergeticsolutions.familyartefacts
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
+import com.synergeticsolutions.familyartefacts.controllers.GroupRequest
+import com.synergeticsolutions.familyartefacts.dtos.LoginRequest
+import com.synergeticsolutions.familyartefacts.dtos.LoginResponse
+import com.synergeticsolutions.familyartefacts.entities.Group
+import com.synergeticsolutions.familyartefacts.entities.User
+import com.synergeticsolutions.familyartefacts.repositories.GroupRepository
+import com.synergeticsolutions.familyartefacts.repositories.UserRepository
+import com.synergeticsolutions.familyartefacts.services.GroupService
+import com.synergeticsolutions.familyartefacts.services.UserService
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.`is`
 import org.hamcrest.Matchers.containsInAnyOrder
@@ -57,7 +66,12 @@ class GroupControllerTest {
         val resp = client.post()
                 .uri("/login")
                 .contentType(MediaType.APPLICATION_JSON_UTF8)
-                .syncBody(LoginRequest(email = userEmail, password = userPassword))
+                .syncBody(
+                    LoginRequest(
+                        email = userEmail,
+                        password = userPassword
+                    )
+                )
                 .exchange()
                 .expectStatus().isOk
                 .expectBody()
@@ -140,10 +154,10 @@ class GroupControllerTest {
         @Test
         fun `it should create the group`() {
             val groupRequest = GroupRequest(
-                    name = "Group 1",
-                    description = "Group description",
-                    members = listOf(),
-                    admins = listOf()
+                name = "Group 1",
+                description = "Group description",
+                members = listOf(),
+                admins = listOf()
             )
             val response = client.post()
                     .uri("/group")
@@ -189,10 +203,10 @@ class GroupControllerTest {
         @Test
         fun `it should allow admins to update the group`() {
             val groupRequest = GroupRequest(
-                    name = "Group 1",
-                    description = "Description",
-                    members = listOf(),
-                    admins = listOf()
+                name = "Group 1",
+                description = "Description",
+                members = listOf(),
+                admins = listOf()
             )
             val createGroupResponse = client.post()
                     .uri("/group")
@@ -209,12 +223,12 @@ class GroupControllerTest {
                     ObjectMapper().registerKotlinModule().readValue<Map<String, Any>>(String(createGroupResponse))
             @Suppress("UNCHECKED_CAST")
             val updateGroupRequest =
-                    GroupRequest(
-                            name = returnedGroup["name"] as String,
-                            description = returnedGroup["description"] as String,
-                            admins = (returnedGroup["admins"] as List<Map<String, Any>>).map { (it["id"] as Int).toLong() },
-                            members = (returnedGroup["members"] as List<Map<String, Any>>).map { (it["id"] as Int).toLong() }
-                    )
+                GroupRequest(
+                    name = returnedGroup["name"] as String,
+                    description = returnedGroup["description"] as String,
+                    admins = (returnedGroup["admins"] as List<Map<String, Any>>).map { (it["id"] as Int).toLong() },
+                    members = (returnedGroup["members"] as List<Map<String, Any>>).map { (it["id"] as Int).toLong() }
+                )
             val updateGroupResponse = client.put()
                     .uri("/group/${returnedGroup["id"]}")
                     .accept(MediaType.APPLICATION_JSON_UTF8)
@@ -247,10 +261,10 @@ class GroupControllerTest {
         @Test
         fun `it should allow admins to add group image`() {
             val groupRequest = GroupRequest(
-                    name = "Group 1",
-                    description = "Description",
-                    members = listOf(),
-                    admins = listOf()
+                name = "Group 1",
+                description = "Description",
+                members = listOf(),
+                admins = listOf()
             )
             val createGroupResponse = client.post()
                     .uri("/group")
@@ -286,10 +300,10 @@ class GroupControllerTest {
         @Test
         fun `it should allow admins to delete the group`() {
             val groupRequest = GroupRequest(
-                    name = "Group 1",
-                    description = "Group description",
-                    members = listOf(),
-                    admins = listOf()
+                name = "Group 1",
+                description = "Group description",
+                members = listOf(),
+                admins = listOf()
             )
             val groupResponse = client.post()
                     .uri("/group")
@@ -322,10 +336,10 @@ class GroupControllerTest {
         @Test
         fun `it should not allow members to delete the group`() {
             val groupRequest = GroupRequest(
-                    name = "Group 1",
-                    description = "Description",
-                    members = listOf(),
-                    admins = listOf()
+                name = "Group 1",
+                description = "Description",
+                members = listOf(),
+                admins = listOf()
             )
 
             val groupResponse = client.post()

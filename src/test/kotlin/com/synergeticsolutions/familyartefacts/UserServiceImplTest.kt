@@ -1,5 +1,14 @@
 package com.synergeticsolutions.familyartefacts
 
+import com.synergeticsolutions.familyartefacts.dtos.UserUpdateRequest
+import com.synergeticsolutions.familyartefacts.entities.Group
+import com.synergeticsolutions.familyartefacts.entities.User
+import com.synergeticsolutions.familyartefacts.exceptions.ActionNotAllowedException
+import com.synergeticsolutions.familyartefacts.repositories.GroupRepository
+import com.synergeticsolutions.familyartefacts.repositories.UserRepository
+import com.synergeticsolutions.familyartefacts.services.UserAlreadyExistsException
+import com.synergeticsolutions.familyartefacts.services.UserService
+import com.synergeticsolutions.familyartefacts.services.UserServiceImpl
 import java.util.Optional
 import org.hamcrest.CoreMatchers.allOf
 import org.hamcrest.MatcherAssert.assertThat
@@ -27,33 +36,40 @@ class UserServiceImplUnitTest {
     private val userRepository: UserRepository = Mockito.mock(UserRepository::class.java)
     private val passwordEncoder: PasswordEncoder = Mockito.mock(PasswordEncoder::class.java)
     private val groupRepository: GroupRepository = Mockito.mock(GroupRepository::class.java)
-    private val userService: UserService = UserServiceImpl(userRepository, groupRepository, passwordEncoder)
+    private val userService: UserService =
+        UserServiceImpl(
+            userRepository,
+            groupRepository,
+            passwordEncoder
+        )
 
     @Test
     fun `it should encrypt the password before saving it in the user repository`() {
         val encodedPassword = "encodedSecret"
         val user = User(
-                name = "name",
-                email = "email",
-                password = "secret",
-                privateGroup = Group(
-                        2,
-                        "Group 2",
-                        description = "description",
-                        members = mutableListOf(),
-                        admins = mutableListOf()
-                )
+            name = "name",
+            email = "email",
+            password = "secret",
+            privateGroup = Group(
+                2,
+                "Group 2",
+                description = "description",
+                members = mutableListOf(),
+                admins = mutableListOf()
+            )
         )
         Mockito.`when`(userRepository.save(any<User>())).thenReturn(user.copy(id = 1))
         Mockito.`when`(userRepository.findByEmail(anyString())).then { user }
         // Mockito.`when`(userRepository.findByIdOrNull(anyLong())).then { user }
         Mockito.`when`(groupRepository.save(any<Group>())).thenReturn(
-                Group(
-                        1,
-                        "group",
-                        description = "description",
-                        members = mutableListOf(),
-                        admins = mutableListOf()))
+            Group(
+                1,
+                "group",
+                description = "description",
+                members = mutableListOf(),
+                admins = mutableListOf()
+            )
+        )
         Mockito.`when`(passwordEncoder.encode(anyString())).thenReturn(encodedPassword)
         val inOrder = Mockito.inOrder(passwordEncoder, userRepository)
 
@@ -69,16 +85,16 @@ class UserServiceImplUnitTest {
     @Test
     fun `it should not allow the creation of users with emails that already exist`() {
         val user = User(
-                name = "name",
-                email = "email",
-                password = "secret",
-                privateGroup = Group(
-                        2,
-                        "Group 2",
-                        description = "description",
-                        members = mutableListOf(),
-                        admins = mutableListOf()
-                )
+            name = "name",
+            email = "email",
+            password = "secret",
+            privateGroup = Group(
+                2,
+                "Group 2",
+                description = "description",
+                members = mutableListOf(),
+                admins = mutableListOf()
+            )
         )
         Mockito.`when`(userRepository.existsByEmail(user.email)).thenReturn(true)
         assertThrows(UserAlreadyExistsException::class.java) {
@@ -152,14 +168,98 @@ class UserServiceImplUnitTest {
     @Nested
     inner class FindUsers {
         val email = "example1@example.com"
-        private val user = User(7, "user", email, "password", privateGroup = Group(2, "Group 2", "description", mutableListOf(), mutableListOf()))
+        private val user = User(
+            7,
+            "user",
+            email,
+            "password",
+            privateGroup = Group(
+                2,
+                "Group 2",
+                "description",
+                mutableListOf(),
+                mutableListOf()
+            )
+        )
         private val users = listOf(
-            User(1, "user1", "example1@example.com", "password", privateGroup = Group(2, "Group 2", "description", mutableListOf(), mutableListOf())),
-            User(2, "user2", "example2@example.com", "password", privateGroup = Group(2, "Group 2", "description", mutableListOf(), mutableListOf())),
-            User(3, "user2", "example3@example.com", "password", privateGroup = Group(2, "Group 2", "description", mutableListOf(), mutableListOf())),
-            User(4, "user3", "example4@example.com", "password", privateGroup = Group(2, "Group 2", "description", mutableListOf(), mutableListOf())),
-            User(5, "user4", "example5@example.com", "password", privateGroup = Group(2, "Group 2", "description", mutableListOf(), mutableListOf())),
-            User(6, "user5", "example6@example.com", "password", privateGroup = Group(2, "Group 2", "description", mutableListOf(), mutableListOf()))
+            User(
+                1,
+                "user1",
+                "example1@example.com",
+                "password",
+                privateGroup = Group(
+                    2,
+                    "Group 2",
+                    "description",
+                    mutableListOf(),
+                    mutableListOf()
+                )
+            ),
+            User(
+                2,
+                "user2",
+                "example2@example.com",
+                "password",
+                privateGroup = Group(
+                    2,
+                    "Group 2",
+                    "description",
+                    mutableListOf(),
+                    mutableListOf()
+                )
+            ),
+            User(
+                3,
+                "user2",
+                "example3@example.com",
+                "password",
+                privateGroup = Group(
+                    2,
+                    "Group 2",
+                    "description",
+                    mutableListOf(),
+                    mutableListOf()
+                )
+            ),
+            User(
+                4,
+                "user3",
+                "example4@example.com",
+                "password",
+                privateGroup = Group(
+                    2,
+                    "Group 2",
+                    "description",
+                    mutableListOf(),
+                    mutableListOf()
+                )
+            ),
+            User(
+                5,
+                "user4",
+                "example5@example.com",
+                "password",
+                privateGroup = Group(
+                    2,
+                    "Group 2",
+                    "description",
+                    mutableListOf(),
+                    mutableListOf()
+                )
+            ),
+            User(
+                6,
+                "user5",
+                "example6@example.com",
+                "password",
+                privateGroup = Group(
+                    2,
+                    "Group 2",
+                    "description",
+                    mutableListOf(),
+                    mutableListOf()
+                )
+            )
             )
 
         @BeforeEach
@@ -195,8 +295,32 @@ class UserServiceImplUnitTest {
 
     @Nested
     inner class UpdateUser {
-        val user1 = User(1, "user1", "example1@example.com", "password", privateGroup = Group(2, "Group 2", "description", mutableListOf(), mutableListOf()))
-        val user2 = User(2, "user2", "example2@example.com", "password", privateGroup = Group(2, "Group 2", "description", mutableListOf(), mutableListOf()))
+        val user1 = User(
+            1,
+            "user1",
+            "example1@example.com",
+            "password",
+            privateGroup = Group(
+                2,
+                "Group 2",
+                "description",
+                mutableListOf(),
+                mutableListOf()
+            )
+        )
+        val user2 = User(
+            2,
+            "user2",
+            "example2@example.com",
+            "password",
+            privateGroup = Group(
+                2,
+                "Group 2",
+                "description",
+                mutableListOf(),
+                mutableListOf()
+            )
+        )
 
         @BeforeEach
         fun beforeEach() {
@@ -277,8 +401,32 @@ class UserServiceImplUnitTest {
 
     @Nested
     inner class DeleteUser {
-        val user1 = User(1, "user1", "example1@example.com", "password", privateGroup = Group(2, "Group 2", "description", mutableListOf(), mutableListOf()))
-        val user2 = User(2, "user2", "example2@example.com", "password", privateGroup = Group(2, "Group 2", "description", mutableListOf(), mutableListOf()))
+        val user1 = User(
+            1,
+            "user1",
+            "example1@example.com",
+            "password",
+            privateGroup = Group(
+                2,
+                "Group 2",
+                "description",
+                mutableListOf(),
+                mutableListOf()
+            )
+        )
+        val user2 = User(
+            2,
+            "user2",
+            "example2@example.com",
+            "password",
+            privateGroup = Group(
+                2,
+                "Group 2",
+                "description",
+                mutableListOf(),
+                mutableListOf()
+            )
+        )
 
         @BeforeEach
         fun beforeEach() {

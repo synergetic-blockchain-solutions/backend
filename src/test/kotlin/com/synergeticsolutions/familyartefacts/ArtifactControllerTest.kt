@@ -3,6 +3,20 @@ package com.synergeticsolutions.familyartefacts
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
+import com.synergeticsolutions.familyartefacts.dtos.ArtifactRequest
+import com.synergeticsolutions.familyartefacts.dtos.LoginRequest
+import com.synergeticsolutions.familyartefacts.dtos.LoginResponse
+import com.synergeticsolutions.familyartefacts.entities.Artifact
+import com.synergeticsolutions.familyartefacts.entities.ArtifactResource
+import com.synergeticsolutions.familyartefacts.entities.Group
+import com.synergeticsolutions.familyartefacts.entities.User
+import com.synergeticsolutions.familyartefacts.repositories.ArtifactRepository
+import com.synergeticsolutions.familyartefacts.repositories.ArtifactResourceRepository
+import com.synergeticsolutions.familyartefacts.repositories.GroupRepository
+import com.synergeticsolutions.familyartefacts.repositories.UserRepository
+import com.synergeticsolutions.familyartefacts.services.ArtifactService
+import com.synergeticsolutions.familyartefacts.services.GroupService
+import com.synergeticsolutions.familyartefacts.services.UserService
 import java.time.Instant
 import java.util.Date
 import org.assertj.core.util.DateUtil
@@ -77,7 +91,12 @@ class ArtifactControllerTest {
         val resp = client.post()
                 .uri("/login")
                 .contentType(MediaType.APPLICATION_JSON_UTF8)
-                .syncBody(LoginRequest(email = userEmail, password = userPassword))
+                .syncBody(
+                    LoginRequest(
+                        email = userEmail,
+                        password = userPassword
+                    )
+                )
                 .exchange()
                 .expectStatus().isOk
                 .expectBody()
@@ -126,8 +145,20 @@ class ArtifactControllerTest {
         fun `it should filter the artifacts by the given group ID`() {
             val usr = userRepository.findByEmail(email)!!
             val grp1 =
-                    groupRepository.save(Group(name = "group1", members = mutableListOf(usr), description = ""))
-            val grp2 = groupRepository.save(Group(name = "group2", members = mutableListOf(usr), description = ""))
+                    groupRepository.save(
+                        Group(
+                            name = "group1",
+                            members = mutableListOf(usr),
+                            description = ""
+                        )
+                    )
+            val grp2 = groupRepository.save(
+                Group(
+                    name = "group2",
+                    members = mutableListOf(usr),
+                    description = ""
+                )
+            )
             val artifacts = mapOf(
                     "artifact1" to grp1.id,
                     "artifact2" to grp1.id,
@@ -239,8 +270,20 @@ class ArtifactControllerTest {
             val usr1 = userRepository.findByEmail(email)!!
             val usr2 = userService.createUser("user2", "exampl2@example.com", "password")
             val grp1 =
-                    groupRepository.save(Group(name = "group1", members = mutableListOf(usr1), description = ""))
-            val grp2 = groupRepository.save(Group(name = "group2", members = mutableListOf(usr1), description = ""))
+                    groupRepository.save(
+                        Group(
+                            name = "group1",
+                            members = mutableListOf(usr1),
+                            description = ""
+                        )
+                    )
+            val grp2 = groupRepository.save(
+                Group(
+                    name = "group2",
+                    members = mutableListOf(usr1),
+                    description = ""
+                )
+            )
             val artifacts = listOf(
                     artifactService.createArtifact(
                             email,
@@ -360,13 +403,12 @@ class ArtifactControllerTest {
             val group = groupService.createGroup(user.email, "group1", "description", memberIDs = listOf(user2.id), adminIDs = listOf())
             val album = albumService.createAlbum(user.email, "Album", description = "Description", ownerIDs = listOf(), groupIDs = listOf(), sharedWithIDs = listOf(), artifactIDs = listOf())
             val artifactRequest = ArtifactRequest(
-                    name = "Artifact 1",
-                    description = "Description",
-                    owners = listOf(),
-                    groups = listOf(group.id),
-                    sharedWith = listOf(user2.id),
-                    albums = listOf(album.id),
-                    tags = listOf("test1", "test2")
+                name = "Artifact 1",
+                description = "Description",
+                owners = listOf(),
+                groups = listOf(group.id),
+                sharedWith = listOf(user2.id),
+                tags = listOf("test1", "test2")
             )
             val response = client.post()
                     .uri("/artifact")
@@ -435,11 +477,11 @@ class ArtifactControllerTest {
         @Test
         fun `it should allow owners to update the artifact`() {
             val artifactRequest = ArtifactRequest(
-                    name = "Artifact 1",
-                    description = "Description",
-                    owners = listOf(),
-                    groups = listOf(),
-                    sharedWith = listOf()
+                name = "Artifact 1",
+                description = "Description",
+                owners = listOf(),
+                groups = listOf(),
+                sharedWith = listOf()
             )
             val createArtifactResponse = client.post()
                     .uri("/artifact")
@@ -457,14 +499,14 @@ class ArtifactControllerTest {
             val dateTaken = Date()
             @Suppress("UNCHECKED_CAST")
             val updateArtifactRequest =
-                    ArtifactRequest(
-                            name = returnedArtifact["name"] as String,
-                            description = returnedArtifact["description"] as String,
-                            owners = (returnedArtifact["owners"] as List<Map<String, Any>>).map { (it["id"] as Int).toLong() },
-                            groups = (returnedArtifact["groups"] as List<Map<String, Any>>).map { (it["id"] as Int).toLong() },
-                            sharedWith = (returnedArtifact["owners"] as List<Map<String, Any>>).map { (it["id"] as Int).toLong() },
-                            dateTaken = dateTaken
-                    )
+                ArtifactRequest(
+                    name = returnedArtifact["name"] as String,
+                    description = returnedArtifact["description"] as String,
+                    owners = (returnedArtifact["owners"] as List<Map<String, Any>>).map { (it["id"] as Int).toLong() },
+                    groups = (returnedArtifact["groups"] as List<Map<String, Any>>).map { (it["id"] as Int).toLong() },
+                    sharedWith = (returnedArtifact["owners"] as List<Map<String, Any>>).map { (it["id"] as Int).toLong() },
+                    dateTaken = dateTaken
+                )
             val updateArtifactResponse = client.put()
                     .uri("/artifact/${returnedArtifact["id"]}")
                     .accept(MediaType.APPLICATION_JSON_UTF8)
@@ -500,33 +542,33 @@ class ArtifactControllerTest {
         fun `it should allow group owners to remove the artifact from the group`() {
             var user = userRepository.findByEmail(email)!!
             var ownedGroup = groupRepository.save(
-                    Group(
-                            name = "Group 1",
-                            description = "description",
-                            artifacts = mutableListOf(),
-                            admins = mutableListOf(user),
-                            members = mutableListOf(user)
-                    )
+                Group(
+                    name = "Group 1",
+                    description = "description",
+                    artifacts = mutableListOf(),
+                    admins = mutableListOf(user),
+                    members = mutableListOf(user)
+                )
             )
             userRepository.save(user.copy(ownedGroups = mutableListOf(ownedGroup)))
             val artifact = artifactRepository.save(
-                    Artifact(
-                            name = "Artifact 1",
-                            description = "Description",
-                            owners = mutableListOf(),
-                            groups = mutableListOf(ownedGroup),
-                            sharedWith = mutableListOf()
-                    )
+                Artifact(
+                    name = "Artifact 1",
+                    description = "Description",
+                    owners = mutableListOf(),
+                    groups = mutableListOf(ownedGroup),
+                    sharedWith = mutableListOf()
+                )
             )
             ownedGroup = groupRepository.save(ownedGroup.copy(artifacts = mutableListOf(artifact)))
             val updateArtifactRequest =
-                    ArtifactRequest(
-                            name = artifact.name,
-                            description = artifact.description,
-                            owners = artifact.owners.map(User::id),
-                            groups = artifact.groups.map(Group::id).filter { it != ownedGroup.id },
-                            sharedWith = artifact.sharedWith.map(User::id)
-                    )
+                ArtifactRequest(
+                    name = artifact.name,
+                    description = artifact.description,
+                    owners = artifact.owners.map(User::id),
+                    groups = artifact.groups.map(Group::id).filter { it != ownedGroup.id },
+                    sharedWith = artifact.sharedWith.map(User::id)
+                )
             val updateArtifactResponse = client.put()
                     .uri("/artifact/${artifact.id}")
                     .accept(MediaType.APPLICATION_JSON_UTF8)
@@ -552,11 +594,11 @@ class ArtifactControllerTest {
         @Test
         fun `it should not allow normal users to update the artifact`() {
             val artifactRequest = ArtifactRequest(
-                    name = "Artifact 1",
-                    description = "Description",
-                    owners = listOf(),
-                    groups = listOf(),
-                    sharedWith = listOf()
+                name = "Artifact 1",
+                description = "Description",
+                owners = listOf(),
+                groups = listOf(),
+                sharedWith = listOf()
             )
 
             val createArtifactResponse = client.post()
@@ -575,13 +617,13 @@ class ArtifactControllerTest {
 
             @Suppress("UNCHECKED_CAST")
             val updateArtifactRequest =
-                    ArtifactRequest(
-                            name = returnedArtifact["name"] as String,
-                            description = returnedArtifact["description"] as String,
-                            owners = (returnedArtifact["owners"] as List<Map<String, Any>>).map { (it["id"] as Int).toLong() },
-                            groups = (returnedArtifact["groups"] as List<Map<String, Any>>).map { (it["id"] as Int).toLong() },
-                            sharedWith = (returnedArtifact["owners"] as List<Map<String, Any>>).map { (it["id"] as Int).toLong() }
-                    )
+                ArtifactRequest(
+                    name = returnedArtifact["name"] as String,
+                    description = returnedArtifact["description"] as String,
+                    owners = (returnedArtifact["owners"] as List<Map<String, Any>>).map { (it["id"] as Int).toLong() },
+                    groups = (returnedArtifact["groups"] as List<Map<String, Any>>).map { (it["id"] as Int).toLong() },
+                    sharedWith = (returnedArtifact["owners"] as List<Map<String, Any>>).map { (it["id"] as Int).toLong() }
+                )
             val altUser = userService.createUser("user 2", "exampl2@example.com", "password")
             val altToken = getToken(altUser.email, "password")
             client.put()
@@ -596,11 +638,11 @@ class ArtifactControllerTest {
         @Test
         fun `it should not allow the removal of associated resources`() {
             val artifactRequest = ArtifactRequest(
-                    name = "Artifact 1",
-                    description = "Description",
-                    owners = listOf(),
-                    groups = listOf(),
-                    sharedWith = listOf()
+                name = "Artifact 1",
+                description = "Description",
+                owners = listOf(),
+                groups = listOf(),
+                sharedWith = listOf()
             )
             val createArtifactResponse = client.post()
                     .uri("/artifact")
@@ -618,13 +660,13 @@ class ArtifactControllerTest {
 
             val artifact = artifactRepository.findByIdOrNull((returnedArtifact["id"] as Int).toLong())!!
             val resource = artifactResourceRepository.save(
-                    ArtifactResource(
-                            name = "Resource name",
-                            description = "Resource description",
-                            resource = ClassPathResource("test-image.jpg").file.readBytes(),
-                            contentType = MediaType.IMAGE_PNG_VALUE,
-                            artifact = artifact
-                    )
+                ArtifactResource(
+                    name = "Resource name",
+                    description = "Resource description",
+                    resource = ClassPathResource("test-image.jpg").file.readBytes(),
+                    contentType = MediaType.IMAGE_PNG_VALUE,
+                    artifact = artifact
+                )
             )
 
             artifactRepository.save(artifact.copy(resources = mutableListOf(resource)))
@@ -657,12 +699,12 @@ class ArtifactControllerTest {
             val user = userRepository.findByEmail(email)!!
             val user2 = userService.createUser("user2", "example2@example.com", "password")
             val updateArtifactRequest = ArtifactRequest(
-                    name = artifact.name,
-                    description = artifact.description,
-                    owners = artifact.owners.map(User::id) + listOf(user2.id),
-                    groups = listOf(),
-                    sharedWith = listOf(),
-                    tags = listOf()
+                name = artifact.name,
+                description = artifact.description,
+                owners = artifact.owners.map(User::id) + listOf(user2.id),
+                groups = listOf(),
+                sharedWith = listOf(),
+                tags = listOf()
             )
             val updateArtifactResponse = client.put()
                     .uri("/artifact/${artifact.id}")
@@ -695,12 +737,12 @@ class ArtifactControllerTest {
             val user = userRepository.findByEmail(email)
             val group = groupService.createGroup(email, "group 1", "description", memberIDs = listOf(), adminIDs = listOf())
             val updateArtifactRequest = ArtifactRequest(
-                    name = artifact.name,
-                    description = artifact.description,
-                    owners = listOf(),
-                    groups = listOf(group.id),
-                    sharedWith = listOf(),
-                    tags = listOf()
+                name = artifact.name,
+                description = artifact.description,
+                owners = listOf(),
+                groups = listOf(group.id),
+                sharedWith = listOf(),
+                tags = listOf()
             )
             val updateArtifactResponse = client.put()
                     .uri("/artifact/${artifact.id}")
@@ -731,12 +773,12 @@ class ArtifactControllerTest {
             val user = userRepository.findByEmail(email)
             val user2 = userService.createUser("user2", "example2@example.com", "password")
             val updateArtifactRequest = ArtifactRequest(
-                    name = artifact.name,
-                    description = artifact.description,
-                    owners = listOf(),
-                    groups = listOf(),
-                    sharedWith = listOf(user2.id),
-                    tags = listOf()
+                name = artifact.name,
+                description = artifact.description,
+                owners = listOf(),
+                groups = listOf(),
+                sharedWith = listOf(user2.id),
+                tags = listOf()
             )
             val updateArtifactResponse = client.put()
                     .uri("/artifact/${artifact.id}")
@@ -765,12 +807,12 @@ class ArtifactControllerTest {
         fun `it should add the specified tags to the artifact`() {
             val artifact = artifactService.createArtifact(email, "artifact", "description")
             val updateArtifactRequest = ArtifactRequest(
-                    name = artifact.name,
-                    description = artifact.description,
-                    owners = listOf(),
-                    groups = listOf(),
-                    sharedWith = listOf(),
-                    tags = listOf("tag1", "tag2")
+                name = artifact.name,
+                description = artifact.description,
+                owners = listOf(),
+                groups = listOf(),
+                sharedWith = listOf(),
+                tags = listOf("tag1", "tag2")
             )
             val updateArtifactResponse = client.put()
                     .uri("/artifact/${artifact.id}")
@@ -838,11 +880,11 @@ class ArtifactControllerTest {
         @Test
         fun `it should allow owners to delete the artifact`() {
             val artifactRequest = ArtifactRequest(
-                    name = "Artifact 1",
-                    description = "Description",
-                    owners = listOf(),
-                    groups = listOf(),
-                    sharedWith = listOf()
+                name = "Artifact 1",
+                description = "Description",
+                owners = listOf(),
+                groups = listOf(),
+                sharedWith = listOf()
             )
             val createArtifactResponse = client.post()
                     .uri("/artifact")
@@ -875,11 +917,11 @@ class ArtifactControllerTest {
         @Test
         fun `it should not allow normal users to delete the artifact`() {
             val artifactRequest = ArtifactRequest(
-                    name = "Artifact 1",
-                    description = "Description",
-                    owners = listOf(),
-                    groups = listOf(),
-                    sharedWith = listOf()
+                name = "Artifact 1",
+                description = "Description",
+                owners = listOf(),
+                groups = listOf(),
+                sharedWith = listOf()
             )
 
             val createArtifactResponse = client.post()
@@ -909,11 +951,11 @@ class ArtifactControllerTest {
         @Test
         fun `it should delete associated resources as well`() {
             val artifactRequest = ArtifactRequest(
-                    name = "Artifact 1",
-                    description = "Description",
-                    owners = listOf(),
-                    groups = listOf(),
-                    sharedWith = listOf()
+                name = "Artifact 1",
+                description = "Description",
+                owners = listOf(),
+                groups = listOf(),
+                sharedWith = listOf()
             )
             val createArtifactResponse = client.post()
                     .uri("/artifact")
@@ -931,13 +973,13 @@ class ArtifactControllerTest {
 
             val artifact = artifactRepository.findByIdOrNull((returnedArtifact["id"] as Int).toLong())!!
             val resource = artifactResourceRepository.save(
-                    ArtifactResource(
-                            name = "Resource name",
-                            description = "Resource description",
-                            resource = ClassPathResource("test-image.jpg").file.readBytes(),
-                            contentType = MediaType.IMAGE_PNG_VALUE,
-                            artifact = artifact
-                    )
+                ArtifactResource(
+                    name = "Resource name",
+                    description = "Resource description",
+                    resource = ClassPathResource("test-image.jpg").file.readBytes(),
+                    contentType = MediaType.IMAGE_PNG_VALUE,
+                    artifact = artifact
+                )
             )
 
             artifactRepository.save(artifact.copy(resources = mutableListOf(resource)))

@@ -3,6 +3,14 @@ package com.synergeticsolutions.familyartefacts
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
+import com.synergeticsolutions.familyartefacts.dtos.LoginRequest
+import com.synergeticsolutions.familyartefacts.dtos.LoginResponse
+import com.synergeticsolutions.familyartefacts.dtos.UserRequest
+import com.synergeticsolutions.familyartefacts.dtos.UserUpdateRequest
+import com.synergeticsolutions.familyartefacts.entities.User
+import com.synergeticsolutions.familyartefacts.repositories.GroupRepository
+import com.synergeticsolutions.familyartefacts.repositories.UserRepository
+import com.synergeticsolutions.familyartefacts.services.UserService
 import org.hamcrest.Matchers.`is`
 import org.hamcrest.Matchers.contains
 import org.hamcrest.Matchers.containsInAnyOrder
@@ -59,7 +67,8 @@ class UserControllerTest {
     inner class CreateUser {
         @Test
         fun `it should not allow blank names`() {
-            val registrationRequest = UserRequest("", "example@example.com", "secret")
+            val registrationRequest =
+                UserRequest("", "example@example.com", "secret")
             client.post().uri("/user")
                 .contentType(MediaType.APPLICATION_JSON_UTF8)
                 .syncBody(registrationRequest)
@@ -72,7 +81,8 @@ class UserControllerTest {
 
         @Test
         fun `it should not allow invalid emails`() {
-            val registrationRequest = UserRequest("name", "example", "secret")
+            val registrationRequest =
+                UserRequest("name", "example", "secret")
             client.post().uri("/user")
                 .contentType(MediaType.APPLICATION_JSON_UTF8)
                 .syncBody(registrationRequest)
@@ -85,7 +95,8 @@ class UserControllerTest {
 
         @Test
         fun `it should not allow short password `() {
-            val registrationRequest = UserRequest("name", "example@example.com", "")
+            val registrationRequest =
+                UserRequest("name", "example@example.com", "")
             client.post().uri("/user")
                 .contentType(MediaType.APPLICATION_JSON_UTF8)
                 .syncBody(registrationRequest)
@@ -122,7 +133,8 @@ class UserControllerTest {
 
         @Test
         fun `it should return the created user without the password`() {
-            val registrationRequest = UserRequest("name", "example@example.com", "secret")
+            val registrationRequest =
+                UserRequest("name", "example@example.com", "secret")
             client.post().uri("/user")
                 .syncBody(registrationRequest)
                 .header("Content-Type", MediaType.APPLICATION_JSON_UTF8_VALUE)
@@ -153,7 +165,8 @@ class UserControllerTest {
 
         @Test
         fun `it should create a private group for the user`() {
-            val registrationRequest = UserRequest("name", "example@example.com", "secret")
+            val registrationRequest =
+                UserRequest("name", "example@example.com", "secret")
             val body = String(
                 client.post().uri("/user")
                     .contentType(MediaType.APPLICATION_JSON_UTF8)
@@ -193,7 +206,12 @@ class UserControllerTest {
             )
             val resp = client.post()
                 .uri("/login")
-                .syncBody(LoginRequest(email = user.email, password = "password"))
+                .syncBody(
+                    LoginRequest(
+                        email = user.email,
+                        password = "password"
+                    )
+                )
                 .exchange()
                 .expectStatus().isOk
                 .expectBody()
@@ -413,7 +431,13 @@ class UserControllerTest {
                 val updatedPassword = "updatedPassword"
                 client.put().uri("/user/${user.id}")
                     .header(HttpHeaders.AUTHORIZATION, "Bearer $token")
-                    .syncBody(UserUpdateRequest(updatedName, updatedEmail, updatedPassword))
+                    .syncBody(
+                        UserUpdateRequest(
+                            updatedName,
+                            updatedEmail,
+                            updatedPassword
+                        )
+                    )
                     .exchange()
                     .expectStatus().isOk
                     .expectBody()
