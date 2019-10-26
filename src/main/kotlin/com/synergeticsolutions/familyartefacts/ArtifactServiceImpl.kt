@@ -237,19 +237,19 @@ class ArtifactServiceImpl(
 
         ((update.owners ?: listOf()) + (update.sharedWith ?: listOf())).forEach {
             if (!userRepository.existsById(it)) {
-                throw UserNotFoundException("Could not find user with ID $id")
+                throw UserNotFoundException("Could not find user with ID $it")
             }
         }
 
         (update.groups ?: listOf()).forEach {
             if (!groupRepository.existsById(it)) {
-                throw GroupNotFoundException("Could not find group with ID $id")
+                throw GroupNotFoundException("Could not find group with ID $it")
             }
         }
 
         (update.resources ?: listOf()).forEach {
             if (!artifactResourceRepository.existsById(it)) {
-                throw ArtifactResourceNotFoundException("Could not find artifact resource with ID $id")
+                throw ArtifactResourceNotFoundException("Could not find artifact resource with ID $it")
             }
         }
 
