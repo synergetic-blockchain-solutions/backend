@@ -6,9 +6,9 @@ import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import com.synergeticsolutions.familyartefacts.dtos.ArtifactResourceMetadata
 import com.synergeticsolutions.familyartefacts.dtos.Resource
 import com.synergeticsolutions.familyartefacts.entities.ArtifactResource
-import com.synergeticsolutions.familyartefacts.exceptions.MetadataPartRequired
+import com.synergeticsolutions.familyartefacts.exceptions.MetadataPartRequiredException
 import com.synergeticsolutions.familyartefacts.exceptions.ResourceContentTypeRequiredException
-import com.synergeticsolutions.familyartefacts.exceptions.ResourcePartRequired
+import com.synergeticsolutions.familyartefacts.exceptions.ResourcePartRequiredException
 import com.synergeticsolutions.familyartefacts.services.ArtifactResourceService
 import java.io.ByteArrayOutputStream
 import java.io.InputStream
@@ -52,7 +52,7 @@ class ArtifactResourceController(
     private fun getMetadataFromRequest(request: HttpServletRequest): ArtifactResourceMetadata {
         val parameters = request.parameterMap
         if (!parameters.containsKey("metadata")) {
-            throw MetadataPartRequired()
+            throw MetadataPartRequiredException()
         }
         val metadataPart = checkNotNull(
             parameters["metadata"]?.firstOrNull(),
@@ -70,7 +70,7 @@ class ArtifactResourceController(
     private fun getResourceFromRequest(request: HttpServletRequest): Resource {
         val files = (request as StandardMultipartHttpServletRequest).fileMap
         if (!files.containsKey("resource")) {
-            throw ResourcePartRequired()
+            throw ResourcePartRequiredException()
         }
 
         val resource = checkNotNull(files["resource"]?.bytes, { "Checked that file map contained 'resource' earlier" })
