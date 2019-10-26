@@ -1,5 +1,9 @@
 package com.synergeticsolutions.familyartefacts
 
+import com.synergeticsolutions.familyartefacts.entities.User
+import com.synergeticsolutions.familyartefacts.repositories.UserRepository
+import com.synergeticsolutions.familyartefacts.security.TokenServiceImpl
+import com.synergeticsolutions.familyartefacts.services.UserService
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired

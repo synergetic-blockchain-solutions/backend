@@ -1,5 +1,17 @@
 package com.synergeticsolutions.familyartefacts
 
+import com.synergeticsolutions.familyartefacts.dtos.ArtifactResourceMetadata
+import com.synergeticsolutions.familyartefacts.entities.Artifact
+import com.synergeticsolutions.familyartefacts.entities.ArtifactResource
+import com.synergeticsolutions.familyartefacts.entities.Group
+import com.synergeticsolutions.familyartefacts.entities.User
+import com.synergeticsolutions.familyartefacts.exceptions.ActionNotAllowedException
+import com.synergeticsolutions.familyartefacts.exceptions.ArtifactNotFoundException
+import com.synergeticsolutions.familyartefacts.exceptions.UserNotFoundException
+import com.synergeticsolutions.familyartefacts.repositories.ArtifactRepository
+import com.synergeticsolutions.familyartefacts.repositories.ArtifactResourceRepository
+import com.synergeticsolutions.familyartefacts.repositories.UserRepository
+import com.synergeticsolutions.familyartefacts.services.ArtifactResourceServiceImpl
 import java.util.Optional
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.`is`
@@ -22,11 +34,16 @@ class ArtifactResourceServiceImplTest {
 
     private val artifactResourceRepository: ArtifactResourceRepository =
         Mockito.mock(ArtifactResourceRepository::class.java)
-    private val artifactRepository: ArtifactRepository = Mockito.mock(ArtifactRepository::class.java)
+    private val artifactRepository: ArtifactRepository = Mockito.mock(
+        ArtifactRepository::class.java)
     private val userRepository: UserRepository = Mockito.mock(UserRepository::class.java)
 
     val artifactResourceService =
-        ArtifactResourceServiceImpl(artifactResourceRepository, artifactRepository, userRepository)
+        ArtifactResourceServiceImpl(
+            artifactResourceRepository,
+            artifactRepository,
+            userRepository
+        )
 
     @Nested
     inner class Create {
@@ -38,7 +55,12 @@ class ArtifactResourceServiceImplTest {
                 artifactResourceService.create(
                     "example@example.com",
                     1,
-                    ArtifactResourceMetadata(id = 0, name = "Resource name", description = "Resource description", artifactId = 0),
+                    ArtifactResourceMetadata(
+                        id = 0,
+                        name = "Resource name",
+                        description = "Resource description",
+                        artifactId = 0
+                    ),
                     resource = "resource".toByteArray(),
                     contentType = "text/plain"
                 )
@@ -53,7 +75,10 @@ class ArtifactResourceServiceImplTest {
                         name = "name",
                         email = "email",
                         password = "password",
-                        privateGroup = Group(name = "name", description = "description")
+                        privateGroup = Group(
+                            name = "name",
+                            description = "description"
+                        )
                     )
                 )
             Mockito.`when`(artifactRepository.findByIdOrNull(anyLong())).then { Optional.empty<ArtifactResource>() }
@@ -61,7 +86,12 @@ class ArtifactResourceServiceImplTest {
                 artifactResourceService.create(
                     "example@example.com",
                     1,
-                    ArtifactResourceMetadata(id = 0, name = "Resource name", description = "Resource description", artifactId = 0),
+                    ArtifactResourceMetadata(
+                        id = 0,
+                        name = "Resource name",
+                        description = "Resource description",
+                        artifactId = 0
+                    ),
                     resource = "resource".toByteArray(),
                     contentType = "text/plain"
                 )
@@ -74,7 +104,10 @@ class ArtifactResourceServiceImplTest {
                 name = "name",
                 email = "email",
                 password = "password",
-                privateGroup = Group(name = "name", description = "description")
+                privateGroup = Group(
+                    name = "name",
+                    description = "description"
+                )
             )
             var artifact = Artifact(
                 id = 1,
@@ -102,7 +135,12 @@ class ArtifactResourceServiceImplTest {
             artifactResourceService.create(
                 "example@example.com",
                 artifact.id,
-                ArtifactResourceMetadata(id = 0, name = resource.name, description = resource.description, artifactId = 0),
+                ArtifactResourceMetadata(
+                    id = 0,
+                    name = resource.name,
+                    description = resource.description,
+                    artifactId = 0
+                ),
                 resource = resource.resource,
                 contentType = "text/plain"
             )
@@ -124,7 +162,10 @@ class ArtifactResourceServiceImplTest {
                 name = "name",
                 email = "email",
                 password = "password",
-                privateGroup = Group(name = "name", description = "description")
+                privateGroup = Group(
+                    name = "name",
+                    description = "description"
+                )
             )
             var artifact = Artifact(
                 id = 1,
@@ -153,7 +194,12 @@ class ArtifactResourceServiceImplTest {
                 email = "example@example.com",
                 artifactId = artifact.id,
                 resourceId = 1,
-                metadata = ArtifactResourceMetadata(id = 0, name = "Updated name", description = "Updated description", artifactId = 0),
+                metadata = ArtifactResourceMetadata(
+                    id = 0,
+                    name = "Updated name",
+                    description = "Updated description",
+                    artifactId = 0
+                ),
                 resource = resource.resource,
                 contentType = "text/plain"
             )
@@ -174,13 +220,19 @@ class ArtifactResourceServiceImplTest {
                 name = "name",
                 email = "useremail",
                 password = "password",
-                privateGroup = Group(name = "name", description = "description")
+                privateGroup = Group(
+                    name = "name",
+                    description = "description"
+                )
             )
             var owner = User(
                 name = "owner",
                 email = "owneremail",
                 password = "password",
-                privateGroup = Group(name = "name", description = "description")
+                privateGroup = Group(
+                    name = "name",
+                    description = "description"
+                )
             )
             val artifact = Artifact(
                 id = 1,
@@ -215,7 +267,12 @@ class ArtifactResourceServiceImplTest {
                     email = user.email,
                     artifactId = artifact.id,
                     resourceId = 1,
-                    metadata = ArtifactResourceMetadata(id = 0, name = "Resource name", description = "Resource description", artifactId = 0),
+                    metadata = ArtifactResourceMetadata(
+                        id = 0,
+                        name = "Resource name",
+                        description = "Resource description",
+                        artifactId = 0
+                    ),
                     resource = resource.resource,
                     contentType = "text/plain"
                 )
@@ -231,7 +288,10 @@ class ArtifactResourceServiceImplTest {
                 name = "name",
                 email = "email",
                 password = "password",
-                privateGroup = Group(name = "name", description = "description")
+                privateGroup = Group(
+                    name = "name",
+                    description = "description"
+                )
             )
             var artifact = Artifact(
                 id = 1,
@@ -273,13 +333,19 @@ class ArtifactResourceServiceImplTest {
                 name = "name",
                 email = "useremail",
                 password = "password",
-                privateGroup = Group(name = "name", description = "description")
+                privateGroup = Group(
+                    name = "name",
+                    description = "description"
+                )
             )
             var owner = User(
                 name = "owner",
                 email = "owneremail",
                 password = "password",
-                privateGroup = Group(name = "name", description = "description")
+                privateGroup = Group(
+                    name = "name",
+                    description = "description"
+                )
             )
             val artifact = Artifact(
                 id = 1,
@@ -324,7 +390,10 @@ class ArtifactResourceServiceImplTest {
                 name = "name",
                 email = "email",
                 password = "password",
-                privateGroup = Group(name = "name", description = "description")
+                privateGroup = Group(
+                    name = "name",
+                    description = "description"
+                )
             )
             var artifact = Artifact(
                 id = 1,

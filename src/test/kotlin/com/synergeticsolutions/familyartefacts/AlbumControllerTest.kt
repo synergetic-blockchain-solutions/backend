@@ -3,6 +3,21 @@ package com.synergeticsolutions.familyartefacts
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
+import com.synergeticsolutions.familyartefacts.controllers.AlbumRequest
+import com.synergeticsolutions.familyartefacts.dtos.LoginRequest
+import com.synergeticsolutions.familyartefacts.dtos.LoginResponse
+import com.synergeticsolutions.familyartefacts.entities.Album
+import com.synergeticsolutions.familyartefacts.entities.Artifact
+import com.synergeticsolutions.familyartefacts.entities.Group
+import com.synergeticsolutions.familyartefacts.entities.User
+import com.synergeticsolutions.familyartefacts.repositories.AlbumRepository
+import com.synergeticsolutions.familyartefacts.repositories.ArtifactRepository
+import com.synergeticsolutions.familyartefacts.repositories.GroupRepository
+import com.synergeticsolutions.familyartefacts.repositories.UserRepository
+import com.synergeticsolutions.familyartefacts.services.AlbumService
+import com.synergeticsolutions.familyartefacts.services.ArtifactService
+import com.synergeticsolutions.familyartefacts.services.GroupService
+import com.synergeticsolutions.familyartefacts.services.UserService
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.`is`
 import org.hamcrest.Matchers.contains
@@ -68,7 +83,12 @@ class AlbumControllerTest {
         val resp = client.post()
                 .uri("/login")
                 .contentType(MediaType.APPLICATION_JSON_UTF8)
-                .syncBody(LoginRequest(email = userEmail, password = userPassword))
+                .syncBody(
+                    LoginRequest(
+                        email = userEmail,
+                        password = userPassword
+                    )
+                )
                 .exchange()
                 .expectStatus().isOk
                 .expectBody()
@@ -117,8 +137,20 @@ class AlbumControllerTest {
         fun `it should filter the albums by the given group ID`() {
             val usr = userRepository.findByEmail(email)!!
             val grp1 =
-                    groupRepository.save(Group(name = "group1", members = mutableListOf(usr), description = ""))
-            val grp2 = groupRepository.save(Group(name = "group2", members = mutableListOf(usr), description = ""))
+                    groupRepository.save(
+                        Group(
+                            name = "group1",
+                            members = mutableListOf(usr),
+                            description = ""
+                        )
+                    )
+            val grp2 = groupRepository.save(
+                Group(
+                    name = "group2",
+                    members = mutableListOf(usr),
+                    description = ""
+                )
+            )
             val albums = mapOf(
                     "album1" to grp1.id,
                     "album2" to grp1.id,
@@ -195,8 +227,20 @@ class AlbumControllerTest {
             val usr1 = userRepository.findByEmail(email)!!
             val usr2 = userService.createUser("user2", "exampl2@example.com", "password")
             val grp1 =
-                    groupRepository.save(Group(name = "group1", members = mutableListOf(usr1), description = ""))
-            val grp2 = groupRepository.save(Group(name = "group2", members = mutableListOf(usr1), description = ""))
+                    groupRepository.save(
+                        Group(
+                            name = "group1",
+                            members = mutableListOf(usr1),
+                            description = ""
+                        )
+                    )
+            val grp2 = groupRepository.save(
+                Group(
+                    name = "group2",
+                    members = mutableListOf(usr1),
+                    description = ""
+                )
+            )
             val albums = listOf(
                     albumService.createAlbum(
                             email,
@@ -378,12 +422,12 @@ class AlbumControllerTest {
             val user2 = userService.createUser("user2", "example2@example.com", "password")
             val group = groupService.createGroup(user.email, "group1", "description", memberIDs = listOf(user2.id), adminIDs = listOf())
             val albumRequest = AlbumRequest(
-                    name = "Album 1",
-                    description = "Description",
-                    owners = listOf(),
-                    groups = listOf(group.id),
-                    sharedWith = listOf(user2.id),
-                    artifacts = listOf()
+                name = "Album 1",
+                description = "Description",
+                owners = listOf(),
+                groups = listOf(group.id),
+                sharedWith = listOf(user2.id),
+                artifacts = listOf()
             )
             val response = client.post()
                     .uri("/album")
@@ -446,12 +490,12 @@ class AlbumControllerTest {
         @Test
         fun `it should allow owners to update the album`() {
             val albumRequest = AlbumRequest(
-                    name = "Album 1",
-                    description = "Description",
-                    owners = listOf(),
-                    groups = listOf(),
-                    sharedWith = listOf(),
-                    artifacts = listOf()
+                name = "Album 1",
+                description = "Description",
+                owners = listOf(),
+                groups = listOf(),
+                sharedWith = listOf(),
+                artifacts = listOf()
             )
             val createAlbumResponse = client.post()
                     .uri("/album")
@@ -468,14 +512,14 @@ class AlbumControllerTest {
                     ObjectMapper().registerKotlinModule().readValue<Map<String, Any>>(String(createAlbumResponse))
             @Suppress("UNCHECKED_CAST")
             val updateAlbumRequest =
-                    AlbumRequest(
-                            name = returnedAlbum["name"] as String,
-                            description = returnedAlbum["description"] as String,
-                            owners = (returnedAlbum["owners"] as List<Map<String, Any>>).map { (it.getValue("id") as Int).toLong() },
-                            groups = (returnedAlbum["groups"] as List<Map<String, Any>>).map { (it.getValue("id") as Int).toLong() },
-                            sharedWith = (returnedAlbum["sharedWith"] as List<Map<String, Any>>).map { (it.getValue("id") as Int).toLong() },
-                            artifacts = (returnedAlbum["artifacts"] as List<Map<String, Any>>).map { (it.getValue("id") as Int).toLong() }
-                    )
+                AlbumRequest(
+                    name = returnedAlbum["name"] as String,
+                    description = returnedAlbum["description"] as String,
+                    owners = (returnedAlbum["owners"] as List<Map<String, Any>>).map { (it.getValue("id") as Int).toLong() },
+                    groups = (returnedAlbum["groups"] as List<Map<String, Any>>).map { (it.getValue("id") as Int).toLong() },
+                    sharedWith = (returnedAlbum["sharedWith"] as List<Map<String, Any>>).map { (it.getValue("id") as Int).toLong() },
+                    artifacts = (returnedAlbum["artifacts"] as List<Map<String, Any>>).map { (it.getValue("id") as Int).toLong() }
+                )
             val updateAlbumResponse = client.put()
                     .uri("/album/${returnedAlbum["id"]}")
                     .accept(MediaType.APPLICATION_JSON_UTF8)
@@ -505,35 +549,35 @@ class AlbumControllerTest {
         fun `it should allow group owners to remove the album from the group`() {
             var user = userRepository.findByEmail(email)!!
             var ownedGroup = groupRepository.save(
-                    Group(
-                            name = "Group 1",
-                            description = "description",
-                            artifacts = mutableListOf(),
-                            admins = mutableListOf(user),
-                            members = mutableListOf(user),
-                            albums = mutableListOf()
-                    )
+                Group(
+                    name = "Group 1",
+                    description = "description",
+                    artifacts = mutableListOf(),
+                    admins = mutableListOf(user),
+                    members = mutableListOf(user),
+                    albums = mutableListOf()
+                )
             )
             userRepository.save(user.copy(ownedGroups = mutableListOf(ownedGroup)))
             val album = albumRepository.save(
-                    Album(
-                            name = "Album 1",
-                            description = "Description",
-                            owners = mutableListOf(),
-                            groups = mutableListOf(ownedGroup),
-                            sharedWith = mutableListOf()
-                    )
+                Album(
+                    name = "Album 1",
+                    description = "Description",
+                    owners = mutableListOf(),
+                    groups = mutableListOf(ownedGroup),
+                    sharedWith = mutableListOf()
+                )
             )
             ownedGroup = groupRepository.save(ownedGroup.copy(albums = mutableListOf(album)))
             val updateAlbumRequest =
-                    AlbumRequest(
-                            name = album.name,
-                            description = album.description,
-                            owners = album.owners.map(User::id),
-                            groups = album.groups.map(Group::id).filter { it != ownedGroup.id },
-                            sharedWith = album.sharedWith.map(User::id),
-                            artifacts = album.artifacts.map(Artifact::id)
-                    )
+                AlbumRequest(
+                    name = album.name,
+                    description = album.description,
+                    owners = album.owners.map(User::id),
+                    groups = album.groups.map(Group::id).filter { it != ownedGroup.id },
+                    sharedWith = album.sharedWith.map(User::id),
+                    artifacts = album.artifacts.map(Artifact::id)
+                )
             val updateAlbumResponse = client.put()
                     .uri("/album/${album.id}")
                     .accept(MediaType.APPLICATION_JSON_UTF8)
@@ -559,12 +603,12 @@ class AlbumControllerTest {
         @Test
         fun `it should not allow normal users to update the album`() {
             val albumRequest = AlbumRequest(
-                    name = "Album 1",
-                    description = "Description",
-                    owners = listOf(),
-                    groups = listOf(),
-                    sharedWith = listOf(),
-                    artifacts = listOf()
+                name = "Album 1",
+                description = "Description",
+                owners = listOf(),
+                groups = listOf(),
+                sharedWith = listOf(),
+                artifacts = listOf()
             )
 
             val createAlbumResponse = client.post()
@@ -583,14 +627,14 @@ class AlbumControllerTest {
 
             @Suppress("UNCHECKED_CAST")
             val updateAlbumRequest =
-                    AlbumRequest(
-                            name = returnedAlbum["name"] as String,
-                            description = returnedAlbum["description"] as String,
-                            owners = (returnedAlbum["owners"] as List<Map<String, Any>>).map { (it.getValue("id") as Int).toLong() },
-                            groups = (returnedAlbum["groups"] as List<Map<String, Any>>).map { (it.getValue("id") as Int).toLong() },
-                            sharedWith = (returnedAlbum["owners"] as List<Map<String, Any>>).map { (it.getValue("id") as Int).toLong() },
-                            artifacts = (returnedAlbum["artifacts"] as List<Map<String, Any>>).map { (it.getValue("id") as Int).toLong() }
-                    )
+                AlbumRequest(
+                    name = returnedAlbum["name"] as String,
+                    description = returnedAlbum["description"] as String,
+                    owners = (returnedAlbum["owners"] as List<Map<String, Any>>).map { (it.getValue("id") as Int).toLong() },
+                    groups = (returnedAlbum["groups"] as List<Map<String, Any>>).map { (it.getValue("id") as Int).toLong() },
+                    sharedWith = (returnedAlbum["owners"] as List<Map<String, Any>>).map { (it.getValue("id") as Int).toLong() },
+                    artifacts = (returnedAlbum["artifacts"] as List<Map<String, Any>>).map { (it.getValue("id") as Int).toLong() }
+                )
             val altUser = userService.createUser("user 2", "exampl2@example.com", "password")
             val altToken = getToken(altUser.email, "password")
             client.put()
@@ -608,12 +652,12 @@ class AlbumControllerTest {
             val user = userRepository.findByEmail(email)!!
             val user2 = userService.createUser("user2", "example2@example.com", "password")
             val updateAlbumRequest = AlbumRequest(
-                    name = album.name,
-                    description = album.description,
-                    owners = album.owners.map(User::id) + listOf(user2.id),
-                    groups = listOf(),
-                    sharedWith = listOf(),
-                    artifacts = listOf()
+                name = album.name,
+                description = album.description,
+                owners = album.owners.map(User::id) + listOf(user2.id),
+                groups = listOf(),
+                sharedWith = listOf(),
+                artifacts = listOf()
             )
             val updateAlbumResponse = client.put()
                     .uri("/album/${album.id}")
@@ -646,12 +690,12 @@ class AlbumControllerTest {
             val user = userRepository.findByEmail(email)
             val group = groupService.createGroup(email, "group 1", "description", memberIDs = listOf(), adminIDs = listOf())
             val updateAlbumRequest = AlbumRequest(
-                    name = album.name,
-                    description = album.description,
-                    owners = listOf(),
-                    groups = listOf(group.id),
-                    sharedWith = listOf(),
-                    artifacts = listOf()
+                name = album.name,
+                description = album.description,
+                owners = listOf(),
+                groups = listOf(group.id),
+                sharedWith = listOf(),
+                artifacts = listOf()
             )
             val updateAlbumResponse = client.put()
                     .uri("/album/${album.id}")
@@ -682,12 +726,12 @@ class AlbumControllerTest {
             val user = userRepository.findByEmail(email)
             val user2 = userService.createUser("user2", "example2@example.com", "password")
             val updateAlbumRequest = AlbumRequest(
-                    name = album.name,
-                    description = album.description,
-                    owners = listOf(),
-                    groups = listOf(),
-                    sharedWith = listOf(user2.id),
-                    artifacts = listOf()
+                name = album.name,
+                description = album.description,
+                owners = listOf(),
+                groups = listOf(),
+                sharedWith = listOf(user2.id),
+                artifacts = listOf()
             )
             val updateAlbumResponse = client.put()
                     .uri("/album/${album.id}")
@@ -754,12 +798,12 @@ class AlbumControllerTest {
         @Test
         fun `it should allow owners to delete the album`() {
             val albumRequest = AlbumRequest(
-                    name = "Album 1",
-                    description = "Description",
-                    owners = listOf(),
-                    groups = listOf(),
-                    sharedWith = listOf(),
-                    artifacts = listOf()
+                name = "Album 1",
+                description = "Description",
+                owners = listOf(),
+                groups = listOf(),
+                sharedWith = listOf(),
+                artifacts = listOf()
             )
             val createAlbumResponse = client.post()
                     .uri("/album")
@@ -792,12 +836,12 @@ class AlbumControllerTest {
         @Test
         fun `it should not allow normal users to delete the album`() {
             val albumRequest = AlbumRequest(
-                    name = "Album 1",
-                    description = "Description",
-                    owners = listOf(),
-                    groups = listOf(),
-                    sharedWith = listOf(),
-                    artifacts = listOf()
+                name = "Album 1",
+                description = "Description",
+                owners = listOf(),
+                groups = listOf(),
+                sharedWith = listOf(),
+                artifacts = listOf()
             )
 
             val createAlbumResponse = client.post()
