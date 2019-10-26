@@ -443,6 +443,81 @@ class ArtifactServiceImplTest {
                 )
             assertThat(argCapturer.value, matcher)
         }
+
+        @Test
+        fun `it should not allow creating an artifact associated with albums that don't exist`() {
+            Mockito.`when`(userRepository.findByEmail(anyString()))
+                .thenReturn(
+                    User(
+                        1,
+                        "User1",
+                        "example@example.com",
+                        "password",
+                        privateGroup = Group(1, "Group1", members = mutableListOf(), description = "")
+                    )
+                )
+            Mockito.`when`(albumRepository.findByIdOrNull(anyLong())).thenReturn(null)
+            assertThrows<AlbumNotFoundException> {
+                artifactService.createArtifact(
+                    "example@example.com",
+                    "Artifact 1",
+                    description = "Artifact description",
+                    albumIDs = listOf(2)
+                )
+            }
+        }
+
+        @Test
+        fun `it should create the artifact with the specified albums`() {
+            Mockito.`when`(artifactRepository.save(any<Artifact>())).then { it.arguments[0] as Artifact }
+            Mockito.`when`(albumRepository.existsById(anyLong())).thenReturn(true)
+            Mockito.`when`(userRepository.findByEmail(anyString()))
+                .thenReturn(
+                    User(
+                        1,
+                        "User1",
+                        "example@example.com",
+                        "password",
+                        privateGroup = Group(2, "Group 1", members = mutableListOf(), description = "")
+                    )
+                )
+            Mockito.`when`(userRepository.findByIdOrNull(anyLong())).then {
+                User(
+                    it.arguments[0] as Long,
+                    "User ${it.arguments[0]}",
+                    "example${it.arguments[0]}@email.com",
+                    "password",
+                    privateGroup = Group(2, "Group 1", members = mutableListOf(), description = "")
+                )
+            }
+            Mockito.`when`(albumRepository.findAllById(any<Iterable<Long>>())).then {
+                (it.arguments[0] as Iterable<Long>).map { id ->
+                    Album(
+                        id = id,
+                        name = "Artifact $id",
+                        description = "Description",
+                        owners = mutableListOf()
+                    )
+                }
+            }
+            artifactService.createArtifact(
+                "example@example.com",
+                "Artifact 1",
+                description = "Artifact description",
+                albumIDs = listOf(2, 3)
+            )
+            val argCapturer = ArgumentCaptor.forClass(Artifact::class.java)
+            Mockito.verify(artifactRepository).save(argCapturer.capture())
+            val matcher =
+                hasProperty<Artifact>(
+                    "albums",
+                    hasItems<Group>(
+                        hasProperty("id", equalTo(2L)),
+                        hasProperty("id", equalTo(3L))
+                    )
+                )
+            assertThat(argCapturer.value, matcher)
+        }
     }
 
     @Nested
@@ -1416,6 +1491,100 @@ class ArtifactServiceImplTest {
                 updatedArtifact, equalTo(artifact.copy(description = "updated description"))
             )
             Mockito.verify(artifactRepository).save(artifact.copy(description = "updated description"))
+        }
+
+        @Test
+        fun `it should not allow the updating of the artifact with albums that don't exist`() {
+            val artifact = Artifact(
+                id = 1,
+                name = "Artifact 1",
+                description = "Description",
+                groups = mutableListOf(),
+                owners = mutableListOf(User(
+                    1,
+                    "User1",
+                    "example@example.com",
+                    "password",
+                    privateGroup = Group(1, "Group1", members = mutableListOf(), description = "")
+                ))
+            )
+            Mockito.`when`(artifactRepository.findById(anyLong())).thenReturn(Optional.of(artifact))
+            Mockito.`when`(userRepository.findByEmail(anyString()))
+                .thenReturn(
+                    User(
+                        1,
+                        "User1",
+                        "example@example.com",
+                        "password",
+                        privateGroup = Group(1, "Group1", members = mutableListOf(), description = "")
+                    )
+                )
+            Mockito.`when`(albumRepository.findByIdOrNull(anyLong())).thenReturn(null)
+            assertThrows<AlbumNotFoundException> {
+                artifactService.updateArtifact(
+                    "example@example.com",
+                    1,
+                    ArtifactRequest(
+                        name = artifact.name,
+                        description = artifact.description,
+                        albums = listOf(2),
+                        groups = null,
+                        owners = null,
+                        sharedWith = null
+                    )
+                )
+            }
+            val argCapturer = ArgumentCaptor.forClass(Artifact::class.java)
+            Mockito.verify(artifactRepository).save(argCapturer.capture())
+            val matcher =
+                hasProperty<Artifact>(
+                    "albums",
+                    hasItems<Group>(
+                        hasProperty("id", equalTo(2L))
+                    )
+                )
+            assertThat(argCapturer.value, matcher)
+        }
+
+        @Test
+        fun `it should update the artifact with the specified albums`() {
+            val user = User(
+                1,
+                "User1",
+                "example@example.com",
+                "password",
+                privateGroup = Group(1, "Group1", members = mutableListOf(), description = "")
+            )
+            val artifact = Artifact(
+                id = 1,
+                name = "Artifact 1",
+                description = "Description",
+                groups = mutableListOf(),
+                owners = mutableListOf(user)
+            )
+            val album = Album(
+                id = 2,
+                name = "Album 2",
+                description = "Description",
+                owners = mutableListOf()
+            )
+            Mockito.`when`(artifactRepository.findById(anyLong())).thenReturn(Optional.of(artifact))
+            Mockito.`when`(artifactRepository.save(any<Artifact>())).then { it.arguments[0] as Artifact }
+            Mockito.`when`(userRepository.findByEmail(anyString())).thenReturn(user)
+            Mockito.`when`(albumRepository.findById(anyLong())).thenReturn(Optional.of(album))
+            Mockito.`when`(albumRepository.existsById(anyLong())).thenReturn(true)
+                artifactService.updateArtifact(
+                    "example@example.com",
+                    1,
+                    ArtifactRequest(
+                        name = artifact.name,
+                        description = artifact.description,
+                        albums = listOf(2),
+                        groups = null,
+                        owners = null,
+                        sharedWith = null
+                    )
+                )
         }
     }
 
