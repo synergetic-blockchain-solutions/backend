@@ -25,6 +25,7 @@ interface ArtifactService {
         groupIDs: List<Long> = listOf(),
         sharedWith: List<Long> = listOf(),
         resourceIDs: List<Long> = listOf(),
+        albumIDs: List<Long> = listOf(),
         tags: List<String> = listOf(),
         dateTaken: Date? = null
     ): Artifact

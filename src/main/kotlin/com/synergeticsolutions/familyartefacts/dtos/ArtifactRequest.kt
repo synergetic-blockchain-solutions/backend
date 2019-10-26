@@ -18,6 +18,7 @@ data class ArtifactRequest(
     val groups: List<Long>?,
     val sharedWith: List<Long>?,
     val resources: List<Long>? = listOf(),
+    val albums: List<Long>? = listOf(),
     val tags: List<String>? = listOf(),
     val dateTaken: Date? = null
 )

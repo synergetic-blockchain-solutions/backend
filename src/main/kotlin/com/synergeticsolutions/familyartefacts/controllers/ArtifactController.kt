@@ -89,6 +89,7 @@ class ArtifactController(
             groupIDs = newArtifact.groups ?: listOf(),
             sharedWith = newArtifact.sharedWith ?: listOf(),
             resourceIDs = newArtifact.resources ?: listOf(),
+            albumIDs = newArtifact.albums ?: listOf(),
             tags = newArtifact.tags ?: listOf()
         )
         logger.info("Created artifact $createdArtifact")

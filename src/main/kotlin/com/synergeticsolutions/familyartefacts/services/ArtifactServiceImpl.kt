@@ -66,6 +66,7 @@ class ArtifactServiceImpl(
         groupIDs: List<Long>,
         sharedWith: List<Long>,
         resourceIDs: List<Long>,
+        albumIDs: List<Long>,
         tags: List<String>,
         dateTaken: Date?
     ): Artifact {
@@ -88,11 +89,17 @@ class ArtifactServiceImpl(
                 throw ArtifactResourceNotFoundException("No artifact resource with ID $it was found")
             }
         }
+        albumIDs.forEach {
+            if (!albumRepository.existsById(it)) {
+                throw AlbumNotFoundException("Not album with ID $it was found")
+            }
+        }
 
         val owners = userRepository.findAllById(ownerIDs).toMutableList()
         val groups = groupRepository.findAllById(groupIDs).toMutableList()
         val shares = userRepository.findAllById(sharedWith)
         val resources = artifactResourceRepository.findAllById(resourceIDs)
+        val albums = albumRepository.findAllById(albumIDs)
 
         if (!owners.contains(creator)) {
             owners.add(creator)
@@ -108,6 +115,7 @@ class ArtifactServiceImpl(
             groups = groups,
             sharedWith = shares,
             resources = resources,
+            albums = albums,
             tags = tags.toMutableList(),
             dateTaken = dateTaken
         )
@@ -127,6 +135,9 @@ class ArtifactServiceImpl(
 
         logger.debug("Adding $savedArtifact to $resources")
         artifactResourceRepository.saveAll(resources.map { it.copy(artifact = savedArtifact) })
+
+        logger.debug("Adding $savedArtifact to $albums")
+        albumRepository.saveAll(albums.map { it.copy(artifacts = (it.artifacts + savedArtifact).toMutableList()) })
 
         logger.debug("Created artifact $savedArtifact")
         return savedArtifact
@@ -269,19 +280,25 @@ class ArtifactServiceImpl(
 
         ((update.owners ?: listOf()) + (update.sharedWith ?: listOf())).forEach {
             if (!userRepository.existsById(it)) {
-                throw UserNotFoundException("Could not find user with ID $id")
+                throw UserNotFoundException("Could not find user with ID $it")
             }
         }
 
         (update.groups ?: listOf()).forEach {
             if (!groupRepository.existsById(it)) {
-                throw GroupNotFoundException("Could not find group with ID $id")
+                throw GroupNotFoundException("Could not find group with ID $it")
             }
         }
 
         (update.resources ?: listOf()).forEach {
             if (!artifactResourceRepository.existsById(it)) {
-                throw ArtifactResourceNotFoundException("Could not find artifact resource with ID $id")
+                throw ArtifactResourceNotFoundException("Could not find artifact resource with ID $it")
+            }
+        }
+
+        (update.albums ?: listOf()).forEach {
+            if (!albumRepository.existsById(it)) {
+                throw AlbumNotFoundException("Could not find album with ID $it")
             }
         }
 
@@ -306,12 +323,20 @@ class ArtifactServiceImpl(
         userRepository.saveAll(artifact.sharedWith)
         userRepository.saveAll(updatedShares)
 
+        // Fix up new albums and albums being removed
+        val updatedAlbums = albumRepository.findAllById(update.albums ?: listOf())
+        artifact.albums.subtract(updatedAlbums).forEach { it.artifacts.remove(artifact) }
+        updatedAlbums.subtract(artifact.albums).forEach { it.artifacts.add(artifact) }
+        albumRepository.saveAll(artifact.albums)
+        albumRepository.saveAll(updatedAlbums)
+
         val updatedArtifact = artifact.copy(
             name = update.name,
             description = update.description,
             owners = updatedOwners,
             groups = updatedGroups,
             sharedWith = updatedShares,
+            albums = updatedAlbums,
             tags = update.tags?.toMutableList() ?: mutableListOf(),
             dateTaken = update.dateTaken ?: artifact.dateTaken
         )
@@ -366,6 +391,9 @@ class ArtifactServiceImpl(
         groupRepository.saveAll(artifact.groups)
         artifact.sharedWith.forEach { it.sharedArtifacts.remove(artifact) }
         userRepository.saveAll(artifact.sharedWith)
+        artifact.albums.forEach { it.artifacts.remove(artifact) }
+        albumRepository.saveAll(artifact.albums)
+        artifactRepository.save(artifact.copy(owners = mutableListOf(), groups = mutableListOf(), sharedWith = mutableListOf(), albums = mutableListOf()))
         artifactRepository.delete(artifact)
         return artifact
     }
