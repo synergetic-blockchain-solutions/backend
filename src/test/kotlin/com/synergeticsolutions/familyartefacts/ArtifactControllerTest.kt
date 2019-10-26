@@ -6,14 +6,16 @@ import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import com.synergeticsolutions.familyartefacts.dtos.ArtifactRequest
 import com.synergeticsolutions.familyartefacts.dtos.LoginRequest
 import com.synergeticsolutions.familyartefacts.dtos.LoginResponse
+import com.synergeticsolutions.familyartefacts.entities.Album
 import com.synergeticsolutions.familyartefacts.entities.Artifact
-import com.synergeticsolutions.familyartefacts.entities.ArtifactResource
 import com.synergeticsolutions.familyartefacts.entities.Group
 import com.synergeticsolutions.familyartefacts.entities.User
+import com.synergeticsolutions.familyartefacts.repositories.AlbumRepository
 import com.synergeticsolutions.familyartefacts.repositories.ArtifactRepository
 import com.synergeticsolutions.familyartefacts.repositories.ArtifactResourceRepository
 import com.synergeticsolutions.familyartefacts.repositories.GroupRepository
 import com.synergeticsolutions.familyartefacts.repositories.UserRepository
+import com.synergeticsolutions.familyartefacts.services.AlbumService
 import com.synergeticsolutions.familyartefacts.services.ArtifactService
 import com.synergeticsolutions.familyartefacts.services.GroupService
 import com.synergeticsolutions.familyartefacts.services.UserService
