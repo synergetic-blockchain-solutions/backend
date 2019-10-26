@@ -52,6 +52,9 @@ class ArtifactControllerTest {
     lateinit var artifactResourceRepository: ArtifactResourceRepository
 
     @Autowired
+    lateinit var albumRepository: AlbumRepository
+
+    @Autowired
     lateinit var userService: UserService
 
     @Autowired
@@ -59,6 +62,9 @@ class ArtifactControllerTest {
 
     @Autowired
     lateinit var groupService: GroupService
+
+    @Autowired
+    lateinit var albumService: AlbumService
 
     @Autowired
     private lateinit var testUtils: TestUtilsService
@@ -352,12 +358,14 @@ class ArtifactControllerTest {
             val user = userRepository.findByEmail(email)!!
             val user2 = userService.createUser("user2", "example2@example.com", "password")
             val group = groupService.createGroup(user.email, "group1", "description", memberIDs = listOf(user2.id), adminIDs = listOf())
+            val album = albumService.createAlbum(user.email, "Album", description = "Description", ownerIDs = listOf(), groupIDs = listOf(), sharedWithIDs = listOf(), artifactIDs = listOf())
             val artifactRequest = ArtifactRequest(
                     name = "Artifact 1",
                     description = "Description",
                     owners = listOf(),
                     groups = listOf(group.id),
                     sharedWith = listOf(user2.id),
+                    albums = listOf(album.id),
                     tags = listOf("test1", "test2")
             )
             val response = client.post()
@@ -375,6 +383,7 @@ class ArtifactControllerTest {
                     .jsonPath("$.owners").value(contains(hasEntry("id", user.id.toInt())))
                     .jsonPath("$.groups").value(containsInAnyOrder(hasEntry("id", user.privateGroup.id.toInt()), hasEntry("id", group.id.toInt())))
                     .jsonPath("$.sharedWith").value(contains(hasEntry("id", user2.id.toInt())))
+                    .jsonPath("$.albums").value(contains(hasEntry("id", album.id.toInt())))
                     .jsonPath("$.tags").value(`is`(artifactRequest.tags))
                     .returnResult()
                     .responseBody!!
@@ -389,6 +398,9 @@ class ArtifactControllerTest {
 
             // Check shared with
             assertThat(createdArtifact.sharedWith.map(User::id), contains(user2.id))
+
+            // Check albums
+            assertThat(createdArtifact.albums.map(Album::id), contains(album.id))
 
             // Check tags
             assertThat(createdArtifact.tags, containsInAnyOrder(*(artifactRequest.tags!!.toTypedArray())))
@@ -782,6 +794,43 @@ class ArtifactControllerTest {
             val updatedArtifact = artifactRepository.findByIdOrNull((response.getValue("id") as Int).toLong())!!
             assertThat(updatedArtifact.tags, containsInAnyOrder(*(updateArtifactRequest.tags!!.toTypedArray())))
         }
+
+        @Test
+        fun `it should allow the associated albums to be updated`() {
+            val album = albumService.createAlbum(email, "Album", "Description", listOf(), listOf(), listOf(), listOf())
+            val artifact = artifactService.createArtifact(email, "artifact", "description")
+            val updateArtifactRequest = ArtifactRequest(
+                name = artifact.name,
+                description = artifact.description,
+                owners = listOf(),
+                groups = listOf(),
+                sharedWith = listOf(),
+                tags = listOf("tag1", "tag2"),
+                albums = listOf(album.id)
+            )
+            val updateArtifactResponse = client.put()
+                .uri("/artifact/${artifact.id}")
+                .accept(MediaType.APPLICATION_JSON_UTF8)
+                .contentType(MediaType.APPLICATION_JSON_UTF8)
+                .header(HttpHeaders.AUTHORIZATION, "Bearer $token")
+                .syncBody(updateArtifactRequest)
+                .exchange()
+                .expectStatus().isOk
+                .expectBody()
+                .jsonPath("$.id").value(`is`(artifact.id.toInt()))
+                .jsonPath("$.name").value(`is`(updateArtifactRequest.name))
+                .jsonPath("$.description").value(`is`(updateArtifactRequest.description))
+                .jsonPath("$.owners").value(`is`(updateArtifactRequest.owners!!.map(Long::toInt)))
+                .jsonPath("$.groups").value(`is`(updateArtifactRequest.groups!!.map(Long::toInt)))
+                .jsonPath("$.sharedWith").value(`is`(updateArtifactRequest.sharedWith!!.map(Long::toInt)))
+                .jsonPath("$.albums").value(containsInAnyOrder(updateArtifactRequest.albums!!.map { hasEntry("id", it.toInt()) }))
+                .jsonPath("$.tags").value(`is`(updateArtifactRequest.tags))
+                .returnResult()
+                .responseBody!!
+            val response = ObjectMapper().registerKotlinModule().readValue<Map<String, Any>>(updateArtifactResponse)
+            val updatedArtifact = artifactRepository.findByIdOrNull((response.getValue("id") as Int).toLong())!!
+            assertThat(updatedArtifact.albums, contains(hasProperty("id", `is`(album.id))))
+        }
     }
 
     @Nested
@@ -903,6 +952,45 @@ class ArtifactControllerTest {
                     .responseBody!!
 
             assertFalse(artifactResourceRepository.existsById(resource.id))
+        }
+
+        @Test
+        fun `it should remove the artifact from associated albums when delete`() {
+            val album = albumService.createAlbum(email, "Album", "Description", listOf(), listOf(), listOf(), listOf())
+            val artifactRequest = ArtifactRequest(
+                name = "Artifact 1",
+                description = "Description",
+                owners = listOf(),
+                groups = listOf(),
+                sharedWith = listOf(),
+                albums = listOf(album.id)
+            )
+            val createArtifactResponse = client.post()
+                .uri("/artifact")
+                .accept(MediaType.APPLICATION_JSON_UTF8)
+                .contentType(MediaType.APPLICATION_JSON_UTF8)
+                .header(HttpHeaders.AUTHORIZATION, "Bearer $token")
+                .syncBody(artifactRequest)
+                .exchange()
+                .expectStatus().isCreated
+                .expectBody()
+                .returnResult()
+                .responseBody!!
+            val returnedArtifact =
+                ObjectMapper().registerKotlinModule().readValue<Map<String, Any>>(String(createArtifactResponse))
+            client.delete()
+                .uri("/artifact/${returnedArtifact["id"]}")
+                .accept(MediaType.APPLICATION_JSON_UTF8)
+                .header(HttpHeaders.AUTHORIZATION, "Bearer $token")
+                .exchange()
+                .expectStatus().isOk
+                .expectBody()
+                .returnResult()
+                .responseBody!!
+            assertFalse(artifactRepository.existsById((returnedArtifact["id"] as Int).toLong()))
+            val updatedAlbum = albumRepository.findByIdOrNull(album.id)!!
+            val artifactId = (returnedArtifact["id"] as Int).toLong()
+            assertThat(updatedAlbum.artifacts, not(hasItems(hasProperty("id", `is`(artifactId)))))
         }
     }
 }

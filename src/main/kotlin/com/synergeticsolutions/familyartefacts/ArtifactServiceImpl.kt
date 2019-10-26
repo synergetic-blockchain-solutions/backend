@@ -1,12 +1,12 @@
 package com.synergeticsolutions.familyartefacts
 
+import java.util.Date
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.security.core.userdetails.UsernameNotFoundException
 import org.springframework.stereotype.Service
-import java.util.Date
 
 /**
  * Service for performing actions with artifacts.
@@ -118,7 +118,7 @@ class ArtifactServiceImpl(
         artifactResourceRepository.saveAll(resources.map { it.copy(artifact = savedArtifact) })
 
         logger.debug("Adding $savedArtifact to $albums")
-        albumRepository.saveAll(albums.map { it.copy(artifacts = (it.artifacts + savedArtifact).toMutableList())})
+        albumRepository.saveAll(albums.map { it.copy(artifacts = (it.artifacts + savedArtifact).toMutableList()) })
 
         logger.debug("Created artifact $savedArtifact")
         return savedArtifact
@@ -358,6 +358,8 @@ class ArtifactServiceImpl(
         artifact.sharedWith.forEach { it.sharedArtifacts.remove(artifact) }
         userRepository.saveAll(artifact.sharedWith)
         artifact.albums.forEach { it.artifacts.remove(artifact) }
+        albumRepository.saveAll(artifact.albums)
+        artifactRepository.save(artifact.copy(owners = mutableListOf(), groups = mutableListOf(), sharedWith = mutableListOf(), albums = mutableListOf()))
         artifactRepository.delete(artifact)
         return artifact
     }
