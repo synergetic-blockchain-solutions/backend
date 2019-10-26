@@ -8,6 +8,7 @@ import com.synergeticsolutions.familyartefacts.dtos.LoginRequest
 import com.synergeticsolutions.familyartefacts.dtos.LoginResponse
 import com.synergeticsolutions.familyartefacts.entities.Album
 import com.synergeticsolutions.familyartefacts.entities.Artifact
+import com.synergeticsolutions.familyartefacts.entities.ArtifactResource
 import com.synergeticsolutions.familyartefacts.entities.Group
 import com.synergeticsolutions.familyartefacts.entities.User
 import com.synergeticsolutions.familyartefacts.repositories.AlbumRepository
@@ -410,7 +411,8 @@ class ArtifactControllerTest {
                 owners = listOf(),
                 groups = listOf(group.id),
                 sharedWith = listOf(user2.id),
-                tags = listOf("test1", "test2")
+                tags = listOf("test1", "test2"),
+                albums = listOf(album.id)
             )
             val response = client.post()
                     .uri("/artifact")
