@@ -1,5 +1,9 @@
 package com.synergeticsolutions.familyartefacts
 
+import com.synergeticsolutions.familyartefacts.repositories.AlbumRepository
+import com.synergeticsolutions.familyartefacts.repositories.ArtifactRepository
+import com.synergeticsolutions.familyartefacts.repositories.GroupRepository
+import com.synergeticsolutions.familyartefacts.repositories.UserRepository
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 

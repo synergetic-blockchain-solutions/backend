@@ -1,5 +1,17 @@
 package com.synergeticsolutions.familyartefacts
 
+import com.synergeticsolutions.familyartefacts.controllers.AlbumRequest
+import com.synergeticsolutions.familyartefacts.entities.Album
+import com.synergeticsolutions.familyartefacts.entities.Artifact
+import com.synergeticsolutions.familyartefacts.entities.Group
+import com.synergeticsolutions.familyartefacts.entities.User
+import com.synergeticsolutions.familyartefacts.exceptions.ActionNotAllowedException
+import com.synergeticsolutions.familyartefacts.repositories.AlbumRepository
+import com.synergeticsolutions.familyartefacts.repositories.ArtifactRepository
+import com.synergeticsolutions.familyartefacts.repositories.GroupRepository
+import com.synergeticsolutions.familyartefacts.repositories.UserRepository
+import com.synergeticsolutions.familyartefacts.services.AlbumService
+import com.synergeticsolutions.familyartefacts.services.AlbumServiceImpl
 import java.util.Optional
 import org.hamcrest.MatcherAssert
 import org.hamcrest.Matchers
@@ -20,9 +32,16 @@ import org.springframework.data.repository.findByIdOrNull
 class AlbumServiceImplTest {
     private val userRepository: UserRepository = Mockito.mock(UserRepository::class.java)
     private val groupRepository: GroupRepository = Mockito.mock(GroupRepository::class.java)
-    private val artifactRepository: ArtifactRepository = Mockito.mock(ArtifactRepository::class.java)
+    private val artifactRepository: ArtifactRepository = Mockito.mock(
+        ArtifactRepository::class.java)
     private val albumRepository: AlbumRepository = Mockito.mock(AlbumRepository::class.java)
-    private val albumService: AlbumService = AlbumServiceImpl(userRepository, groupRepository, artifactRepository, albumRepository)
+    private val albumService: AlbumService =
+        AlbumServiceImpl(
+            userRepository,
+            groupRepository,
+            artifactRepository,
+            albumRepository
+        )
 
     @Nested
     inner class FindAlbumsByOwner {
@@ -31,24 +50,75 @@ class AlbumServiceImplTest {
         fun `it should find all the albums accessible by the user`() {
             val email = "example@example.com"
             val groupAlbums = listOf(
-                    Album(1, "Album 1", "Description", owners = mutableListOf(), groups = mutableListOf()),
-                    Album(2, "Album 2", "Description", owners = mutableListOf(), groups = mutableListOf())
+                Album(
+                    1,
+                    "Album 1",
+                    "Description",
+                    owners = mutableListOf(),
+                    groups = mutableListOf()
+                ),
+                Album(
+                    2,
+                    "Album 2",
+                    "Description",
+                    owners = mutableListOf(),
+                    groups = mutableListOf()
+                )
             )
             val ownedAlbums = listOf(
-                    Album(3, "Album 3", "Description", owners = mutableListOf(), groups = mutableListOf()),
-                    Album(4, "Album 4", "Description", owners = mutableListOf(), groups = mutableListOf())
+                Album(
+                    3,
+                    "Album 3",
+                    "Description",
+                    owners = mutableListOf(),
+                    groups = mutableListOf()
+                ),
+                Album(
+                    4,
+                    "Album 4",
+                    "Description",
+                    owners = mutableListOf(),
+                    groups = mutableListOf()
+                )
             )
             val sharedAlbums = listOf(
-                    Album(5, "Album 5", "Description", owners = mutableListOf(), groups = mutableListOf()),
-                    Album(6, "Album 6", "Description", owners = mutableListOf(), groups = mutableListOf())
+                Album(
+                    5,
+                    "Album 5",
+                    "Description",
+                    owners = mutableListOf(),
+                    groups = mutableListOf()
+                ),
+                Album(
+                    6,
+                    "Album 6",
+                    "Description",
+                    owners = mutableListOf(),
+                    groups = mutableListOf()
+                )
             )
             Mockito.`when`(userRepository.findByEmail(email))
                     .thenReturn(
-                            User(
-                                    id = 1, name = "User 1", email = email, password = "password", groups = mutableListOf(
-                                    Group(id = 1, name = "Group 1", members = mutableListOf(), description = "")
-                            ), privateGroup = Group(2, "Group 2", members = mutableListOf(), description = "")
+                        User(
+                            id = 1,
+                            name = "User 1",
+                            email = email,
+                            password = "password",
+                            groups = mutableListOf(
+                                Group(
+                                    id = 1,
+                                    name = "Group 1",
+                                    members = mutableListOf(),
+                                    description = ""
+                                )
+                            ),
+                            privateGroup = Group(
+                                2,
+                                "Group 2",
+                                members = mutableListOf(),
+                                description = ""
                             )
+                        )
                     )
             Mockito.`when`(albumRepository.findByGroups_Id(ArgumentMatchers.anyLong())).thenReturn(groupAlbums)
             Mockito.`when`(albumRepository.findByOwners_Email(ArgumentMatchers.anyString())).thenReturn(ownedAlbums)
@@ -69,24 +139,87 @@ class AlbumServiceImplTest {
         @Test
         fun `it should filter the accessible albums by the group ID if specified`() {
             val email = "example@example.com"
-            val group = Group(id = 1, name = "Group 1", members = mutableListOf(), description = "")
-            val group2 = Group(id = 2, name = "Group 2", members = mutableListOf(), description = "")
+            val group = Group(
+                id = 1,
+                name = "Group 1",
+                members = mutableListOf(),
+                description = ""
+            )
+            val group2 = Group(
+                id = 2,
+                name = "Group 2",
+                members = mutableListOf(),
+                description = ""
+            )
             val user = User(
-                    id = 1, name = "User 1", email = email, password = "password",
-                    groups = mutableListOf(group),
-                    privateGroup = Group(3, "Group 3", members = mutableListOf(), description = "")
+                id = 1, name = "User 1", email = email, password = "password",
+                groups = mutableListOf(group),
+                privateGroup = Group(
+                    3,
+                    "Group 3",
+                    members = mutableListOf(),
+                    description = ""
+                )
             )
             val groupAlbums = listOf(
-                    Album(1, "Album 1", "Description", owners = mutableListOf(), groups = mutableListOf(group), sharedWith = mutableListOf(), artifacts = mutableListOf()),
-                    Album(2, "Album 2", "Description", owners = mutableListOf(), groups = mutableListOf(group), sharedWith = mutableListOf(), artifacts = mutableListOf())
+                Album(
+                    1,
+                    "Album 1",
+                    "Description",
+                    owners = mutableListOf(),
+                    groups = mutableListOf(group),
+                    sharedWith = mutableListOf(),
+                    artifacts = mutableListOf()
+                ),
+                Album(
+                    2,
+                    "Album 2",
+                    "Description",
+                    owners = mutableListOf(),
+                    groups = mutableListOf(group),
+                    sharedWith = mutableListOf(),
+                    artifacts = mutableListOf()
+                )
             )
             val ownedAlbums = listOf(
-                    Album(3, "Album 3", "Description", owners = mutableListOf(user), groups = mutableListOf(), sharedWith = mutableListOf(), artifacts = mutableListOf()),
-                    Album(4, "Album 4", "Description", owners = mutableListOf(user), groups = mutableListOf(), sharedWith = mutableListOf(), artifacts = mutableListOf())
+                Album(
+                    3,
+                    "Album 3",
+                    "Description",
+                    owners = mutableListOf(user),
+                    groups = mutableListOf(),
+                    sharedWith = mutableListOf(),
+                    artifacts = mutableListOf()
+                ),
+                Album(
+                    4,
+                    "Album 4",
+                    "Description",
+                    owners = mutableListOf(user),
+                    groups = mutableListOf(),
+                    sharedWith = mutableListOf(),
+                    artifacts = mutableListOf()
+                )
             )
             val sharedAlbums = listOf(
-                    Album(5, "Album 5", "Description", owners = mutableListOf(), groups = mutableListOf(group2), sharedWith = mutableListOf(), artifacts = mutableListOf()),
-                    Album(6, "Album 6", "Description", owners = mutableListOf(), groups = mutableListOf(group2), sharedWith = mutableListOf(), artifacts = mutableListOf())
+                Album(
+                    5,
+                    "Album 5",
+                    "Description",
+                    owners = mutableListOf(),
+                    groups = mutableListOf(group2),
+                    sharedWith = mutableListOf(),
+                    artifacts = mutableListOf()
+                ),
+                Album(
+                    6,
+                    "Album 6",
+                    "Description",
+                    owners = mutableListOf(),
+                    groups = mutableListOf(group2),
+                    sharedWith = mutableListOf(),
+                    artifacts = mutableListOf()
+                )
             )
             Mockito.`when`(userRepository.findByEmail(email))
                     .thenReturn(user)
@@ -111,21 +244,84 @@ class AlbumServiceImplTest {
         fun `it should filter the accessible albums by the owner ID if specified`() {
             val email = "example@example.com"
             val user = User(
-                    id = 1, name = "User 1", email = email, password = "password", groups = mutableListOf(
-                    Group(id = 1, name = "Group 1", members = mutableListOf(), description = "")
-            ), privateGroup = Group(2, "Group 2", members = mutableListOf(), description = "")
+                id = 1,
+                name = "User 1",
+                email = email,
+                password = "password",
+                groups = mutableListOf(
+                    Group(
+                        id = 1,
+                        name = "Group 1",
+                        members = mutableListOf(),
+                        description = ""
+                    )
+                ),
+                privateGroup = Group(
+                    2,
+                    "Group 2",
+                    members = mutableListOf(),
+                    description = ""
+                )
             )
             val groupAlbums = listOf(
-                    Album(1, "Album 1", "Description", owners = mutableListOf(), groups = mutableListOf(), sharedWith = mutableListOf(), artifacts = mutableListOf()),
-                    Album(2, "Album 2", "Description", owners = mutableListOf(), groups = mutableListOf(), sharedWith = mutableListOf(), artifacts = mutableListOf())
+                Album(
+                    1,
+                    "Album 1",
+                    "Description",
+                    owners = mutableListOf(),
+                    groups = mutableListOf(),
+                    sharedWith = mutableListOf(),
+                    artifacts = mutableListOf()
+                ),
+                Album(
+                    2,
+                    "Album 2",
+                    "Description",
+                    owners = mutableListOf(),
+                    groups = mutableListOf(),
+                    sharedWith = mutableListOf(),
+                    artifacts = mutableListOf()
+                )
             )
             val ownedAlbums = listOf(
-                    Album(3, "Album 3", "Description", owners = mutableListOf(user), groups = mutableListOf(), sharedWith = mutableListOf(), artifacts = mutableListOf()),
-                    Album(4, "Album 4", "Description", owners = mutableListOf(user), groups = mutableListOf(), sharedWith = mutableListOf(), artifacts = mutableListOf())
+                Album(
+                    3,
+                    "Album 3",
+                    "Description",
+                    owners = mutableListOf(user),
+                    groups = mutableListOf(),
+                    sharedWith = mutableListOf(),
+                    artifacts = mutableListOf()
+                ),
+                Album(
+                    4,
+                    "Album 4",
+                    "Description",
+                    owners = mutableListOf(user),
+                    groups = mutableListOf(),
+                    sharedWith = mutableListOf(),
+                    artifacts = mutableListOf()
+                )
             )
             val sharedAlbums = listOf(
-                    Album(5, "Album 5", "Description", owners = mutableListOf(), groups = mutableListOf(), sharedWith = mutableListOf(), artifacts = mutableListOf()),
-                    Album(6, "Album 6", "Description", owners = mutableListOf(), groups = mutableListOf(), sharedWith = mutableListOf(), artifacts = mutableListOf())
+                Album(
+                    5,
+                    "Album 5",
+                    "Description",
+                    owners = mutableListOf(),
+                    groups = mutableListOf(),
+                    sharedWith = mutableListOf(),
+                    artifacts = mutableListOf()
+                ),
+                Album(
+                    6,
+                    "Album 6",
+                    "Description",
+                    owners = mutableListOf(),
+                    groups = mutableListOf(),
+                    sharedWith = mutableListOf(),
+                    artifacts = mutableListOf()
+                )
             )
             Mockito.`when`(userRepository.findByEmail(email)).thenReturn(user)
             Mockito.`when`(albumRepository.findByGroups_Id(ArgumentMatchers.anyLong())).thenReturn(groupAlbums)
@@ -149,21 +345,84 @@ class AlbumServiceImplTest {
         fun `it should filter the accessible albums by the shared ID if specified`() {
             val email = "example@example.com"
             val user = User(
-                    id = 1, name = "User 1", email = email, password = "password", groups = mutableListOf(
-                    Group(id = 1, name = "Group 1", members = mutableListOf(), description = "")
-            ), privateGroup = Group(2, "Group 2", members = mutableListOf(), description = "")
+                id = 1,
+                name = "User 1",
+                email = email,
+                password = "password",
+                groups = mutableListOf(
+                    Group(
+                        id = 1,
+                        name = "Group 1",
+                        members = mutableListOf(),
+                        description = ""
+                    )
+                ),
+                privateGroup = Group(
+                    2,
+                    "Group 2",
+                    members = mutableListOf(),
+                    description = ""
+                )
             )
             val groupAlbums = listOf(
-                    Album(1, "Album 1", "Description", owners = mutableListOf(), groups = mutableListOf(), sharedWith = mutableListOf(), artifacts = mutableListOf()),
-                    Album(2, "Album 2", "Description", owners = mutableListOf(), groups = mutableListOf(), sharedWith = mutableListOf(), artifacts = mutableListOf())
+                Album(
+                    1,
+                    "Album 1",
+                    "Description",
+                    owners = mutableListOf(),
+                    groups = mutableListOf(),
+                    sharedWith = mutableListOf(),
+                    artifacts = mutableListOf()
+                ),
+                Album(
+                    2,
+                    "Album 2",
+                    "Description",
+                    owners = mutableListOf(),
+                    groups = mutableListOf(),
+                    sharedWith = mutableListOf(),
+                    artifacts = mutableListOf()
+                )
             )
             val ownedAlbums = listOf(
-                    Album(3, "Album 3", "Description", owners = mutableListOf(), groups = mutableListOf(), sharedWith = mutableListOf(), artifacts = mutableListOf()),
-                    Album(4, "Album 4", "Description", owners = mutableListOf(), groups = mutableListOf(), sharedWith = mutableListOf(), artifacts = mutableListOf())
+                Album(
+                    3,
+                    "Album 3",
+                    "Description",
+                    owners = mutableListOf(),
+                    groups = mutableListOf(),
+                    sharedWith = mutableListOf(),
+                    artifacts = mutableListOf()
+                ),
+                Album(
+                    4,
+                    "Album 4",
+                    "Description",
+                    owners = mutableListOf(),
+                    groups = mutableListOf(),
+                    sharedWith = mutableListOf(),
+                    artifacts = mutableListOf()
+                )
             )
             val sharedAlbums = listOf(
-                    Album(5, "Album 5", "Description", owners = mutableListOf(), groups = mutableListOf(), sharedWith = mutableListOf(user), artifacts = mutableListOf()),
-                    Album(6, "Album 6", "Description", owners = mutableListOf(), groups = mutableListOf(), sharedWith = mutableListOf(user), artifacts = mutableListOf())
+                Album(
+                    5,
+                    "Album 5",
+                    "Description",
+                    owners = mutableListOf(),
+                    groups = mutableListOf(),
+                    sharedWith = mutableListOf(user),
+                    artifacts = mutableListOf()
+                ),
+                Album(
+                    6,
+                    "Album 6",
+                    "Description",
+                    owners = mutableListOf(),
+                    groups = mutableListOf(),
+                    sharedWith = mutableListOf(user),
+                    artifacts = mutableListOf()
+                )
             )
             Mockito.`when`(userRepository.findByEmail(email)).thenReturn(user)
             Mockito.`when`(albumRepository.findByGroups_Id(ArgumentMatchers.anyLong())).thenReturn(groupAlbums)
@@ -187,21 +446,72 @@ class AlbumServiceImplTest {
         fun `it should not return duplicate albums`() {
             val email = "example@example.com"
             val user = User(
-                    id = 1, name = "User 1", email = email, password = "password", groups = mutableListOf(
-                    Group(id = 1, name = "Group 1", members = mutableListOf(), description = "")
-            ), privateGroup = Group(2, "Group 2", members = mutableListOf(), description = "")
+                id = 1,
+                name = "User 1",
+                email = email,
+                password = "password",
+                groups = mutableListOf(
+                    Group(
+                        id = 1,
+                        name = "Group 1",
+                        members = mutableListOf(),
+                        description = ""
+                    )
+                ),
+                privateGroup = Group(
+                    2,
+                    "Group 2",
+                    members = mutableListOf(),
+                    description = ""
+                )
             )
             val groupAlbums = listOf(
-                    Album(1, "Album 1", "Description", owners = mutableListOf(), groups = mutableListOf()),
-                    Album(2, "Album 2", "Description", owners = mutableListOf(), groups = mutableListOf())
+                Album(
+                    1,
+                    "Album 1",
+                    "Description",
+                    owners = mutableListOf(),
+                    groups = mutableListOf()
+                ),
+                Album(
+                    2,
+                    "Album 2",
+                    "Description",
+                    owners = mutableListOf(),
+                    groups = mutableListOf()
+                )
             )
             val ownedAlbums = listOf(
-                    Album(3, "Album 3", "Description", owners = mutableListOf(), groups = mutableListOf()),
-                    Album(4, "Album 4", "Description", owners = mutableListOf(), groups = mutableListOf())
+                Album(
+                    3,
+                    "Album 3",
+                    "Description",
+                    owners = mutableListOf(),
+                    groups = mutableListOf()
+                ),
+                Album(
+                    4,
+                    "Album 4",
+                    "Description",
+                    owners = mutableListOf(),
+                    groups = mutableListOf()
+                )
             )
             val sharedAlbums = listOf(
-                    Album(5, "Album 5", "Description", owners = mutableListOf(), groups = mutableListOf()),
-                    Album(6, "Album 6", "Description", owners = mutableListOf(), groups = mutableListOf())
+                Album(
+                    5,
+                    "Album 5",
+                    "Description",
+                    owners = mutableListOf(),
+                    groups = mutableListOf()
+                ),
+                Album(
+                    6,
+                    "Album 6",
+                    "Description",
+                    owners = mutableListOf(),
+                    groups = mutableListOf()
+                )
             )
             Mockito.`when`(userRepository.findByEmail(email)).thenReturn(user)
             Mockito.`when`(albumRepository.findByGroups_Id(ArgumentMatchers.anyLong())).thenReturn(groupAlbums)
@@ -224,21 +534,84 @@ class AlbumServiceImplTest {
         fun `it should filter the albums by their name`() {
             val email = "example@example.com"
             val user = User(
-                id = 1, name = "User 1", email = email, password = "password", groups = mutableListOf(
-                    Group(id = 1, name = "Group 1", members = mutableListOf(), description = "")
-                ), privateGroup = Group(2, "Group 2", members = mutableListOf(), description = "")
+                id = 1,
+                name = "User 1",
+                email = email,
+                password = "password",
+                groups = mutableListOf(
+                    Group(
+                        id = 1,
+                        name = "Group 1",
+                        members = mutableListOf(),
+                        description = ""
+                    )
+                ),
+                privateGroup = Group(
+                    2,
+                    "Group 2",
+                    members = mutableListOf(),
+                    description = ""
+                )
             )
             val groupAlbums = listOf(
-                Album(1, "Album 1", "Description", owners = mutableListOf(), groups = mutableListOf(), sharedWith = mutableListOf(), artifacts = mutableListOf()),
-                Album(2, "Album 2", "Description", owners = mutableListOf(), groups = mutableListOf(), sharedWith = mutableListOf(), artifacts = mutableListOf())
+                Album(
+                    1,
+                    "Album 1",
+                    "Description",
+                    owners = mutableListOf(),
+                    groups = mutableListOf(),
+                    sharedWith = mutableListOf(),
+                    artifacts = mutableListOf()
+                ),
+                Album(
+                    2,
+                    "Album 2",
+                    "Description",
+                    owners = mutableListOf(),
+                    groups = mutableListOf(),
+                    sharedWith = mutableListOf(),
+                    artifacts = mutableListOf()
+                )
             )
             val ownedAlbums = listOf(
-                Album(3, "Album 1", "Description", owners = mutableListOf(), groups = mutableListOf(), sharedWith = mutableListOf(), artifacts = mutableListOf()),
-                Album(4, "Album 4", "Description", owners = mutableListOf(), groups = mutableListOf(), sharedWith = mutableListOf(), artifacts = mutableListOf())
+                Album(
+                    3,
+                    "Album 1",
+                    "Description",
+                    owners = mutableListOf(),
+                    groups = mutableListOf(),
+                    sharedWith = mutableListOf(),
+                    artifacts = mutableListOf()
+                ),
+                Album(
+                    4,
+                    "Album 4",
+                    "Description",
+                    owners = mutableListOf(),
+                    groups = mutableListOf(),
+                    sharedWith = mutableListOf(),
+                    artifacts = mutableListOf()
+                )
             )
             val sharedAlbums = listOf(
-                Album(5, "Album 1", "Description", owners = mutableListOf(), groups = mutableListOf(), sharedWith = mutableListOf(user), artifacts = mutableListOf()),
-                Album(6, "Album 6", "Description", owners = mutableListOf(), groups = mutableListOf(), sharedWith = mutableListOf(user), artifacts = mutableListOf())
+                Album(
+                    5,
+                    "Album 1",
+                    "Description",
+                    owners = mutableListOf(),
+                    groups = mutableListOf(),
+                    sharedWith = mutableListOf(user),
+                    artifacts = mutableListOf()
+                ),
+                Album(
+                    6,
+                    "Album 6",
+                    "Description",
+                    owners = mutableListOf(),
+                    groups = mutableListOf(),
+                    sharedWith = mutableListOf(user),
+                    artifacts = mutableListOf()
+                )
             )
             Mockito.`when`(userRepository.findByEmail(email)).thenReturn(user)
             Mockito.`when`(albumRepository.findByGroups_Id(ArgumentMatchers.anyLong())).thenReturn(groupAlbums)
@@ -265,20 +638,25 @@ class AlbumServiceImplTest {
         fun `it should include the creator as one of the album owners`() {
         Mockito.`when`(albumRepository.save(ArgumentMatchers.any<Album>())).then { it.arguments[0] as Album }
         val user = User(
+            1,
+            "User1",
+            "example@example.com",
+            "password",
+            privateGroup = Group(
                 1,
-                "User1",
-                "example@example.com",
-                "password",
-                privateGroup = Group(1, "Group 1", members = mutableListOf(), description = "")
+                "Group 1",
+                members = mutableListOf(),
+                description = ""
+            )
         )
         val album = Album(
-                id = 1,
-                name = "Album 1",
-                description = "Album description",
-                owners = mutableListOf(user),
-                groups = mutableListOf(),
-                sharedWith = mutableListOf(),
-                artifacts = mutableListOf()
+            id = 1,
+            name = "Album 1",
+            description = "Album description",
+            owners = mutableListOf(user),
+            groups = mutableListOf(),
+            sharedWith = mutableListOf(),
+            artifacts = mutableListOf()
         )
         Mockito.`when`(userRepository.findByEmail(ArgumentMatchers.anyString())).thenReturn(user)
         Mockito.`when`(userRepository.findByIdOrNull(ArgumentMatchers.anyLong())).then { Optional.empty<User>() }
@@ -303,13 +681,18 @@ class AlbumServiceImplTest {
             Mockito.`when`(albumRepository.save(ArgumentMatchers.any<Album>())).then { it.arguments[0] as Album }
             Mockito.`when`(userRepository.findByEmail(ArgumentMatchers.anyString()))
                     .thenReturn(
-                            User(
-                                    1,
-                                    "User1",
-                                    "example@example.com",
-                                    "password",
-                                    privateGroup = Group(2, "Group 1", members = mutableListOf(), description = "")
+                        User(
+                            1,
+                            "User1",
+                            "example@example.com",
+                            "password",
+                            privateGroup = Group(
+                                2,
+                                "Group 1",
+                                members = mutableListOf(),
+                                description = ""
                             )
+                        )
                     )
             Mockito.`when`(userRepository.findByIdOrNull(ArgumentMatchers.anyLong())).thenReturn(null)
             albumService.createAlbum(
@@ -334,33 +717,43 @@ class AlbumServiceImplTest {
             Mockito.`when`(userRepository.existsById(ArgumentMatchers.anyLong())).thenReturn(true)
             Mockito.`when`(userRepository.findByEmail(ArgumentMatchers.anyString()))
                     .thenReturn(
-                            User(
-                                    1,
-                                    "User1",
-                                    "example@example.com",
-                                    "password",
-                                    privateGroup = Group(2, "Group 1", members = mutableListOf(), description = "")
+                        User(
+                            1,
+                            "User1",
+                            "example@example.com",
+                            "password",
+                            privateGroup = Group(
+                                2,
+                                "Group 1",
+                                members = mutableListOf(),
+                                description = ""
                             )
+                        )
                     )
             Mockito.`when`(userRepository.findByIdOrNull(ArgumentMatchers.anyLong())).then {
                 User(
-                        it.arguments[0] as Long,
-                        "User ${it.arguments[0]}",
-                        "example${it.arguments[0]}@email.com",
-                        "password",
-                        privateGroup = Group(2, "Group 1", members = mutableListOf(), description = "")
+                    it.arguments[0] as Long,
+                    "User ${it.arguments[0]}",
+                    "example${it.arguments[0]}@email.com",
+                    "password",
+                    privateGroup = Group(
+                        2,
+                        "Group 1",
+                        members = mutableListOf(),
+                        description = ""
+                    )
                 )
             }
             Mockito.`when`(userRepository.findAllById(ArgumentMatchers.any<Iterable<Long>>())).then {
                 (it.arguments[0] as Iterable<Long>).map { id ->
                     User(
-                            id = id,
-                            name = "User $id",
-                            email = "example$id@example.com",
-                            password = "password",
-                            privateGroup = Group(
-                                    1, "Group1", members = mutableListOf(), description = ""
-                            )
+                        id = id,
+                        name = "User $id",
+                        email = "example$id@example.com",
+                        password = "password",
+                        privateGroup = Group(
+                            1, "Group1", members = mutableListOf(), description = ""
+                        )
                     )
                 }
             }
@@ -392,29 +785,39 @@ class AlbumServiceImplTest {
             Mockito.`when`(groupRepository.existsById(ArgumentMatchers.anyLong())).thenReturn(true)
             Mockito.`when`(userRepository.findByEmail(ArgumentMatchers.anyString()))
                     .thenReturn(
-                            User(
-                                    1,
-                                    "User1",
-                                    "example@example.com",
-                                    "password",
-                                    privateGroup = Group(2, "Group 1", members = mutableListOf(), description = "")
+                        User(
+                            1,
+                            "User1",
+                            "example@example.com",
+                            "password",
+                            privateGroup = Group(
+                                2,
+                                "Group 1",
+                                members = mutableListOf(),
+                                description = ""
                             )
+                        )
                     )
             Mockito.`when`(userRepository.findByIdOrNull(ArgumentMatchers.anyLong())).then {
                 User(
-                        it.arguments[0] as Long,
-                        "User ${it.arguments[0]}",
-                        "example${it.arguments[0]}@email.com",
-                        "password",
-                        privateGroup = Group(2, "Group 1", members = mutableListOf(), description = "")
+                    it.arguments[0] as Long,
+                    "User ${it.arguments[0]}",
+                    "example${it.arguments[0]}@email.com",
+                    "password",
+                    privateGroup = Group(
+                        2,
+                        "Group 1",
+                        members = mutableListOf(),
+                        description = ""
+                    )
                 )
             }
             Mockito.`when`(groupRepository.findAllById(ArgumentMatchers.any<Iterable<Long>>())).then {
                 (it.arguments[0] as Iterable<Long>).map { id ->
                     Group(
-                            id = id,
-                            name = "Group $id",
-                            members = mutableListOf(), description = ""
+                        id = id,
+                        name = "Group $id",
+                        members = mutableListOf(), description = ""
                     )
                 }
             }
@@ -446,33 +849,43 @@ class AlbumServiceImplTest {
             Mockito.`when`(userRepository.existsById(ArgumentMatchers.anyLong())).thenReturn(true)
             Mockito.`when`(userRepository.findByEmail(ArgumentMatchers.anyString()))
                     .thenReturn(
-                            User(
-                                    1,
-                                    "User1",
-                                    "example@example.com",
-                                    "password",
-                                    privateGroup = Group(2, "Group 1", members = mutableListOf(), description = "")
+                        User(
+                            1,
+                            "User1",
+                            "example@example.com",
+                            "password",
+                            privateGroup = Group(
+                                2,
+                                "Group 1",
+                                members = mutableListOf(),
+                                description = ""
                             )
+                        )
                     )
             Mockito.`when`(userRepository.findByIdOrNull(ArgumentMatchers.anyLong())).then {
                 User(
-                        it.arguments[0] as Long,
-                        "User ${it.arguments[0]}",
-                        "example${it.arguments[0]}@email.com",
-                        "password",
-                        privateGroup = Group(2, "Group 1", members = mutableListOf(), description = "")
+                    it.arguments[0] as Long,
+                    "User ${it.arguments[0]}",
+                    "example${it.arguments[0]}@email.com",
+                    "password",
+                    privateGroup = Group(
+                        2,
+                        "Group 1",
+                        members = mutableListOf(),
+                        description = ""
+                    )
                 )
             }
             Mockito.`when`(userRepository.findAllById(ArgumentMatchers.any<Iterable<Long>>())).then {
                 (it.arguments[0] as Iterable<Long>).map { id ->
                     User(
-                            id = id,
-                            name = "User $id",
-                            email = "example$id@example.com",
-                            password = "password",
-                            privateGroup = Group(
-                                    1, "Group1", members = mutableListOf(), description = ""
-                            )
+                        id = id,
+                        name = "User $id",
+                        email = "example$id@example.com",
+                        password = "password",
+                        privateGroup = Group(
+                            1, "Group1", members = mutableListOf(), description = ""
+                        )
                     )
                 }
             }
@@ -504,33 +917,43 @@ class AlbumServiceImplTest {
             Mockito.`when`(userRepository.existsById(ArgumentMatchers.anyLong())).thenReturn(true)
             Mockito.`when`(userRepository.findByEmail(ArgumentMatchers.anyString()))
                     .thenReturn(
-                            User(
-                                    1,
-                                    "User 1",
-                                    "example1@example.com",
-                                    "password",
-                                    privateGroup = Group(2, "Group 1", members = mutableListOf(), description = "")
+                        User(
+                            1,
+                            "User 1",
+                            "example1@example.com",
+                            "password",
+                            privateGroup = Group(
+                                2,
+                                "Group 1",
+                                members = mutableListOf(),
+                                description = ""
                             )
+                        )
                     )
             Mockito.`when`(userRepository.findByIdOrNull(ArgumentMatchers.anyLong())).then {
                 User(
-                        it.arguments[0] as Long,
-                        "User ${it.arguments[0]}",
-                        "example${it.arguments[0]}@email.com",
-                        "password",
-                        privateGroup = Group(2, "Group 1", members = mutableListOf(), description = "")
+                    it.arguments[0] as Long,
+                    "User ${it.arguments[0]}",
+                    "example${it.arguments[0]}@email.com",
+                    "password",
+                    privateGroup = Group(
+                        2,
+                        "Group 1",
+                        members = mutableListOf(),
+                        description = ""
+                    )
                 )
             }
             Mockito.`when`(userRepository.findAllById(ArgumentMatchers.any<Iterable<Long>>())).then {
                 (it.arguments[0] as Iterable<Long>).map { id ->
                     User(
-                            id = id,
-                            name = "User $id",
-                            email = "example$id@example.com",
-                            password = "password",
-                            privateGroup = Group(
-                                    2, "Group 1", members = mutableListOf(), description = ""
-                            )
+                        id = id,
+                        name = "User $id",
+                        email = "example$id@example.com",
+                        password = "password",
+                        privateGroup = Group(
+                            2, "Group 1", members = mutableListOf(), description = ""
+                        )
                     )
                 }
             }
@@ -563,31 +986,36 @@ class AlbumServiceImplTest {
             Mockito.`when`(groupRepository.existsById(ArgumentMatchers.anyLong())).thenReturn(true)
             Mockito.`when`(userRepository.findByEmail(ArgumentMatchers.anyString()))
                     .thenReturn(
-                            User(
-                                    1,
-                                    "User1",
-                                    "example@example.com",
-                                    "password",
-                                    privateGroup = Group(2, "Group 2", members = mutableListOf(), description = "")
+                        User(
+                            1,
+                            "User1",
+                            "example@example.com",
+                            "password",
+                            privateGroup = Group(
+                                2,
+                                "Group 2",
+                                members = mutableListOf(),
+                                description = ""
                             )
+                        )
                     )
             Mockito.`when`(userRepository.findByIdOrNull(ArgumentMatchers.anyLong())).then {
                 User(
-                        it.arguments[0] as Long,
-                        "User ${it.arguments[0]}",
-                        "example${it.arguments[0]}@email.com",
-                        "password",
-                        privateGroup = Group(
-                                2, "Group 1", members = mutableListOf(), description = ""
-                        )
+                    it.arguments[0] as Long,
+                    "User ${it.arguments[0]}",
+                    "example${it.arguments[0]}@email.com",
+                    "password",
+                    privateGroup = Group(
+                        2, "Group 1", members = mutableListOf(), description = ""
+                    )
                 )
             }
             Mockito.`when`(groupRepository.findAllById(ArgumentMatchers.any<Iterable<Long>>())).then {
                 (it.arguments[0] as Iterable<Long>).map { id ->
                     Group(
-                            id = id,
-                            name = "Group $id",
-                            members = mutableListOf(), description = ""
+                        id = id,
+                        name = "Group $id",
+                        members = mutableListOf(), description = ""
                     )
                 }
             }
@@ -620,27 +1048,42 @@ class AlbumServiceImplTest {
         @Test
         fun `it should add the specified artifact to the album`() {
             var owningUser = User(
-                    id = 2, name = "User 2", email = "example@example2.com", password = "password", groups = mutableListOf(
-                    Group(id = 1, name = "Group 1", members = mutableListOf(), description = "")
-            ), privateGroup = Group(2, "Group 2", members = mutableListOf(), description = "")
+                id = 2,
+                name = "User 2",
+                email = "example@example2.com",
+                password = "password",
+                groups = mutableListOf(
+                    Group(
+                        id = 1,
+                        name = "Group 1",
+                        members = mutableListOf(),
+                        description = ""
+                    )
+                ),
+                privateGroup = Group(
+                    2,
+                    "Group 2",
+                    members = mutableListOf(),
+                    description = ""
+                )
             )
             var album = Album(
-                    1,
-                    "Album 1",
-                    "Album description",
-                    owners = mutableListOf(owningUser),
-                    groups = mutableListOf(),
-                    sharedWith = mutableListOf(),
-                    artifacts = mutableListOf()
+                1,
+                "Album 1",
+                "Album description",
+                owners = mutableListOf(owningUser),
+                groups = mutableListOf(),
+                sharedWith = mutableListOf(),
+                artifacts = mutableListOf()
             )
             var artifact = Artifact(
-                    id = 3,
-                    name = "Artifact 3",
-                    description = "Artifact description",
-                    owners = mutableListOf(owningUser),
-                    groups = mutableListOf(),
-                    sharedWith = mutableListOf(),
-                    albums = mutableListOf()
+                id = 3,
+                name = "Artifact 3",
+                description = "Artifact description",
+                owners = mutableListOf(owningUser),
+                groups = mutableListOf(),
+                sharedWith = mutableListOf(),
+                albums = mutableListOf()
             )
             owningUser = owningUser.copy(ownedAlbums = mutableListOf(album), ownedArtifacts = mutableListOf(artifact))
             Mockito.`when`(userRepository.findByEmail(ArgumentMatchers.anyString())).then {
@@ -686,24 +1129,54 @@ class AlbumServiceImplTest {
         fun `it should not allow users without permission to modify the album`() {
             val email = "example@example.com"
             var owningUser = User(
-                    id = 2, name = "User 2", email = "example@example2.com", password = "password", groups = mutableListOf(
-                    Group(id = 1, name = "Group 1", members = mutableListOf(), description = "")
-            ), privateGroup = Group(2, "Group 2", members = mutableListOf(), description = "")
+                id = 2,
+                name = "User 2",
+                email = "example@example2.com",
+                password = "password",
+                groups = mutableListOf(
+                    Group(
+                        id = 1,
+                        name = "Group 1",
+                        members = mutableListOf(),
+                        description = ""
+                    )
+                ),
+                privateGroup = Group(
+                    2,
+                    "Group 2",
+                    members = mutableListOf(),
+                    description = ""
+                )
             )
             val album = Album(
-                    1,
-                    "Album 1",
-                    "Description",
-                    owners = mutableListOf(owningUser),
-                    groups = mutableListOf(),
-                    sharedWith = mutableListOf(),
-                    artifacts = mutableListOf()
+                1,
+                "Album 1",
+                "Description",
+                owners = mutableListOf(owningUser),
+                groups = mutableListOf(),
+                sharedWith = mutableListOf(),
+                artifacts = mutableListOf()
             )
             owningUser = owningUser.copy(ownedAlbums = mutableListOf(album))
             val user = User(
-                    id = 1, name = "User 1", email = email, password = "password", groups = mutableListOf(
-                    Group(id = 1, name = "Group 1", members = mutableListOf(), description = "")
-            ), privateGroup = Group(2, "Group 2", members = mutableListOf(), description = "")
+                id = 1,
+                name = "User 1",
+                email = email,
+                password = "password",
+                groups = mutableListOf(
+                    Group(
+                        id = 1,
+                        name = "Group 1",
+                        members = mutableListOf(),
+                        description = ""
+                    )
+                ),
+                privateGroup = Group(
+                    2,
+                    "Group 2",
+                    members = mutableListOf(),
+                    description = ""
+                )
             )
             Mockito.`when`(albumRepository.findByIdOrNull(ArgumentMatchers.anyLong())).then {
                 if (it.arguments[0] == album.id) {
@@ -722,13 +1195,13 @@ class AlbumServiceImplTest {
             assertThrows<ActionNotAllowedException> {
                 albumService.updateAlbum(
                         user.email, album.id, AlbumRequest(
-                            album.name,
-                            "updated description",
-                            album.owners.map(User::id),
-                            album.groups.map(Group::id),
-                            album.sharedWith.map(User::id),
-                            album.artifacts.map(Artifact::id)
-                        )
+                        album.name,
+                        "updated description",
+                        album.owners.map(User::id),
+                        album.groups.map(Group::id),
+                        album.sharedWith.map(User::id),
+                        album.artifacts.map(Artifact::id)
+                    )
                 )
             }
         }
@@ -736,32 +1209,57 @@ class AlbumServiceImplTest {
         @Test
         fun `it should allow group owners to remove their group from the album`() {
             val email = "example@example.com"
-            var group = Group(id = 1, name = "Group 1", members = mutableListOf(), description = "")
+            var group = Group(
+                id = 1,
+                name = "Group 1",
+                members = mutableListOf(),
+                description = ""
+            )
             val groupOwner = User(
-                    id = 2,
-                    name = "User 2",
-                    email = "example@example2.com",
-                    password = "password",
-                    groups = mutableListOf(
-                            group
-                    ),
-                    privateGroup = Group(2, "Group 2", members = mutableListOf(), description = ""),
-                    ownedGroups = mutableListOf(group)
+                id = 2,
+                name = "User 2",
+                email = "example@example2.com",
+                password = "password",
+                groups = mutableListOf(
+                    group
+                ),
+                privateGroup = Group(
+                    2,
+                    "Group 2",
+                    members = mutableListOf(),
+                    description = ""
+                ),
+                ownedGroups = mutableListOf(group)
             )
             val album = Album(
-                    1,
-                    "Album 1",
-                    "Description",
-                    owners = mutableListOf(),
-                    groups = mutableListOf(group),
-                    sharedWith = mutableListOf(),
-                    artifacts = mutableListOf()
+                1,
+                "Album 1",
+                "Description",
+                owners = mutableListOf(),
+                groups = mutableListOf(group),
+                sharedWith = mutableListOf(),
+                artifacts = mutableListOf()
             )
             group = group.copy(albums = mutableListOf(album))
             val user = User(
-                    id = 1, name = "User 1", email = email, password = "password", groups = mutableListOf(
-                    Group(id = 1, name = "Group 1", members = mutableListOf(), description = "")
-            ), privateGroup = Group(2, "Group 2", members = mutableListOf(), description = "")
+                id = 1,
+                name = "User 1",
+                email = email,
+                password = "password",
+                groups = mutableListOf(
+                    Group(
+                        id = 1,
+                        name = "Group 1",
+                        members = mutableListOf(),
+                        description = ""
+                    )
+                ),
+                privateGroup = Group(
+                    2,
+                    "Group 2",
+                    members = mutableListOf(),
+                    description = ""
+                )
             )
             Mockito.`when`(albumRepository.findByIdOrNull(ArgumentMatchers.anyLong())).then {
                 if (it.arguments[0] == album.id) {
@@ -782,13 +1280,14 @@ class AlbumServiceImplTest {
 
             val updatedAlbum =
                     albumService.updateAlbum(
-                            groupOwner.email, album.id, AlbumRequest(
-                                name = album.name,
-                                description = album.description,
-                                owners = album.owners.map(User::id),
-                                groups = emptyList(),
-                                sharedWith = album.sharedWith.map(User::id),
-                                artifacts = album.artifacts.map(Artifact::id)
+                            groupOwner.email, album.id,
+                        AlbumRequest(
+                            name = album.name,
+                            description = album.description,
+                            owners = album.owners.map(User::id),
+                            groups = emptyList(),
+                            sharedWith = album.sharedWith.map(User::id),
+                            artifacts = album.artifacts.map(Artifact::id)
                         )
                     )
             MatcherAssert.assertThat(
@@ -800,18 +1299,33 @@ class AlbumServiceImplTest {
         @Test
         fun `it should allow album owners to make changes to the album`() {
             var owningUser = User(
-                    id = 2, name = "User 2", email = "example@example2.com", password = "password", groups = mutableListOf(
-                    Group(id = 1, name = "Group 1", members = mutableListOf(), description = "")
-            ), privateGroup = Group(2, "Group 2", members = mutableListOf(), description = "")
+                id = 2,
+                name = "User 2",
+                email = "example@example2.com",
+                password = "password",
+                groups = mutableListOf(
+                    Group(
+                        id = 1,
+                        name = "Group 1",
+                        members = mutableListOf(),
+                        description = ""
+                    )
+                ),
+                privateGroup = Group(
+                    2,
+                    "Group 2",
+                    members = mutableListOf(),
+                    description = ""
+                )
             )
             var album = Album(
-                    1,
-                    "Album 1",
-                    "Description",
-                    owners = mutableListOf(owningUser),
-                    groups = mutableListOf(),
-                    sharedWith = mutableListOf(),
-                    artifacts = mutableListOf()
+                1,
+                "Album 1",
+                "Description",
+                owners = mutableListOf(owningUser),
+                groups = mutableListOf(),
+                sharedWith = mutableListOf(),
+                artifacts = mutableListOf()
             )
             owningUser = owningUser.copy(ownedAlbums = mutableListOf(album))
             album = album.copy(owners = mutableListOf(owningUser))
@@ -861,24 +1375,54 @@ class AlbumServiceImplTest {
         fun `it should not allow user's who are not the album's owners to delete it`() {
             val email = "example@example.com"
             var owningUser = User(
-                    id = 2, name = "User 2", email = "example@example2.com", password = "password", groups = mutableListOf(
-                    Group(id = 1, name = "Group 1", members = mutableListOf(), description = "")
-            ), privateGroup = Group(2, "Group 2", members = mutableListOf(), description = "")
+                id = 2,
+                name = "User 2",
+                email = "example@example2.com",
+                password = "password",
+                groups = mutableListOf(
+                    Group(
+                        id = 1,
+                        name = "Group 1",
+                        members = mutableListOf(),
+                        description = ""
+                    )
+                ),
+                privateGroup = Group(
+                    2,
+                    "Group 2",
+                    members = mutableListOf(),
+                    description = ""
+                )
             )
             val album = Album(
-                    1,
-                    "Album 1",
-                    "Description",
-                    owners = mutableListOf(owningUser),
-                    groups = mutableListOf(),
-                    sharedWith = mutableListOf(),
-                    artifacts = mutableListOf()
+                1,
+                "Album 1",
+                "Description",
+                owners = mutableListOf(owningUser),
+                groups = mutableListOf(),
+                sharedWith = mutableListOf(),
+                artifacts = mutableListOf()
             )
             owningUser = owningUser.copy(ownedAlbums = mutableListOf(album))
             val user = User(
-                    id = 1, name = "User 1", email = email, password = "password", groups = mutableListOf(
-                    Group(id = 1, name = "Group 1", members = mutableListOf(), description = "")
-            ), privateGroup = Group(2, "Group 2", members = mutableListOf(), description = "")
+                id = 1,
+                name = "User 1",
+                email = email,
+                password = "password",
+                groups = mutableListOf(
+                    Group(
+                        id = 1,
+                        name = "Group 1",
+                        members = mutableListOf(),
+                        description = ""
+                    )
+                ),
+                privateGroup = Group(
+                    2,
+                    "Group 2",
+                    members = mutableListOf(),
+                    description = ""
+                )
             )
             Mockito.`when`(albumRepository.findByIdOrNull(ArgumentMatchers.anyLong())).then {
                 if (it.arguments[0] == album.id) {
@@ -900,16 +1444,31 @@ class AlbumServiceImplTest {
         @Test
         fun `it should allow the album's owners to delete it`() {
             var owningUser = User(
-                    id = 2, name = "User 2", email = "example@example2.com", password = "password", groups = mutableListOf(
-                    Group(id = 1, name = "Group 1", members = mutableListOf(), description = "")
-            ), privateGroup = Group(2, "Group 2", members = mutableListOf(), description = "")
+                id = 2,
+                name = "User 2",
+                email = "example@example2.com",
+                password = "password",
+                groups = mutableListOf(
+                    Group(
+                        id = 1,
+                        name = "Group 1",
+                        members = mutableListOf(),
+                        description = ""
+                    )
+                ),
+                privateGroup = Group(
+                    2,
+                    "Group 2",
+                    members = mutableListOf(),
+                    description = ""
+                )
             )
             var album = Album(
-                    1,
-                    "Album 1",
-                    "Description",
-                    mutableListOf(owningUser),
-                    mutableListOf()
+                1,
+                "Album 1",
+                "Description",
+                mutableListOf(owningUser),
+                mutableListOf()
             )
             owningUser = owningUser.copy(ownedAlbums = mutableListOf(album))
             album = album.copy(owners = mutableListOf(owningUser))

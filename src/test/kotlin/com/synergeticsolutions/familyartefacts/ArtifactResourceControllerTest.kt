@@ -3,6 +3,18 @@ package com.synergeticsolutions.familyartefacts
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
+import com.synergeticsolutions.familyartefacts.dtos.ArtifactRequest
+import com.synergeticsolutions.familyartefacts.dtos.ArtifactResourceMetadata
+import com.synergeticsolutions.familyartefacts.dtos.LoginRequest
+import com.synergeticsolutions.familyartefacts.dtos.LoginResponse
+import com.synergeticsolutions.familyartefacts.entities.ArtifactResource
+import com.synergeticsolutions.familyartefacts.entities.User
+import com.synergeticsolutions.familyartefacts.repositories.ArtifactRepository
+import com.synergeticsolutions.familyartefacts.repositories.ArtifactResourceRepository
+import com.synergeticsolutions.familyartefacts.services.ArtifactResourceService
+import com.synergeticsolutions.familyartefacts.services.ArtifactService
+import com.synergeticsolutions.familyartefacts.services.GroupService
+import com.synergeticsolutions.familyartefacts.services.UserService
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.CoreMatchers.hasItem
 import org.hamcrest.MatcherAssert.assertThat
@@ -61,7 +73,12 @@ class ArtifactResourceControllerTest(
         val resp = client.post()
             .uri("/login")
             .contentType(MediaType.APPLICATION_JSON_UTF8)
-            .syncBody(LoginRequest(email = userEmail, password = userPassword))
+            .syncBody(
+                LoginRequest(
+                    email = userEmail,
+                    password = userPassword
+                )
+            )
             .exchange()
             .expectStatus().isOk
             .expectBody()
@@ -96,7 +113,12 @@ class ArtifactResourceControllerTest(
         val returnedArtifact =
             ObjectMapper().registerKotlinModule().readValue<Map<String, Any>>(String(createArtifactResponse))
 
-        val metadata = ArtifactResourceMetadata(id = 0, name = "Resource name", description = "Resource description", artifactId = (returnedArtifact["id"] as Int).toLong())
+        val metadata = ArtifactResourceMetadata(
+            id = 0,
+            name = "Resource name",
+            description = "Resource description",
+            artifactId = (returnedArtifact["id"] as Int).toLong()
+        )
         val multipartDataRequest = MultipartBodyBuilder()
         multipartDataRequest.part("metadata", metadata, MediaType.APPLICATION_JSON_UTF8)
         multipartDataRequest.part(
@@ -161,7 +183,12 @@ class ArtifactResourceControllerTest(
             val returnedArtifact =
                 ObjectMapper().registerKotlinModule().readValue<Map<String, Any>>(String(createArtifactResponse))
 
-            val metadata = ArtifactResourceMetadata(id = 0, name = "Resource name", description = "Resource description", artifactId = (returnedArtifact["id"] as Int).toLong())
+            val metadata = ArtifactResourceMetadata(
+                id = 0,
+                name = "Resource name",
+                description = "Resource description",
+                artifactId = (returnedArtifact["id"] as Int).toLong()
+            )
             val multipartDataRequest = MultipartBodyBuilder()
             multipartDataRequest.part("metadata", metadata, MediaType.APPLICATION_JSON_UTF8)
             multipartDataRequest.part(
@@ -212,7 +239,12 @@ class ArtifactResourceControllerTest(
             val resource = artifactResourceService.create(
                 user1.email,
                 artifactId = artifact.id,
-                metadata = ArtifactResourceMetadata(id = 0, name = "Resource name", description = "Resource description", artifactId = artifact.id),
+                metadata = ArtifactResourceMetadata(
+                    id = 0,
+                    name = "Resource name",
+                    description = "Resource description",
+                    artifactId = artifact.id
+                ),
                 contentType = MediaType.IMAGE_PNG_VALUE,
                 resource = ClassPathResource("test-image.jpg").file.readBytes()
             )
@@ -237,7 +269,12 @@ class ArtifactResourceControllerTest(
             val resource = artifactResourceService.create(
                 user1.email,
                 artifactId = artifact.id,
-                metadata = ArtifactResourceMetadata(id = 0, name = "Resource name", description = "Resource description", artifactId = artifact.id),
+                metadata = ArtifactResourceMetadata(
+                    id = 0,
+                    name = "Resource name",
+                    description = "Resource description",
+                    artifactId = artifact.id
+                ),
                 contentType = MediaType.IMAGE_PNG_VALUE,
                 resource = ClassPathResource("test-image.jpg").file.readBytes()
             )
@@ -262,7 +299,12 @@ class ArtifactResourceControllerTest(
             val resource = artifactResourceService.create(
                 user1.email,
                 artifactId = artifact.id,
-                metadata = ArtifactResourceMetadata(id = 0, name = "Resource name", description = "Resource description", artifactId = artifact.id),
+                metadata = ArtifactResourceMetadata(
+                    id = 0,
+                    name = "Resource name",
+                    description = "Resource description",
+                    artifactId = artifact.id
+                ),
                 contentType = MediaType.IMAGE_PNG_VALUE,
                 resource = ClassPathResource("test-image.jpg").file.readBytes()
             )
@@ -287,7 +329,12 @@ class ArtifactResourceControllerTest(
             val resource = artifactResourceService.create(
                 user1.email,
                 artifactId = artifact.id,
-                metadata = ArtifactResourceMetadata(id = 0, name = "Resource name", description = "Resource description", artifactId = artifact.id),
+                metadata = ArtifactResourceMetadata(
+                    id = 0,
+                    name = "Resource name",
+                    description = "Resource description",
+                    artifactId = artifact.id
+                ),
                 contentType = MediaType.IMAGE_PNG_VALUE,
                 resource = ClassPathResource("test-image.jpg").file.readBytes()
             )
@@ -319,7 +366,12 @@ class ArtifactResourceControllerTest(
             val artifactId = ((returnedResource["artifact"] as Map<String, Any>)["id"] as Int).toLong()
 
             val metadata =
-                ArtifactResourceMetadata(id = 0, name = "Resource name", description = "Resource description", artifactId = artifactId)
+                ArtifactResourceMetadata(
+                    id = 0,
+                    name = "Resource name",
+                    description = "Resource description",
+                    artifactId = artifactId
+                )
             val multipartDataRequest = MultipartBodyBuilder()
             multipartDataRequest.part("metadata", metadata, MediaType.APPLICATION_JSON_UTF8)
             multipartDataRequest.part(
@@ -354,7 +406,12 @@ class ArtifactResourceControllerTest(
             val artifactId = ((returnedResource["artifact"] as Map<String, Any>)["id"] as Int).toLong()
 
             val metadata =
-                ArtifactResourceMetadata(id = 0, name = "Resource name", description = "Resource description", artifactId = artifactId)
+                ArtifactResourceMetadata(
+                    id = 0,
+                    name = "Resource name",
+                    description = "Resource description",
+                    artifactId = artifactId
+                )
             val multipartDataRequest = MultipartBodyBuilder()
             multipartDataRequest.part("metadata", metadata, MediaType.APPLICATION_JSON_UTF8)
             multipartDataRequest.part(
@@ -382,7 +439,12 @@ class ArtifactResourceControllerTest(
             val artifactId = ((returnedResource["artifact"] as Map<String, Any>)["id"] as Int).toLong()
 
             val metadata =
-                ArtifactResourceMetadata(id = 0, name = "Resource name", description = "Resource description", artifactId = artifactId)
+                ArtifactResourceMetadata(
+                    id = 0,
+                    name = "Resource name",
+                    description = "Resource description",
+                    artifactId = artifactId
+                )
 
             client.put()
                 .uri("/artifact/$artifactId/resource/$resourceId")
@@ -431,7 +493,12 @@ class ArtifactResourceControllerTest(
             val resource = artifactResourceService.create(
                 user1.email,
                 artifactId = artifact.id,
-                metadata = ArtifactResourceMetadata(id = 0, name = "Resource name", description = "Resource description", artifactId = artifact.id),
+                metadata = ArtifactResourceMetadata(
+                    id = 0,
+                    name = "Resource name",
+                    description = "Resource description",
+                    artifactId = artifact.id
+                ),
                 contentType = MediaType.IMAGE_PNG_VALUE,
                 resource = ClassPathResource("test-image.jpg").file.readBytes()
             )
@@ -455,7 +522,12 @@ class ArtifactResourceControllerTest(
             val resource = artifactResourceService.create(
                 user1.email,
                 artifactId = artifact.id,
-                metadata = ArtifactResourceMetadata(id = 0, name = "Resource name", description = "Resource description", artifactId = artifact.id),
+                metadata = ArtifactResourceMetadata(
+                    id = 0,
+                    name = "Resource name",
+                    description = "Resource description",
+                    artifactId = artifact.id
+                ),
                 contentType = MediaType.IMAGE_PNG_VALUE,
                 resource = ClassPathResource("test-image.jpg").file.readBytes()
             )

@@ -1,5 +1,15 @@
 package com.synergeticsolutions.familyartefacts
 
+import com.synergeticsolutions.familyartefacts.controllers.GroupRequest
+import com.synergeticsolutions.familyartefacts.entities.Group
+import com.synergeticsolutions.familyartefacts.entities.User
+import com.synergeticsolutions.familyartefacts.exceptions.ActionNotAllowedException
+import com.synergeticsolutions.familyartefacts.exceptions.GroupNotFoundException
+import com.synergeticsolutions.familyartefacts.exceptions.UserNotFoundException
+import com.synergeticsolutions.familyartefacts.repositories.GroupRepository
+import com.synergeticsolutions.familyartefacts.repositories.UserRepository
+import com.synergeticsolutions.familyartefacts.services.GroupService
+import com.synergeticsolutions.familyartefacts.services.GroupServiceImpl
 import java.util.Optional
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.containsInAnyOrder
@@ -24,7 +34,8 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException
 class GroupServiceImplTest {
     private val userRepository: UserRepository = Mockito.mock(UserRepository::class.java)
     private val groupRepository: GroupRepository = Mockito.mock(GroupRepository::class.java)
-    private val groupService: GroupService = GroupServiceImpl(userRepository, groupRepository)
+    private val groupService: GroupService =
+        GroupServiceImpl(userRepository, groupRepository)
 
     @Nested
     inner class GetGroup {
@@ -32,23 +43,65 @@ class GroupServiceImplTest {
         fun `it should find all the groups accessible by the user`() {
             val email = "example@example.com"
             val user = User(
-                    id = 1,
-                    name = "User 1",
-                    email = email,
-                    password = "password",
-                    groups = mutableListOf(),
-                    privateGroup = Group(7, "Group 7", members = mutableListOf(), description = ""))
+                id = 1,
+                name = "User 1",
+                email = email,
+                password = "password",
+                groups = mutableListOf(),
+                privateGroup = Group(
+                    7,
+                    "Group 7",
+                    members = mutableListOf(),
+                    description = ""
+                )
+            )
             Mockito.`when`(userRepository.findByEmail(email))
                     .thenReturn(user)
             val groups = listOf(
-                    Group(1, "Group 1", "Description 1", members = mutableListOf(user), admins = mutableListOf()),
-                    Group(2, "Group 2", "Description 2", members = mutableListOf(user), admins = mutableListOf()),
-                    Group(3, "Group 3", "Description 3", members = mutableListOf(user), admins = mutableListOf())
+                Group(
+                    1,
+                    "Group 1",
+                    "Description 1",
+                    members = mutableListOf(user),
+                    admins = mutableListOf()
+                ),
+                Group(
+                    2,
+                    "Group 2",
+                    "Description 2",
+                    members = mutableListOf(user),
+                    admins = mutableListOf()
+                ),
+                Group(
+                    3,
+                    "Group 3",
+                    "Description 3",
+                    members = mutableListOf(user),
+                    admins = mutableListOf()
+                )
             )
             val ownedGroups = listOf(
-                    Group(4, "Group 4", "Description 4", members = mutableListOf(user), admins = mutableListOf(user)),
-                    Group(5, "Group 5", "Description 5", members = mutableListOf(user), admins = mutableListOf(user)),
-                    Group(6, "Group 6", "Description 6", members = mutableListOf(user), admins = mutableListOf(user))
+                Group(
+                    4,
+                    "Group 4",
+                    "Description 4",
+                    members = mutableListOf(user),
+                    admins = mutableListOf(user)
+                ),
+                Group(
+                    5,
+                    "Group 5",
+                    "Description 5",
+                    members = mutableListOf(user),
+                    admins = mutableListOf(user)
+                ),
+                Group(
+                    6,
+                    "Group 6",
+                    "Description 6",
+                    members = mutableListOf(user),
+                    admins = mutableListOf(user)
+                )
             )
             val allGroups = groups + ownedGroups
 
@@ -64,21 +117,63 @@ class GroupServiceImplTest {
         fun `it should return all group where the user is admin`() {
             val email = "example@example.com"
             val user = User(
-                    id = 1,
-                    name = "User 1",
-                    email = email,
-                    password = "password",
-                    groups = mutableListOf(),
-                    privateGroup = Group(7, "Group 7", members = mutableListOf(), description = ""))
+                id = 1,
+                name = "User 1",
+                email = email,
+                password = "password",
+                groups = mutableListOf(),
+                privateGroup = Group(
+                    7,
+                    "Group 7",
+                    members = mutableListOf(),
+                    description = ""
+                )
+            )
             val groups = listOf(
-                    Group(1, "Group 1", "Description 1", members = mutableListOf(user), admins = mutableListOf()),
-                    Group(2, "Group 2", "Description 2", members = mutableListOf(user), admins = mutableListOf()),
-                    Group(3, "Group 3", "Description 3", members = mutableListOf(user), admins = mutableListOf())
+                Group(
+                    1,
+                    "Group 1",
+                    "Description 1",
+                    members = mutableListOf(user),
+                    admins = mutableListOf()
+                ),
+                Group(
+                    2,
+                    "Group 2",
+                    "Description 2",
+                    members = mutableListOf(user),
+                    admins = mutableListOf()
+                ),
+                Group(
+                    3,
+                    "Group 3",
+                    "Description 3",
+                    members = mutableListOf(user),
+                    admins = mutableListOf()
+                )
             )
             val ownedGroups = listOf(
-                    Group(4, "Group 4", "Description 4", members = mutableListOf(user), admins = mutableListOf(user)),
-                    Group(5, "Group 5", "Description 5", members = mutableListOf(user), admins = mutableListOf(user)),
-                    Group(6, "Group 6", "Description 6", members = mutableListOf(user), admins = mutableListOf(user))
+                Group(
+                    4,
+                    "Group 4",
+                    "Description 4",
+                    members = mutableListOf(user),
+                    admins = mutableListOf(user)
+                ),
+                Group(
+                    5,
+                    "Group 5",
+                    "Description 5",
+                    members = mutableListOf(user),
+                    admins = mutableListOf(user)
+                ),
+                Group(
+                    6,
+                    "Group 6",
+                    "Description 6",
+                    members = mutableListOf(user),
+                    admins = mutableListOf(user)
+                )
             )
             val allGroups = groups + ownedGroups
             Mockito.`when`(userRepository.findByEmail(email)).thenReturn(user)
@@ -96,17 +191,59 @@ class GroupServiceImplTest {
         fun `it should return all groups where the user is member`() {
             val email = "example@example.com"
             val user = User(
-                    id = 1, name = "User 1", email = email, password = "password", groups = mutableListOf(),
-                    privateGroup = Group(7, "Group 7", members = mutableListOf(), description = ""))
+                id = 1, name = "User 1", email = email, password = "password", groups = mutableListOf(),
+                privateGroup = Group(
+                    7,
+                    "Group 7",
+                    members = mutableListOf(),
+                    description = ""
+                )
+            )
             val groups = listOf(
-                    Group(1, "Group 1", "Description 1", members = mutableListOf(user), admins = mutableListOf()),
-                    Group(2, "Group 2", "Description 2", members = mutableListOf(user), admins = mutableListOf()),
-                    Group(3, "Group 3", "Description 3", members = mutableListOf(user), admins = mutableListOf())
+                Group(
+                    1,
+                    "Group 1",
+                    "Description 1",
+                    members = mutableListOf(user),
+                    admins = mutableListOf()
+                ),
+                Group(
+                    2,
+                    "Group 2",
+                    "Description 2",
+                    members = mutableListOf(user),
+                    admins = mutableListOf()
+                ),
+                Group(
+                    3,
+                    "Group 3",
+                    "Description 3",
+                    members = mutableListOf(user),
+                    admins = mutableListOf()
+                )
             )
             val ownedGroups = listOf(
-                    Group(4, "Group 4", "Description 4", members = mutableListOf(user), admins = mutableListOf(user)),
-                    Group(5, "Group 5", "Description 5", members = mutableListOf(user), admins = mutableListOf(user)),
-                    Group(6, "Group 6", "Description 6", members = mutableListOf(user), admins = mutableListOf(user))
+                Group(
+                    4,
+                    "Group 4",
+                    "Description 4",
+                    members = mutableListOf(user),
+                    admins = mutableListOf(user)
+                ),
+                Group(
+                    5,
+                    "Group 5",
+                    "Description 5",
+                    members = mutableListOf(user),
+                    admins = mutableListOf(user)
+                ),
+                Group(
+                    6,
+                    "Group 6",
+                    "Description 6",
+                    members = mutableListOf(user),
+                    admins = mutableListOf(user)
+                )
             )
             val allGroups = groups + ownedGroups
             Mockito.`when`(userRepository.findByEmail(email)).thenReturn(user)
@@ -124,22 +261,63 @@ class GroupServiceImplTest {
         fun `it should return all groups where the user is both admin and member`() {
             val email = "example@example.com"
             val user = User(
-                    id = 1,
-                    name = "User 1",
-                    email = email,
-                    password = "password",
-                    groups = mutableListOf(),
-                    privateGroup = Group(7, "Group 7", members = mutableListOf(), description = "")
+                id = 1,
+                name = "User 1",
+                email = email,
+                password = "password",
+                groups = mutableListOf(),
+                privateGroup = Group(
+                    7,
+                    "Group 7",
+                    members = mutableListOf(),
+                    description = ""
+                )
             )
             val groups = listOf(
-                    Group(1, "Group 1", "Description 1", members = mutableListOf(user), admins = mutableListOf()),
-                    Group(2, "Group 2", "Description 2", members = mutableListOf(user), admins = mutableListOf()),
-                    Group(3, "Group 3", "Description 3", members = mutableListOf(user), admins = mutableListOf())
+                Group(
+                    1,
+                    "Group 1",
+                    "Description 1",
+                    members = mutableListOf(user),
+                    admins = mutableListOf()
+                ),
+                Group(
+                    2,
+                    "Group 2",
+                    "Description 2",
+                    members = mutableListOf(user),
+                    admins = mutableListOf()
+                ),
+                Group(
+                    3,
+                    "Group 3",
+                    "Description 3",
+                    members = mutableListOf(user),
+                    admins = mutableListOf()
+                )
             )
             val ownedGroups = listOf(
-                    Group(4, "Group 4", "Description 4", members = mutableListOf(user), admins = mutableListOf(user)),
-                    Group(5, "Group 5", "Description 5", members = mutableListOf(user), admins = mutableListOf(user)),
-                    Group(6, "Group 6", "Description 6", members = mutableListOf(user), admins = mutableListOf(user))
+                Group(
+                    4,
+                    "Group 4",
+                    "Description 4",
+                    members = mutableListOf(user),
+                    admins = mutableListOf(user)
+                ),
+                Group(
+                    5,
+                    "Group 5",
+                    "Description 5",
+                    members = mutableListOf(user),
+                    admins = mutableListOf(user)
+                ),
+                Group(
+                    6,
+                    "Group 6",
+                    "Description 6",
+                    members = mutableListOf(user),
+                    admins = mutableListOf(user)
+                )
             )
             val allGroups = groups + ownedGroups
             Mockito.`when`(userRepository.findByEmail(email)).thenReturn(user)
@@ -161,16 +339,58 @@ class GroupServiceImplTest {
                 email = email,
                 password = "password",
                 groups = mutableListOf(),
-                privateGroup = Group(7, "Group 7", members = mutableListOf(), description = ""))
+                privateGroup = Group(
+                    7,
+                    "Group 7",
+                    members = mutableListOf(),
+                    description = ""
+                )
+            )
             val groups = listOf(
-                Group(1, "Group 1", "Description 1", members = mutableListOf(user), admins = mutableListOf()),
-                Group(2, "Group 2", "Description 2", members = mutableListOf(user), admins = mutableListOf()),
-                Group(3, "Group 3", "Description 3", members = mutableListOf(user), admins = mutableListOf())
+                Group(
+                    1,
+                    "Group 1",
+                    "Description 1",
+                    members = mutableListOf(user),
+                    admins = mutableListOf()
+                ),
+                Group(
+                    2,
+                    "Group 2",
+                    "Description 2",
+                    members = mutableListOf(user),
+                    admins = mutableListOf()
+                ),
+                Group(
+                    3,
+                    "Group 3",
+                    "Description 3",
+                    members = mutableListOf(user),
+                    admins = mutableListOf()
+                )
             )
             val ownedGroups = listOf(
-                Group(4, "Group 1", "Description 4", members = mutableListOf(user), admins = mutableListOf(user)),
-                Group(5, "Group 5", "Description 5", members = mutableListOf(user), admins = mutableListOf(user)),
-                Group(6, "Group 6", "Description 6", members = mutableListOf(user), admins = mutableListOf(user))
+                Group(
+                    4,
+                    "Group 1",
+                    "Description 4",
+                    members = mutableListOf(user),
+                    admins = mutableListOf(user)
+                ),
+                Group(
+                    5,
+                    "Group 5",
+                    "Description 5",
+                    members = mutableListOf(user),
+                    admins = mutableListOf(user)
+                ),
+                Group(
+                    6,
+                    "Group 6",
+                    "Description 6",
+                    members = mutableListOf(user),
+                    admins = mutableListOf(user)
+                )
             )
             val allGroups = groups + ownedGroups
             Mockito.`when`(userRepository.findByEmail(email)).thenReturn(user)
@@ -205,17 +425,20 @@ class GroupServiceImplTest {
         fun `it should not create the group if one of the members or admins are not in the database`() {
             Mockito.`when`(userRepository.findByEmail(anyString()))
                     .thenReturn(
-                            User(
-                                    1,
-                                    "User1",
-                                    "example@example.com",
-                                    "password",
-                                    privateGroup = Group(
-                                            1,
-                                            "Group1",
-                                            description = "description",
-                                            members = mutableListOf(),
-                                            admins = mutableListOf())))
+                        User(
+                            1,
+                            "User1",
+                            "example@example.com",
+                            "password",
+                            privateGroup = Group(
+                                1,
+                                "Group1",
+                                description = "description",
+                                members = mutableListOf(),
+                                admins = mutableListOf()
+                            )
+                        )
+                    )
             Mockito.`when`(userRepository.findByIdOrNull(anyLong())).thenReturn(null)
             assertThrows<UserNotFoundException> {
                 groupService.createGroup(
@@ -231,21 +454,30 @@ class GroupServiceImplTest {
         fun `it should include the current user as the member and admin of the created group`() {
             Mockito.`when`(userRepository.findByEmail(anyString()))
                     .thenReturn(
-                            User(
-                                    1,
-                                    "User1",
-                                    "example@example.com",
-                                    "password",
-                                    privateGroup = Group(
-                                            1,
-                                            "Group1",
-                                            description = "description",
-                                            members = mutableListOf(),
-                                            admins = mutableListOf())))
+                        User(
+                            1,
+                            "User1",
+                            "example@example.com",
+                            "password",
+                            privateGroup = Group(
+                                1,
+                                "Group1",
+                                description = "description",
+                                members = mutableListOf(),
+                                admins = mutableListOf()
+                            )
+                        )
+                    )
             Mockito.`when`(groupRepository.findById(anyLong()))
                 .thenReturn(
                     Optional.of(
-                        Group(1, "Group 1", "Description 1", members = mutableListOf(), admins = mutableListOf())
+                        Group(
+                            1,
+                            "Group 1",
+                            "Description 1",
+                            members = mutableListOf(),
+                            admins = mutableListOf()
+                        )
                         ))
             Mockito.`when`(userRepository.existsById(anyLong()))
                     .thenReturn(true)
@@ -275,39 +507,55 @@ class GroupServiceImplTest {
 
             Mockito.`when`(userRepository.findByEmail(anyString()))
                     .thenReturn(
-                            User(
-                                    1,
-                                    "User1",
-                                    "example@example.com",
-                                    "password",
-                                    privateGroup = Group(1, "Group 1", members = mutableListOf(), description = "")
+                        User(
+                            1,
+                            "User1",
+                            "example@example.com",
+                            "password",
+                            privateGroup = Group(
+                                1,
+                                "Group 1",
+                                members = mutableListOf(),
+                                description = ""
                             )
+                        )
                     )
             Mockito.`when`(groupRepository.findById(anyLong()))
                     .thenReturn(
                             Optional.of(
-                                    Group(1, "Group 1", "Description 1", members = mutableListOf(), admins = mutableListOf())
+                                Group(
+                                    1,
+                                    "Group 1",
+                                    "Description 1",
+                                    members = mutableListOf(),
+                                    admins = mutableListOf()
+                                )
                             ))
             Mockito.`when`(userRepository.existsById(anyLong())).thenReturn(true)
             Mockito.`when`(userRepository.findByIdOrNull(anyLong())).then {
                 User(
-                        it.arguments[0] as Long,
-                        "User ${it.arguments[0]}",
-                        "example${it.arguments[0]}@email.com",
-                        "password",
-                        privateGroup = Group(2, "Group 2", members = mutableListOf(), description = "")
+                    it.arguments[0] as Long,
+                    "User ${it.arguments[0]}",
+                    "example${it.arguments[0]}@email.com",
+                    "password",
+                    privateGroup = Group(
+                        2,
+                        "Group 2",
+                        members = mutableListOf(),
+                        description = ""
+                    )
                 )
             }
             Mockito.`when`(userRepository.findAllById(any<Iterable<Long>>())).then {
                 (it.arguments[0] as Iterable<Long>).map { id ->
                     User(
-                            id = id,
-                            name = "User $id",
-                            email = "example$id@example.com",
-                            password = "password",
-                            privateGroup = Group(
-                                    2, "Group2", members = mutableListOf(), description = ""
-                            )
+                        id = id,
+                        name = "User $id",
+                        email = "example$id@example.com",
+                        password = "password",
+                        privateGroup = Group(
+                            2, "Group2", members = mutableListOf(), description = ""
+                        )
                     )
                 }
             }
@@ -346,39 +594,55 @@ class GroupServiceImplTest {
 
             Mockito.`when`(userRepository.findByEmail(anyString()))
                     .thenReturn(
-                            User(
-                                    1,
-                                    "User1",
-                                    "example@example.com",
-                                    "password",
-                                    privateGroup = Group(1, "Group 1", members = mutableListOf(), description = "")
+                        User(
+                            1,
+                            "User1",
+                            "example@example.com",
+                            "password",
+                            privateGroup = Group(
+                                1,
+                                "Group 1",
+                                members = mutableListOf(),
+                                description = ""
                             )
+                        )
                     )
             Mockito.`when`(groupRepository.findById(anyLong()))
                 .thenReturn(
                     Optional.of(
-                        Group(1, "Group 1", "Description 1", members = mutableListOf(), admins = mutableListOf())
+                        Group(
+                            1,
+                            "Group 1",
+                            "Description 1",
+                            members = mutableListOf(),
+                            admins = mutableListOf()
+                        )
                     ))
             Mockito.`when`(userRepository.existsById(anyLong())).thenReturn(true)
             Mockito.`when`(userRepository.findByIdOrNull(anyLong())).then {
                 User(
-                        it.arguments[0] as Long,
-                        "User ${it.arguments[0]}",
-                        "example${it.arguments[0]}@email.com",
-                        "password",
-                        privateGroup = Group(2, "Group 2", members = mutableListOf(), description = "")
+                    it.arguments[0] as Long,
+                    "User ${it.arguments[0]}",
+                    "example${it.arguments[0]}@email.com",
+                    "password",
+                    privateGroup = Group(
+                        2,
+                        "Group 2",
+                        members = mutableListOf(),
+                        description = ""
+                    )
                 )
             }
             Mockito.`when`(userRepository.findAllById(any<Iterable<Long>>())).then {
                 (it.arguments[0] as Iterable<Long>).map { id ->
                     User(
-                            id = id,
-                            name = "User $id",
-                            email = "example$id@example.com",
-                            password = "password",
-                            privateGroup = Group(
-                                    2, "Group2", members = mutableListOf(), description = ""
-                            )
+                        id = id,
+                        name = "User $id",
+                        email = "example$id@example.com",
+                        password = "password",
+                        privateGroup = Group(
+                            2, "Group2", members = mutableListOf(), description = ""
+                        )
                     )
                 }
             }
@@ -419,10 +683,10 @@ class GroupServiceImplTest {
         fun `it should not update group if the current user is not in the database`() {
             Mockito.`when`(userRepository.findByEmail(anyString())).thenReturn(null)
             val groupRequest = GroupRequest(
-                    name = "Group 1",
-                    description = "Group description",
-                    members = listOf(2),
-                    admins = listOf(2)
+                name = "Group 1",
+                description = "Group description",
+                members = listOf(2),
+                admins = listOf(2)
             )
             assertThrows<UsernameNotFoundException> {
                 groupService.updateGroup(
@@ -437,22 +701,25 @@ class GroupServiceImplTest {
         fun `it should not update group if the group is not in the database`() {
             Mockito.`when`(userRepository.findByEmail(anyString()))
                     .thenReturn(
-                            User(
-                                    1,
-                                    "User1",
-                                    "example@example.com",
-                                    "password",
-                                    privateGroup = Group(
-                                            1,
-                                            "Group1",
-                                            description = "description",
-                                            members = mutableListOf(),
-                                            admins = mutableListOf())))
+                        User(
+                            1,
+                            "User1",
+                            "example@example.com",
+                            "password",
+                            privateGroup = Group(
+                                1,
+                                "Group1",
+                                description = "description",
+                                members = mutableListOf(),
+                                admins = mutableListOf()
+                            )
+                        )
+                    )
             val groupRequest = GroupRequest(
-                    name = "Group 1",
-                    description = "Group description",
-                    members = listOf(2),
-                    admins = listOf(2)
+                name = "Group 1",
+                description = "Group description",
+                members = listOf(2),
+                admins = listOf(2)
             )
             Mockito.`when`(groupRepository.findByIdOrNull(anyLong())).then { Optional.empty<Group>() }
             assertThrows<GroupNotFoundException> {
@@ -468,31 +735,37 @@ class GroupServiceImplTest {
         fun `it should not allow updating group if user is not an admin`() {
             Mockito.`when`(userRepository.findByEmail(anyString()))
                     .thenReturn(
-                            User(
-                                    1,
-                                    "User1",
-                                    "example@example.com",
-                                    "password",
-                                    privateGroup = Group(
-                                            1,
-                                            "Group1",
-                                            description = "description",
-                                            members = mutableListOf(),
-                                            admins = mutableListOf())))
+                        User(
+                            1,
+                            "User1",
+                            "example@example.com",
+                            "password",
+                            privateGroup = Group(
+                                1,
+                                "Group1",
+                                description = "description",
+                                members = mutableListOf(),
+                                admins = mutableListOf()
+                            )
+                        )
+                    )
             Mockito.`when`(groupRepository.findByIdOrNull(anyLong()))
                     .then {
-                            Optional.of(Group(
+                            Optional.of(
+                                Group(
                                     id = 2,
                                     name = "Group Name",
                                     description = "Group description",
                                     members = mutableListOf(),
-                                    admins = mutableListOf()))
+                                    admins = mutableListOf()
+                                )
+                            )
                     }
             val groupRequest = GroupRequest(
-                    name = "Group 1",
-                    description = "Group description",
-                    members = listOf(2),
-                    admins = listOf(2)
+                name = "Group 1",
+                description = "Group description",
+                members = listOf(2),
+                admins = listOf(2)
             )
             assertThrows<ActionNotAllowedException> {
                 groupService.updateGroup(
@@ -505,29 +778,33 @@ class GroupServiceImplTest {
         @Test
         fun `it should not update group if one of the members are not in the database`() {
             val user = User(
+                1,
+                "User1",
+                "example@example.com",
+                "password",
+                privateGroup = Group(
                     1,
-                    "User1",
-                    "example@example.com",
-                    "password",
-                    privateGroup = Group(
-                            1,
-                            "Group1",
-                            description = "description",
-                            members = mutableListOf(),
-                            admins = mutableListOf()))
+                    "Group1",
+                    description = "description",
+                    members = mutableListOf(),
+                    admins = mutableListOf()
+                )
+            )
             Mockito.`when`(userRepository.findByEmail(anyString()))
                     .thenReturn(user)
-            val group = Group(name = "Group 1",
-                    description = "Group description",
-                    members = mutableListOf(user),
-                    admins = mutableListOf(user))
+            val group = Group(
+                name = "Group 1",
+                description = "Group description",
+                members = mutableListOf(user),
+                admins = mutableListOf(user)
+            )
             Mockito.`when`(groupRepository.findByIdOrNull(anyLong())).then { Optional.of(group) }
             Mockito.`when`(userRepository.findByIdOrNull(anyLong())).thenReturn(null)
             val groupRequest = GroupRequest(
-                    name = "Group 1",
-                    description = "Group description",
-                    members = listOf(2),
-                    admins = listOf(2)
+                name = "Group 1",
+                description = "Group description",
+                members = listOf(2),
+                admins = listOf(2)
             )
             assertThrows<UserNotFoundException> {
                 groupService.updateGroup(
@@ -541,20 +818,23 @@ class GroupServiceImplTest {
         fun `it should allow admins to update group`() {
             val email = "example@example.com"
             var group = Group(
-                    id = 1,
-                    name = "Group 1",
-                    description = "",
-                    members = mutableListOf(),
-                    admins = mutableListOf())
+                id = 1,
+                name = "Group 1",
+                description = "",
+                members = mutableListOf(),
+                admins = mutableListOf()
+            )
             var owningUser = User(
-                    id = 2,
-                    name = "User 2",
-                    email = "example@example2.com",
-                    password = "password",
-                    groups = mutableListOf(group),
-                    ownedGroups = mutableListOf(group),
-                    privateGroup = Group(
-                            2, "Group 2", members = mutableListOf(), description = ""))
+                id = 2,
+                name = "User 2",
+                email = "example@example2.com",
+                password = "password",
+                groups = mutableListOf(group),
+                ownedGroups = mutableListOf(group),
+                privateGroup = Group(
+                    2, "Group 2", members = mutableListOf(), description = ""
+                )
+            )
 
             group = group.copy(admins = mutableListOf(owningUser), members = mutableListOf(owningUser))
             Mockito.`when`(userRepository.findByEmail(anyString())).then {
@@ -585,11 +865,13 @@ class GroupServiceImplTest {
             val updatedGroup = groupService.updateGroup(
                     owningUser.email,
                     group.id,
-                    GroupRequest(
-                        group.name,
-                        "updated description",
-                        group.admins.map(User::id),
-                        group.members.map(User::id)))
+                GroupRequest(
+                    group.name,
+                    "updated description",
+                    group.admins.map(User::id),
+                    group.members.map(User::id)
+                )
+            )
             assertThat(
                     updatedGroup, equalTo(group.copy(description = "updated description"))
             )
@@ -600,29 +882,34 @@ class GroupServiceImplTest {
         fun `it should update group members`() {
             val email = "example@example.com"
             var group = Group(
-                    id = 1,
-                    name = "Group 1",
-                    description = "",
-                    members = mutableListOf(),
-                    admins = mutableListOf())
+                id = 1,
+                name = "Group 1",
+                description = "",
+                members = mutableListOf(),
+                admins = mutableListOf()
+            )
             var owningUser = User(
-                    id = 2,
-                    name = "User 2",
-                    email = "example@example2.com",
-                    password = "password",
-                    groups = mutableListOf(group),
-                    ownedGroups = mutableListOf(group),
-                    privateGroup = Group(
-                            2, "Group 2", members = mutableListOf(), description = ""))
+                id = 2,
+                name = "User 2",
+                email = "example@example2.com",
+                password = "password",
+                groups = mutableListOf(group),
+                ownedGroups = mutableListOf(group),
+                privateGroup = Group(
+                    2, "Group 2", members = mutableListOf(), description = ""
+                )
+            )
             var addedUser = User(
-                    id = 3,
-                    name = "User 3",
-                    email = "example@example3.com",
-                    password = "password",
-                    groups = mutableListOf(),
-                    ownedGroups = mutableListOf(),
-                    privateGroup = Group(
-                            3, "Group 3", members = mutableListOf(), description = ""))
+                id = 3,
+                name = "User 3",
+                email = "example@example3.com",
+                password = "password",
+                groups = mutableListOf(),
+                ownedGroups = mutableListOf(),
+                privateGroup = Group(
+                    3, "Group 3", members = mutableListOf(), description = ""
+                )
+            )
             group = group.copy(admins = mutableListOf(owningUser), members = mutableListOf(owningUser))
             Mockito.`when`(userRepository.findByEmail(anyString())).then {
                 when (it.arguments[0]) {
@@ -644,24 +931,25 @@ class GroupServiceImplTest {
             Mockito.`when`(userRepository.findAllById(any<Iterable<Long>>())).then {
                 (it.arguments[0] as Iterable<Long>).map { id ->
                     User(
-                            id = id,
-                            name = "User $id",
-                            email = "example$id@example.com",
-                            password = "password",
-                            privateGroup = Group(
-                                    1, "Group1", members = mutableListOf(), description = ""
-                            )
+                        id = id,
+                        name = "User $id",
+                        email = "example$id@example.com",
+                        password = "password",
+                        privateGroup = Group(
+                            1, "Group1", members = mutableListOf(), description = ""
+                        )
                     )
                 }
             }
             val updatedGroup = groupService.updateGroup(
                     owningUser.email,
                     group.id,
-                    GroupRequest(
-                            group.name,
-                            "updated description",
-                            admins = listOf(owningUser.id),
-                            members = listOf(2, 3))
+                GroupRequest(
+                    group.name,
+                    "updated description",
+                    admins = listOf(owningUser.id),
+                    members = listOf(2, 3)
+                )
             )
             val argCapturer = ArgumentCaptor.forClass(Group::class.java)
             Mockito.verify(groupRepository).save(argCapturer.capture())
@@ -683,20 +971,23 @@ class GroupServiceImplTest {
         fun `it should add the specified image to the group`() {
             val email = "example@example.com"
             var group = Group(
-                    id = 1,
-                    name = "Group 1",
-                    description = "",
-                    members = mutableListOf(),
-                    admins = mutableListOf())
+                id = 1,
+                name = "Group 1",
+                description = "",
+                members = mutableListOf(),
+                admins = mutableListOf()
+            )
             var owningUser = User(
-                    id = 2,
-                    name = "User 2",
-                    email = "example@example2.com",
-                    password = "password",
-                    groups = mutableListOf(group),
-                    ownedGroups = mutableListOf(group),
-                    privateGroup = Group(
-                            2, "Group 2", members = mutableListOf(), description = ""))
+                id = 2,
+                name = "User 2",
+                email = "example@example2.com",
+                password = "password",
+                groups = mutableListOf(group),
+                ownedGroups = mutableListOf(group),
+                privateGroup = Group(
+                    2, "Group 2", members = mutableListOf(), description = ""
+                )
+            )
 
             group = group.copy(admins = mutableListOf(owningUser), members = mutableListOf(owningUser))
             Mockito.`when`(userRepository.findByEmail(anyString())).then {
@@ -734,31 +1025,45 @@ class GroupServiceImplTest {
         fun `it should not allow ordinary members to delete the group`() {
             val email = "example@example.com"
             var group = Group(
-                    id = 1,
-                    name = "Group 1",
-                    members = mutableListOf(),
-                    description = "")
+                id = 1,
+                name = "Group 1",
+                members = mutableListOf(),
+                description = ""
+            )
             var owningUser = User(
-                    id = 2,
-                    name = "User 2",
-                    email = "example@example2.com",
-                    password = "password",
-                    groups = mutableListOf(group),
-                    ownedGroups = mutableListOf(group),
-                    privateGroup = Group(2, "Group 2", members = mutableListOf(), description = "")
+                id = 2,
+                name = "User 2",
+                email = "example@example2.com",
+                password = "password",
+                groups = mutableListOf(group),
+                ownedGroups = mutableListOf(group),
+                privateGroup = Group(
+                    2,
+                    "Group 2",
+                    members = mutableListOf(),
+                    description = ""
+                )
             )
             group = group.copy(admins = mutableListOf(owningUser), members = mutableListOf(owningUser))
             val user = User(
-                    id = 1,
-                    name = "User 1",
-                    email = email,
-                    password = "password",
-                    groups = mutableListOf(Group(
-                            id = 1,
-                            name = "Group 1",
-                            members = mutableListOf(),
-                            description = "")),
-                    privateGroup = Group(2, "Group 2", members = mutableListOf(), description = "")
+                id = 1,
+                name = "User 1",
+                email = email,
+                password = "password",
+                groups = mutableListOf(
+                    Group(
+                        id = 1,
+                        name = "Group 1",
+                        members = mutableListOf(),
+                        description = ""
+                    )
+                ),
+                privateGroup = Group(
+                    2,
+                    "Group 2",
+                    members = mutableListOf(),
+                    description = ""
+                )
             )
             Mockito.`when`(groupRepository.findByIdOrNull(anyLong())).then {
                 if (it.arguments[0] == group.id) {
@@ -780,18 +1085,24 @@ class GroupServiceImplTest {
         fun `it should allow the group admins to delete the group`() {
             val email = "example@example.com"
             var group = Group(
-                    id = 1,
-                    name = "Group 1",
-                    members = mutableListOf(),
-                    description = "")
+                id = 1,
+                name = "Group 1",
+                members = mutableListOf(),
+                description = ""
+            )
             var owningUser = User(
-                    id = 2,
-                    name = "User 2",
-                    email = "example@example2.com",
-                    password = "password",
-                    groups = mutableListOf(group),
-                    ownedGroups = mutableListOf(group),
-                    privateGroup = Group(2, "Group 2", members = mutableListOf(), description = "")
+                id = 2,
+                name = "User 2",
+                email = "example@example2.com",
+                password = "password",
+                groups = mutableListOf(group),
+                ownedGroups = mutableListOf(group),
+                privateGroup = Group(
+                    2,
+                    "Group 2",
+                    members = mutableListOf(),
+                    description = ""
+                )
             )
             group = group.copy(admins = mutableListOf(owningUser), members = mutableListOf(owningUser))
             Mockito.`when`(groupRepository.findByIdOrNull(anyLong())).then {
