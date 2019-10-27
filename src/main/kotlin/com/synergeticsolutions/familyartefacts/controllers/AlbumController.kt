@@ -115,7 +115,7 @@ class AlbumController(
      * PUT /album/{albumID}/artifact/{artifactID}
      *
      * @param albumID ID of the album to add the artifact to
-     * @param artifactID  ID of the artifact to add to the album
+     * @param artifactID ID of the artifact to add to the album
      * Can only add artifact to album if the user has access to the artifact and owns the album
      * @return [Album] the newly updated album with the added artifact in there
      */
