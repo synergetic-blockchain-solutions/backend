@@ -39,6 +39,17 @@ class AlbumServiceImpl(
 
     val logger: Logger = LoggerFactory.getLogger(this::class.java)
 
+    /**
+     * [findAlbumsByOwner] finds all the [Album]s a [User] with [email] has access to, with the given criteria
+     *
+     * @param email Email of the user
+     * @param groupID ID of the group that the album is in
+     * @param ownerID ID of the user that owns the album
+     * @param sharedID ID of the users that the album shares with
+     * @param albumName name of the album
+     * @return Collection of albums the user has access to filtered by the given parameters
+     * @throws UsernameNotFoundException when a user with [email] does not exist
+     */
     override fun findAlbumsByOwner(
         email: String,
         groupID: Long?,
@@ -76,6 +87,17 @@ class AlbumServiceImpl(
         return albums.toList()
     }
 
+    /**
+     * findAlbumById finds album [id] in the context of user with [email]. If the user has access to the album
+     * then it is returned. If they do not have access [ActionNotAllowedException] is thrown.
+     *
+     * @param email Email of the user performing user
+     * @param id ID of the album to get
+     * @return [Album] with ID [id]
+     * @throws UserNotFoundException when there is no user with [email]
+     * @throws ActionNotAllowedException when the user does not have access to album with [id].
+     * @throws AlbumNotFoundException when the album does not exist
+     */
     override fun findAlbumById(email: String, id: Long): Album {
         val user =
                 userRepository.findByEmail(email) ?: throw UserNotFoundException(
@@ -96,6 +118,19 @@ class AlbumServiceImpl(
                 ?: throw AlbumNotFoundException("No album with ID $id was found")
     }
 
+    /**
+     * [createAlbum] creates an album with given details
+     *
+     * @param email Email of the owner
+     * @param name Name of the album
+     * @param description Description of the album
+     * @param groupIDs IDs of the groups the album is to be shared with
+     * @param sharedWithIDs IDs of the users the album is to be shared with
+     * @param artifactIDs IDs of the artifacts to be added to the album
+     * @return Created [Album]
+     * @throws UserNotFoundException when no user with [email] or one of the IDs in [ownerIDs] or [sharedWithIDs] does not correspond to a [User.id]
+     * @throws GroupNotFoundException when one of the IDs in [groupIDs] does not correspond to a [Group.id]()
+     */
     override fun createAlbum(
         email: String,
         name: String,
@@ -185,6 +220,19 @@ class AlbumServiceImpl(
         return savedAlbum
     }
 
+    /**
+     * [addArtifact] adds the artifact with [artifactID] to album with [albumID]
+     *
+     * @param email email of the performing user
+     * @param albumID ID of the album to be updated
+     * @param artifactID ID of the artifact to be added to the album
+     * Only the owner of the album can perform the action
+     * @return updated [Album]
+     * @throws UserNotFoundException if there is no user with [email]
+     * @throws AlbumNotFoundException if there is no album with [albumID]
+     * @throws ArtifactNotFoundException if there is no artifact with [artifactID]
+     * @throws ActionNotAllowedException if user neither owns the album nor have access to the artifact
+     */
     override fun addArtifact(email: String, albumID: Long, artifactID: Long): Album {
         val user =
                 userRepository.findByEmail(email) ?: throw UserNotFoundException(
@@ -217,6 +265,20 @@ class AlbumServiceImpl(
         return albumRepository.save(album)
     }
 
+    /**
+     * [updateAlbum] updates the album with [id]. To update an album, the user must be an owner of the album.
+     * Except in the case where the user is the owner of a group an removing the album from a group.
+     *
+     * @param email Email of the performing user
+     * @param id ID of the album being updated
+     * @param update Update details of the album
+     * @return Updated [Album]
+     * @throws UserNotFoundException when there exists no user with [email]
+     * @throws AlbumNotFoundException when the album does not exist
+     * @throws GroupNotFoundException when a group specified in [update] does not exist
+     * @throws ArtifactNotFoundException when an artifact specifies in [update] does not exist
+     * @throws ActionNotAllowedException when the user is not authorised to perform the action they're attempting
+     */
     override fun updateAlbum(email: String, id: Long, update: AlbumRequest): Album {
         val user =
                 userRepository.findByEmail(email) ?: throw UserNotFoundException(
@@ -319,6 +381,16 @@ class AlbumServiceImpl(
         }
     }
 
+    /**
+     * [deleteAlbum] deletes album with [id]. This action is only allowable by users who are owners of the album.
+     *
+     * @param email Email of the user doing the deleting
+     * @param id ID of the artifact to delete
+     * @return deleted [Album]
+     * @throws UserNotFoundException when there exists no user with [email]
+     * @throws AlbumNotFoundException when no album with [id] exists
+     * @throws ActionNotAllowedException when the user is not authorised to delete the album
+     */
     override fun deleteAlbum(email: String, id: Long): Album {
         val user =
                 userRepository.findByEmail(email) ?: throw UserNotFoundException(
