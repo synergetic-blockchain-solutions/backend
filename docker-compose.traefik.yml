@@ -3,7 +3,6 @@ version: "3.0"
 services:
     backend:
         command: ./mvnw -B clean spring-boot:run
-        ports: []
         labels:
             - "traefik.enable=true"
             - "traefik.http.routers.backend_router.rule=Host(`api.nspain.me`)"
