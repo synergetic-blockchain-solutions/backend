@@ -20,6 +20,9 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 
+/**
+ * Controller for managing requests related to [Artifact] entities.
+ */
 @RestController
 @RequestMapping(path = ["/artifact"])
 class ArtifactController(
@@ -31,9 +34,13 @@ class ArtifactController(
     /**
      * GET /artifact
      *
+     * Get a collection of artifacts filtered by the given criteria.
+     *
+     * @param artifactName Name of the artifacts to restrict artifacts to
      * @param groupID ID of the group to restrict artifacts to
      * @param ownerID ID of the owner to restrict artifacts to
      * @param sharedID ID of the user the returned artifacts must be shared to
+     * @param tag Tags to restrict the artifacts to
      * @return Collection of artifacts the user has access to and fit the criteria given by the parameters
      */
     @GetMapping
@@ -60,6 +67,14 @@ class ArtifactController(
         return ResponseEntity.ok(artifacts)
     }
 
+    /**
+     * GET /artifact/{id}
+     *
+     * Get an artifact by its IDs.
+     *
+     * @param id ID of the artifact to get
+     * @return Artifact with ID
+     */
     @GetMapping(path = ["/{id}"])
     fun getArtifactById(@PathVariable id: Long): ResponseEntity<Artifact> {
         val currentUser = SecurityContextHolder.getContext().authentication
@@ -76,6 +91,7 @@ class ArtifactController(
      * [ArtifactRequest.owners], the creating user will be made an owner. In addition to the specified
      * [ArtifactRequest.groups], the creating user's private group will be associated with the artifact.
      *
+     * @param newArtifact Artifact to create
      * @return [Artifact] representing the created artifact
      */
     @PostMapping
@@ -103,6 +119,7 @@ class ArtifactController(
      * the artifact. However, if the user is the owner a group the artifact is associated with, they can remove that
      * group from the collection of associated groups.
      *
+     * @param id ID of the artifact to update
      * @return [Artifact] representing the updated artifact
      */
     @PutMapping(path = ["/{id}"])
@@ -118,6 +135,7 @@ class ArtifactController(
      *
      * Delete the artifact with [id]. This endpoint is only usable by users who are owners of the artifact.
      *
+     * @param id ID of the artifact to delete
      * @return [Artifact] representing the deleted artifact
      */
     @DeleteMapping(path = ["/{id}"])

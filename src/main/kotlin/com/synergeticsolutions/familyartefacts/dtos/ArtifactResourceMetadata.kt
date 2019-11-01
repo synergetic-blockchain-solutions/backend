@@ -7,6 +7,7 @@ package com.synergeticsolutions.familyartefacts.dtos
  * @param[name] Name of the resource. Maps to [ArtifactResource.name]
  * @param[description] Description of the resource. Maps to [ArtifactResource.description]
  * @param[tags] Tags associated with the resource. Maps to [ArtifactResource.tags]
+ * @param[artifactId] ID of the artifact associated with the resource
  */
 data class ArtifactResourceMetadata(
     val id: Long,

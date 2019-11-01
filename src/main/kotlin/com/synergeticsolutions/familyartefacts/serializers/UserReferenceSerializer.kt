@@ -7,6 +7,13 @@ import com.synergeticsolutions.familyartefacts.entities.Artifact
 import com.synergeticsolutions.familyartefacts.entities.Group
 import com.synergeticsolutions.familyartefacts.entities.User
 
+/**
+ * Serialiser of [User] entities.
+ *
+ * This serializer is intended to be used as the custom serialiser for [User] properties of
+ * another entity. The idea is to provide a good depth of serialisation with having huge JSON documents or recursive
+ * structures.
+ */
 class UserReferenceCollectionSerializer(type: Class<List<User>>? = null) : StdSerializer<List<User>>(type) {
     override fun serialize(value: List<User>?, maybeGen: JsonGenerator?, maybeProvider: SerializerProvider?) {
         val users = checkNotNull(value, { "User parameter should not be null" })

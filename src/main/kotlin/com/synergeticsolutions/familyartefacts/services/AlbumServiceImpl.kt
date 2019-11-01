@@ -25,6 +25,9 @@ import org.springframework.web.bind.annotation.ResponseStatus
 @ResponseStatus(HttpStatus.BAD_REQUEST)
 class AlbumNotFoundException(msg: String) : RuntimeException(msg)
 
+/**
+ * Service for performing actions on albums.
+ */
 @Service
 class AlbumServiceImpl(
     @Autowired

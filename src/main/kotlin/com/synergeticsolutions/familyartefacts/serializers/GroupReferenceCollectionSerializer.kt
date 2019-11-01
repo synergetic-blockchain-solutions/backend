@@ -7,6 +7,13 @@ import com.synergeticsolutions.familyartefacts.entities.Artifact
 import com.synergeticsolutions.familyartefacts.entities.Group
 import com.synergeticsolutions.familyartefacts.entities.User
 
+/**
+ * Serialise collections of [Group] entities.
+ *
+ * This serializer is intended to be used as the custom serialiser for [Group] collections that are properties of
+ * another entity. The idea is to provide a good depth of serialisation with having huge JSON documents or recursive
+ * structures.
+ */
 class GroupReferenceCollectionSerializer(type: Class<List<Group>>? = null) : StdSerializer<List<Group>>(type) {
     override fun serialize(value: List<Group>?, maybeGen: JsonGenerator?, provider: SerializerProvider?) {
         val groups = checkNotNull(value, { "value parameter should not be null" })

@@ -28,6 +28,9 @@ import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 
+/**
+ * Controller for requests related to the [User] entity.
+ */
 @RestController
 class UserController(
     @Autowired
@@ -36,11 +39,16 @@ class UserController(
     val logger: Logger = LoggerFactory.getLogger(this::class.java)
 
     /**
+     * POST /user
+     * POST /register
+     *
      * [createUser] is the POST endpoint for '/request'. Requests to this endpoint should conform to
      * [UserRequest]. If the body is not valid a 4xx response will be returned with a message describing
      * what is wrong with the request. If there is an issue creating the request a 5xx response will be returned
      * describing what when wrong. Successful requests will return 201 Created status code. The body will be the
      * created [User] object without the password field.
+     *
+     * @return The newly created [User] entity
      */
     @PostMapping(name = "createUser", path = ["/user", "/register"])
     fun createUser(@Valid @RequestBody request: UserRequest): ResponseEntity<User> {
@@ -56,6 +64,8 @@ class UserController(
      *
      * [getMe] gets the current user. A successful response will be the [User] entity of the authenticated user excluding the [User.password]
      * field.
+     *
+     * @return The currently authenticated [User] entity
      */
     @GetMapping(path = ["/user/me"])
     fun getMe(principal: Principal): User = userService.findByEmail(principal.name)
@@ -64,6 +74,11 @@ class UserController(
      * GET /user/me/image
      *
      * [getMyImage] gets the profile picture of the current user.
+     *
+     * The image is base64 encoded to make it easier for the frontend to handle, and the content
+     * type is set to the image type of the picture.
+     *
+     * @return A [ByteArrayResource] of the profile picture for the current user.
      */
     @GetMapping(path = ["/user/me/image"])
     fun getMyImage(principal: Principal): ResponseEntity<ByteArrayResource> {
@@ -78,6 +93,8 @@ class UserController(
      *
      * [getUser] gets the text information associated with a user. A successful response will be the [User] entity
      * corresponding to [id] excluding the [User.password] field.
+     *
+     * @return The [User] entity for the user with ID [id]
      */
     @GetMapping(path = ["/user/{id}"])
     fun getUser(@PathVariable id: Long, principal: Principal): User = userService.findById(principal.name, id)
@@ -97,7 +114,10 @@ class UserController(
     /**
      * Get /user?email=[email]&name=[name]
      *
-     * [getUserByEmailOrName] retrieves all users and filters them by [email] and [name] if specified.
+     * [getUserByEmailOrName] retrieves all users and filters them by [email] and [name] if specified. The [email]
+     * and [name] need only match the first part of the user's email or name (i.e. [String.startsWith] is used)
+     *
+     * @return The [User] entities matched by the filters
      */
     @GetMapping(path = ["/user"])
     fun getUserByEmailOrName(
@@ -109,7 +129,9 @@ class UserController(
     /**
      * PUT /user/{id}
      *
-     * [updateUser] updates the textual informaton associated with user [id].
+     * [updateUser] updates the textual information associated with user [id].
+     *
+     * @return The updated [User] entity
      */
     @PutMapping(path = ["/user/{id}"])
     fun updateUser(@PathVariable("id") id: Long, @RequestBody update: UserUpdateRequest, principal: Principal): User =
@@ -133,6 +155,8 @@ class UserController(
      * Delete /user/{id}
      *
      * [deleteUser] deletes the user associated with [id].
+     *
+     * @return The deleted [User] entit
      */
     @DeleteMapping(path = ["/user/{id}"])
     fun deleteUser(@PathVariable("id") id: Long, principal: Principal): User = userService.delete(principal.name, id)

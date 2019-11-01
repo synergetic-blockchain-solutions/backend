@@ -87,6 +87,15 @@ class UserServiceImpl(
         return updatedUser
     }
 
+    /**
+     * Find a user by their ID.
+     *
+     * [email] is not use in this method but is included to maintain consistency with other methods.
+     *
+     * @param email Email of the requesting user
+     * @param id ID of the user to be retrieved
+     * @return The user entity with [id]
+     */
     override fun findById(email: String, id: Long): User {
         val user =
             userRepository.findByEmail(email) ?: throw UserNotFoundException(
@@ -101,6 +110,14 @@ class UserServiceImpl(
         return foundUser
     }
 
+    /**
+     * Find a users by their email or name.
+     *
+     * This function does not require a string match on the [filterEmail] or [filterName], it just checks that
+     * they match the first part of the email or name, respectively.
+     *
+     * @return A collection of users matching the criteria
+     */
     override fun findUsers(email: String, filterEmail: String?, filterName: String?): List<User> {
         val user =
             userRepository.findByEmail(email) ?: throw UserNotFoundException(
@@ -120,12 +137,24 @@ class UserServiceImpl(
         return users
     }
 
+    /**
+     * Find a user by [email]
+     *
+     * @return A [User] entity with [email]
+     */
     override fun findByEmail(email: String): User {
         return userRepository.findByEmail(email) ?: throw UserNotFoundException(
             "Could not find user with email $email"
         )
     }
 
+    /**
+     * Update a by [id]
+     *
+     * Users can only update themselves.
+     *
+     * @return Updated [User] entity
+     */
     override fun update(
         email: String,
         id: Long,
@@ -161,6 +190,11 @@ class UserServiceImpl(
         return userRepository.save(user)
     }
 
+    /**
+     * Delete the user.
+     *
+     * Users can only delete themselves.
+     */
     override fun delete(email: String, id: Long): User {
         val user = userRepository.findByEmail(email) ?: throw UserNotFoundException(
             "Could not find user with email $email"

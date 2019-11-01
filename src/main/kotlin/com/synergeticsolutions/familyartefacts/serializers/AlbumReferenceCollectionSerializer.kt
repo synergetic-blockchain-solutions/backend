@@ -8,6 +8,13 @@ import com.synergeticsolutions.familyartefacts.entities.Artifact
 import com.synergeticsolutions.familyartefacts.entities.Group
 import com.synergeticsolutions.familyartefacts.entities.User
 
+/**
+ * Serialise collections of [Album] entities.
+ *
+ * This serializer is intended to be used as the custom serialiser for [Album] collections that are properties of
+ * another entity. The idea is to provide a good depth of serialisation with having huge JSON documents or recursive
+ * structures.
+ */
 class AlbumReferenceCollectionSerializer(type: Class<List<Album>>? = null) : StdSerializer<List<Album>>(type) {
     override fun serialize(value: List<Album>?, maybeGen: JsonGenerator?, provider: SerializerProvider?) {
         val artifacts = checkNotNull(value, { "value parameter should not be null" })
