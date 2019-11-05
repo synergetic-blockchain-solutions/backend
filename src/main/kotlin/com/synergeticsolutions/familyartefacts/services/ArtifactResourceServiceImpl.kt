@@ -71,6 +71,9 @@ class ArtifactResourceServiceImpl(
             throw IllegalArgumentException("If resourceId is specified, artifactId must also be specified")
         }
 
+    /**
+     * Check a user identified by [email] has access to artifact resource [resourceId].
+     */
     private fun hasAccess(email: String, artifactId: Long, resourceId: Long): Boolean {
         val user = userRepository.findByEmail(email) ?: throw UserNotFoundException(
             "No user with email $email found"
@@ -111,6 +114,9 @@ class ArtifactResourceServiceImpl(
         )
     }
 
+    /**
+     * Find an artifact resource's resource by [resourceId].
+     */
     override fun findResourceById(email: String, artifactId: Long, resourceId: Long): Resource {
         if (!hasAccess(email, artifactId = artifactId, resourceId = resourceId)) {
             throw ActionNotAllowedException("User with email $email does not have access to artifact resource $resourceId")
@@ -123,6 +129,9 @@ class ArtifactResourceServiceImpl(
         )
     }
 
+    /**
+     * Update an artifact resource. This can be just the metadata or resource, or both.
+     */
     override fun update(
         email: String,
         artifactId: Long,
@@ -151,6 +160,9 @@ class ArtifactResourceServiceImpl(
         return artifactResourceRepository.save(resourceEntity)
     }
 
+    /**
+     * Delete an artifact resource [resourceId] which is part of the artifact [artifactId].
+     */
     override fun delete(email: String, artifactId: Long, resourceId: Long): ArtifactResourceMetadata {
         if (!isOwner(email, artifactId = artifactId, resourceId = resourceId)) {
             throw ActionNotAllowedException("User with email $email does not have access to artifact resource $resourceId")
@@ -168,6 +180,10 @@ class ArtifactResourceServiceImpl(
         )
     }
 
+    /**
+     * Create an [ArtifactResource] with the [metadata] and [resource]. Then it will be associated with the artifact
+     * [artifactId].
+     */
     override fun create(
         email: String,
         artifactId: Long,

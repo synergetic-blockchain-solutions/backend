@@ -14,8 +14,19 @@ import javax.persistence.Table
 import org.hibernate.annotations.LazyCollection
 import org.hibernate.annotations.LazyCollectionOption
 
+/**
+ * Representation of the album entity.
+ *
+ * @param id ID of the album
+ * @param name Name of the album
+ * @param description Description of the album
+ * @param owners [User] entities that can make modifications to the album
+ * @param groups [Group] entities the album is associated with
+ * @param sharedWith [User] entities the album is shared with
+ * @param artifacts [Artifact] entities that make up the album
+ */
 @Entity
-@Table(name = "artifacts")
+@Table(name = "albums")
 data class Album(
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)

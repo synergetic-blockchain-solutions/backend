@@ -14,7 +14,7 @@ interface AlbumService {
         artifactIDs: List<Long>
     ): Album
     fun findAlbumById(email: String, id: Long): Album
-    fun findAlbumsByOwner(
+    fun findAlbums(
         email: String,
         groupID: Long?,
         ownerID: Long?,

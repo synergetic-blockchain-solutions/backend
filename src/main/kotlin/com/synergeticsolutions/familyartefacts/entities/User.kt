@@ -27,7 +27,15 @@ import org.hibernate.annotations.LazyToOneOption
  * @param [name] Name of the user.
  * @param [email] Email user to identify the user. This field is unique.
  * @param [password] Hashed password used to authenticate the user. This field will not be serialised to JSON.
- * @param [groups] Collection of userGroups the user is a member of.
+ * @param [groups] Collection of [Group]s the user is a member of.
+ * @param [ownedArtifacts] Collection of [Artifact]s the user owns
+ * @param [sharedArtifacts] [Artifact]s shared with the user
+ * @param [ownedAlbums] [Album]s the user owns and can edit
+ * @param [sharedAlbums] [Album]s shared with the user
+ * @param [ownedGroups] [Group]s the user is an admin of can can edit
+ * @param [privateGroup] [Group] private to the user
+ * @param [contentType] content type of the user's image
+ * @param [image] User's profile picture
  */
 @Entity
 @Table(name = "users")

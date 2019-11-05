@@ -54,7 +54,7 @@ class ArtifactController(
         val currentUser = SecurityContextHolder.getContext().authentication
         logger.debug("Filtering artifacts for ${currentUser.principal} by group=$groupID, owner=$ownerID, shared=$sharedID")
         val artifacts =
-            artifactService.findArtifactsByOwner(
+            artifactService.findArtifacts(
                 email = currentUser.principal as String,
                 artifactName = artifactName,
                 groupID = groupID,
