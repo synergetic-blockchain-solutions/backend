@@ -23,6 +23,7 @@ class SecurityConfig : WebSecurityConfigurerAdapter() {
     @Autowired
     private lateinit var tokenService: TokenService
 
+    // Endpoints that do not require a authorization header to use
     private val publicEndpoints = OrRequestMatcher(
         AntPathRequestMatcher("/user", "POST"),
         AntPathRequestMatcher("/register", "POST")

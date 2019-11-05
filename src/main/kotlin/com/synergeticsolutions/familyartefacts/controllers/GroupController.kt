@@ -24,6 +24,9 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 
+/**
+ * Controller for requests related to the [Group] entity.
+ */
 @RestController
 @RequestMapping(path = ["/group"])
 class GroupController(
@@ -37,6 +40,7 @@ class GroupController(
      *
      * @param adminID ID of the user, to get only groups that have the user as admin
      * @param memberID ID of the member, to get only groups that have the user as member
+     * @param name Name of the group to filter by
      * @return List of groups the user has access to and fit the criteria given by the parameters
     */
     @GetMapping

@@ -35,6 +35,9 @@ import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.multipart.support.StandardMultipartHttpServletRequest
 
+/**
+ * Controller for requests relating to [ArtifactResource] entities.
+ */
 @RestController
 @RequestMapping(path = ["/artifact/{artifactId}/resource"])
 class ArtifactResourceController(
@@ -84,6 +87,15 @@ class ArtifactResourceController(
      * POST /artifact/{artifactId}/resource
      *
      * Create a new artifact resource associated with [artifactId].
+     *
+     * As this endpoint receives multipart form data, the [request] parameter receives the low level [HttpServletRequest]
+     * object which is then broken down by [ArtifactResourceController.getMetadataFromRequest] and
+     * [ArtifactResourceController.getResourceFromRequest].
+     *
+     * @param [artifactId] ID of the artifact to attach the resource to
+     * @param [request] HTTP request containing the data
+     * @param [principal] Object populated with the currently authenticated user
+     * @return The created [ArtifactResource] entity
      */
     @ResponseStatus(value = HttpStatus.CREATED)
     @PostMapping(consumes = [MediaType.MULTIPART_FORM_DATA_VALUE])
@@ -106,6 +118,8 @@ class ArtifactResourceController(
      * GET /artifact/{artifactId}/resource/{resourceId}/metadata
      *
      * Get the metadata for resource [resourceId] associated with the artifact [artifactId].
+     *
+     * @return The metadata for the [ArtifactResource] with ID [resourceId]
      */
     @GetMapping(path = ["/{resourceId}/metadata"], produces = [MediaType.APPLICATION_JSON_UTF8_VALUE])
     fun getResourceMetadataById(
@@ -120,6 +134,8 @@ class ArtifactResourceController(
      * GET /artifact/artifact{id}/resource/{resourceId}/resource
      *
      * Get the resource for a resource [resourceId] associated with artifact [artifactId]
+     *
+     * @return The resource with ID [resourceId]
      */
     @GetMapping(path = ["/{resourceId}/resource"], produces = [MediaType.APPLICATION_JSON_UTF8_VALUE])
     fun getResourceById(
@@ -137,7 +153,11 @@ class ArtifactResourceController(
     /**
      * PUT /artifact/{artifactId}/resource/{resourceId}
      *
-     * Update both the metadata and resource of an artifact resource.
+     * Update both the metadata and resource of an artifact resource. As with
+     * [ArtifactResourceController.createResourceWithMetadata] we receive multiple form data so use the low
+     * level [HttpServletRequest] to retrieve the relevant information.
+     *
+     * @return The updated [ArtifactResource]'s metadata
      */
     @PutMapping(path = ["/{resourceId}"], consumes = [MediaType.MULTIPART_FORM_DATA_VALUE])
     fun updateResourceAndMetadata(
@@ -163,6 +183,8 @@ class ArtifactResourceController(
      * PUT /artifact/{artifactId}/resource/{resourceId}
      *
      * Update the artifact resource's metadata.
+     *
+     * @return The updated [ArtifactResource]'s metadata
      */
     @PutMapping(path = ["/{resourceId}"], consumes = [MediaType.APPLICATION_JSON_UTF8_VALUE])
     fun updateResourceMetadata(
@@ -184,6 +206,8 @@ class ArtifactResourceController(
      * PUT /artifact/{artifactId}/resource/{resourceId}
      *
      * Update the artifact resource's resource.
+     *
+     * @return The updated [ArtifactResource]'s metadata
      */
     @PutMapping(path = ["/{resourceId}"])
     fun updateResource(
@@ -207,6 +231,8 @@ class ArtifactResourceController(
      * DELETE /artifact/{artifactId}/resource/{resourceId}
      *
      * Delete the resource [resourceId] associated with artifact [artifactId]
+     *
+     * @return The deleted [ArtifactResource]'s metadata
      */
     @DeleteMapping(path = ["/{resourceId}"])
     fun deleteResourceById(@PathVariable artifactId: Long, @PathVariable resourceId: Long, principal: Principal): ArtifactResourceMetadata =
@@ -215,6 +241,8 @@ class ArtifactResourceController(
 
 /**
  * Convert an [InputStream] to a [ByteArray].
+ *
+ * This is a convenience extension method use to retrieve information from the multipart form data requests.
  *
  * @receiver [InputStream] to be converted.
  * @return [ByteArray] of the input stream

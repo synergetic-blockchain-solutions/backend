@@ -144,7 +144,7 @@ class ArtifactServiceImpl(
     }
 
     /**
-     * findArtifactsByOwner finds all the [Artifact]s a [User] with [email] has access to. The collection can be filtered by
+     * findArtifacts finds all the [Artifact]s a [User] with [email] has access to. The collection can be filtered by
      * [groupID] to only display artifacts from that group, and by [ownerID] to only show artifacts owned by the user
      * with that ID.
      *
@@ -154,7 +154,7 @@ class ArtifactServiceImpl(
      * @return Collection of artifacts the user has access to filtered by the given parameters
      * @throws UserNotFoundException when a user with [email] does not exist
      */
-    override fun findArtifactsByOwner(
+    override fun findArtifacts(
         email: String,
         groupID: Long?,
         ownerID: Long?,

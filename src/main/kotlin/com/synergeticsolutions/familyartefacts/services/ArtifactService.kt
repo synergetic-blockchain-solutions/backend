@@ -5,7 +5,7 @@ import com.synergeticsolutions.familyartefacts.entities.Artifact
 import java.util.Date
 
 interface ArtifactService {
-    fun findArtifactsByOwner(
+    fun findArtifacts(
         email: String,
         groupID: Long? = null,
         ownerID: Long? = null,

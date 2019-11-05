@@ -25,6 +25,9 @@ import org.springframework.web.bind.annotation.ResponseStatus
 @ResponseStatus(HttpStatus.BAD_REQUEST)
 class AlbumNotFoundException(msg: String) : RuntimeException(msg)
 
+/**
+ * Service for performing actions on albums.
+ */
 @Service
 class AlbumServiceImpl(
     @Autowired
@@ -50,7 +53,7 @@ class AlbumServiceImpl(
      * @return Collection of albums the user has access to filtered by the given parameters
      * @throws UsernameNotFoundException when a user with [email] does not exist
      */
-    override fun findAlbumsByOwner(
+    override fun findAlbums(
         email: String,
         groupID: Long?,
         ownerID: Long?,
@@ -361,6 +364,9 @@ class AlbumServiceImpl(
         return albumRepository.save(updatedAlbum)
     }
 
+    /**
+     * Check a user is allowed to update the album. If not thrown an [ActionNotAllowedException].
+     */
     private fun assertCanUpdate(user: User, album: Album, update: AlbumRequest) {
         // Owners of an album can make any changes they want
         if (album.owners.contains(user)) {

@@ -11,6 +11,9 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
+/**
+ * Service used by other components to create and validate JWT tokens.
+ */
 @Service
 class TokenServiceImpl(
     @Value("\${auth.jwtSecret}")
@@ -25,6 +28,9 @@ class TokenServiceImpl(
     val userRepository: UserRepository
 ) : TokenService {
 
+    /**
+     * Create a token for a user [name] with roles [roles].
+     */
     override fun createToken(name: String, roles: List<String>): String {
         val signatureAlgorithm = SignatureAlgorithm.HS512
         val apiKeySecretBytes = DatatypeConverter.parseBase64Binary(jwtSecret)
@@ -46,6 +52,11 @@ class TokenServiceImpl(
                 .compact()
     }
 
+    /**
+     * Check that [token] is valid.
+     *
+     * Valid means that it is well formed, is signed with the correct key, etc.
+     */
     override fun validateToken(token: String): Claims {
         return Jwts.parser().setSigningKey(DatatypeConverter.parseBase64Binary(jwtSecret)).parseClaimsJws(token).body
     }

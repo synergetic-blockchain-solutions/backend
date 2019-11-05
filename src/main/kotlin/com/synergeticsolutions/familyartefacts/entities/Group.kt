@@ -21,6 +21,10 @@ import org.hibernate.annotations.LazyCollectionOption
  * @param [id] Unique identifier for the group.
  * @param [name] Group's name. This is how users would identify the group but it does not necessarily uniquely identify it.
  * @param [members] Collection of [User]s who are a member of the group.
+ * @param [admins] Collection of [User]s who own the group and can make modifications to it
+ * @param [albums] Collection of [Album]s that are associated with the group
+ * @param [contentType] Content type of the group image
+ * @param [image] Group's image
  */
 @Entity
 @Table(name = "groups")

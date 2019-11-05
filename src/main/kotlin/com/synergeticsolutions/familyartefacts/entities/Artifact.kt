@@ -22,6 +22,18 @@ import javax.persistence.TemporalType
 import org.hibernate.annotations.LazyCollection
 import org.hibernate.annotations.LazyCollectionOption
 
+/**
+ * Representation of the artifact entity.
+ *
+ * @param id ID of the artifact
+ * @param name Name of the artifact
+ * @param owners Collection of [User] entities that can make modifications to the artifact
+ * @param groups Collection of [Group] entities the artifact is associated with
+ * @param resources Collection of [ArtifactResource] entities that make up the artifact
+ * @param albums Collection of [Album] entities the artifact is in
+ * @param tags Collection of tags that can be used to group the artifact
+ * @param dateTaken Date the artifact itself was taken or created, not the be confused with the date the artifact was added to the database
+ */
 @Entity
 @Table(name = "artifacts")
 data class Artifact(
@@ -65,8 +77,11 @@ data class Artifact(
             "description=$description",
             "owners=${owners.map(User::id)}",
             "groups=${groups.map(Group::id)}",
-            "sharedwith=${sharedWith.map(User::id)}",
-            "tags=$tags"
+            "sharedWith=${sharedWith.map(User::id)}",
+            "resources=${resources.map(ArtifactResource::id)}",
+            "albums=${albums.map(Album::id)}",
+            "tags=$tags",
+            "dateTaken=$dateTaken"
         ).joinToString(separator = ", ", prefix = "Artifact(", postfix = ")")
     }
 }

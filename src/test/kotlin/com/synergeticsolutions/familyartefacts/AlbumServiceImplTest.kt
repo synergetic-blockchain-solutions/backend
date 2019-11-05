@@ -124,7 +124,7 @@ class AlbumServiceImplTest {
             Mockito.`when`(albumRepository.findByOwners_Email(ArgumentMatchers.anyString())).thenReturn(ownedAlbums)
             Mockito.`when`(albumRepository.findBySharedWith_Email(ArgumentMatchers.anyString())).thenReturn(sharedAlbums)
 
-            val foundAlbums = albumService.findAlbumsByOwner(
+            val foundAlbums = albumService.findAlbums(
                 email,
                 groupID = null,
                 ownerID = null,
@@ -227,7 +227,7 @@ class AlbumServiceImplTest {
             Mockito.`when`(albumRepository.findByOwners_Email(ArgumentMatchers.anyString())).thenReturn(ownedAlbums)
             Mockito.`when`(albumRepository.findBySharedWith_Email(ArgumentMatchers.anyString())).thenReturn(sharedAlbums)
 
-            val foundAlbums = albumService.findAlbumsByOwner(
+            val foundAlbums = albumService.findAlbums(
                 email,
                 groupID = 1,
                 ownerID = null,
@@ -328,7 +328,7 @@ class AlbumServiceImplTest {
             Mockito.`when`(albumRepository.findByOwners_Email(ArgumentMatchers.anyString())).thenReturn(ownedAlbums)
             Mockito.`when`(albumRepository.findBySharedWith_Email(ArgumentMatchers.anyString())).thenReturn(sharedAlbums)
 
-            val foundAlbums = albumService.findAlbumsByOwner(
+            val foundAlbums = albumService.findAlbums(
                 email,
                 groupID = null,
                 ownerID = user.id,
@@ -429,7 +429,7 @@ class AlbumServiceImplTest {
             Mockito.`when`(albumRepository.findByOwners_Email(ArgumentMatchers.anyString())).thenReturn(ownedAlbums)
             Mockito.`when`(albumRepository.findBySharedWith_Email(ArgumentMatchers.anyString())).thenReturn(sharedAlbums)
 
-            val foundAlbums = albumService.findAlbumsByOwner(
+            val foundAlbums = albumService.findAlbums(
                 email,
                 groupID = null,
                 ownerID = null,
@@ -518,7 +518,7 @@ class AlbumServiceImplTest {
             Mockito.`when`(albumRepository.findByOwners_Email(ArgumentMatchers.anyString())).thenReturn(ownedAlbums)
             Mockito.`when`(albumRepository.findBySharedWith_Email(ArgumentMatchers.anyString())).thenReturn(sharedAlbums)
 
-            val foundAlbums = albumService.findAlbumsByOwner(
+            val foundAlbums = albumService.findAlbums(
                 email,
                 groupID = null,
                 ownerID = null,
@@ -618,7 +618,7 @@ class AlbumServiceImplTest {
             Mockito.`when`(albumRepository.findByOwners_Email(ArgumentMatchers.anyString())).thenReturn(ownedAlbums)
             Mockito.`when`(albumRepository.findBySharedWith_Email(ArgumentMatchers.anyString())).thenReturn(sharedAlbums)
 
-            val foundAlbums = albumService.findAlbumsByOwner(
+            val foundAlbums = albumService.findAlbums(
                 email,
                 groupID = null,
                 ownerID = null,

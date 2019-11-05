@@ -19,6 +19,9 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 
+/**
+ * Controller for managing requests related to the [Album] entity.
+ */
 @RestController
 @RequestMapping(path = ["/album"])
 class AlbumController(
@@ -30,6 +33,8 @@ class AlbumController(
     /**
      * GET /album
      *
+     * Retrieves all the albums a user has access to. The results can optionally be filtered by [albumName], [groupID],
+     * [ownerID], and [sharedID]. [albumName] only needs to match the first part of the actual album's name.
      * @param albumName name of the album
      * @param groupID ID of the group the album is in
      * @param ownerID ID of the album owner
@@ -46,7 +51,7 @@ class AlbumController(
         val currentUser = SecurityContextHolder.getContext().authentication
         logger.debug("Filtering albums for ${currentUser.principal} by group=$groupID, owner=$ownerID, shared=$sharedID")
         val albums =
-                albumService.findAlbumsByOwner(
+                albumService.findAlbums(
                         email = currentUser.principal as String,
                         albumName = albumName,
                         groupID = groupID,
@@ -143,6 +148,16 @@ class AlbumController(
     }
 }
 
+/**
+ * Request to create an album
+ *
+ * @param name Name of the album to create
+ * @param description Description of the album
+ * @param owners List of the user IDs to own the album
+ * @param groups List of the group IDs to associate the album with
+ * @param sharedWith List of the user IDs to share the album with
+ * @param artifacts List of the artifact IDs to associate with the album
+ */
 data class AlbumRequest(
     val name: String,
     val description: String,

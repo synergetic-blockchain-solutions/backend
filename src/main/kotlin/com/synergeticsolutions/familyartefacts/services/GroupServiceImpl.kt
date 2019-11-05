@@ -19,12 +19,6 @@ import org.springframework.web.bind.annotation.ResponseStatus
 
 @ResponseStatus(HttpStatus.BAD_REQUEST)
 class UserIsNotMemberException(msg: String) : RuntimeException(msg)
-@ResponseStatus(HttpStatus.BAD_REQUEST)
-class UserIsNotAdminException(msg: String) : RuntimeException(msg)
-@ResponseStatus(HttpStatus.BAD_REQUEST)
-class MemberAlreadyInGroupException(msg: String) : RuntimeException(msg)
-@ResponseStatus(HttpStatus.BAD_REQUEST)
-class MemberIsAlreadyAdminException(msg: String) : RuntimeException(msg)
 
 /**
  * Service for performing actions with groups
